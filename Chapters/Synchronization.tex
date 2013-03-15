@@ -1,0 +1,110 @@
+\chapter{Synchronization} % Titlul capotilului
+\label{Capitolul4}
+
+
+As we described earlier, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the library samples these objects and sends them to an IS server. 
+
+This concurrent access pattern creates problems which include issues regarding visibility of updates in one thread in another and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library 
+threads.
+
+\section*{Smart pointers}
+
+We use smart pointers to implement the synchronization between the application and the library while requiring only minimal and incremental changes to the existing codebase. For every object registered with the library we return a smart pointer that is used by both library and application for synchronization. 
+
+The smart pointers offer a simple interface to the application developer. They have two functions called lock and unlock which ensure exclusive access to the underlying object. Moreover, we use an interesting C++ feature \citep{andrei2001modern} that allows us to overload the dereference operator to lock the smart pointer just before any method call or field access and unlock it afterwards.
+
+Due to the nice syntactical similarities between smart pointers and raw pointers we can easily port the code to use the former. It usually requires just changing the type of the declaration of the pointer. For example, the following function can be ported just by changing the type of the parameter:
+
+\verb+void do_work(histo * h) { ... h->observe(42); ...  }+
+
+to obtain the following form:
+
+\verb+void do_work(sync_ptr<histo> h) { ... h->observe(42); ...  }+
+
+As explained above, the smart pointer takes care of the synchronization with the library on every function call and field access.
+
+There is an exception to the previous case in which the pointer should be passed to a legacy function which we cannot change. For example:
+
+\verb+void do_work(histo * h) { ... do_legacy_work(h); ... }+
+
+in which case we replace it with:
+\begin{verbatim}
+void do_work(sync_ptr<histo> h) { 
+  ... h.lock(); do_legacy_work(h.get()); h.unlock(); ...
+}
+\end{verbatim}
+Note that in this case even the change was very small, there is a trade-off between lock granularity and the amount of code that needs to be changed. 
+
+
+\section*{Sinchronization strategies}
+In the previous section we referred to locking and unlocking the smart pointer without giving details about how this is implemented. In this section we will present different implementations among which the application developer can choose when registering an object.
+
+\subsection*{No synchronization}
+
+The information that is stored in the IS server is represented as objects with the base class ISInfo. Some of these objects are generated from XML description. We implemented a script which can generate a thread-safe version of the object which uses atomic integers for the fields. 
+
+In cases where this level of thread-safety is sufficient, a developer can avoid the overhead of locking by using a smart-pointer that provides no synchronization.
+
+\subsection*{Mutex}
+
+The simplest technique is to have a mutex and acquire it when accessing the object. The disadvantage of this strategy is that the library has to lock the object while it sent over the network to the IS server. This is because the publishing to the IS server uses a legacy function similar with the example we have given before.
+
+\subsection*{Copy before publish}
+
+When using this synchronization strategy, the library makes local copy of the object before publishing it to the IS server. The advantage of this technique is that we avoid holding a lock while sending data over the network. The disadvantage is that we consume more time and memory to make a copy of the object which may not be acceptable for large histograms.
+
+This strategy is the opposite of copy-on-write but we prefer it since in our case the object is written more often than is read.
+
+\subsection*{Asynchronous updates}
+
+An important observation is that in our use cases, the application that updates an object with the current operational values does not need to wait for the update to be applied. All we are interested in is serial consistency of the operations on that object. 
+
+With the asynchronous updates strategy, we still use a mutex to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. Since updates can be represented very compactly this strategy has low space usage and does not block the application threads while sending it over the network.
+
+The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provides asynchronous updates to any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
+
+\begin{verbatim}
+template <typename T>
+template <typename R, typename... Args>
+void async_ptr<T>::async(R (T::*fn)(Args...), Args... args);
+\end{verbatim}
+
+This method takes a pointer to a member function and its arguments and calls it asynchronously. It requires a change of the method calls from \verb+h->observe(42)+ to \verb+h.async(Histo::observe, 42);+.
+
+Another positive point of this implementation is that we can rewrite only some of the method calls to be asynchronous, so there is again a trade-off between the amount of code to be modified and performance.
+
+\subsubsection*{Implementation}
+
+In this section we will present the pseudocode for the main operations on the smart pointer. The dereference operator is implemented on top of these operations. The smart pointer class has the following fields:
+\begin{itemize}
+\item {\tt update\_queue} the queue of updates that need to be executed asynchronously.
+\item {\tt qlock} a mutex used to protect the {\tt update\_queue}.
+\item {\tt obj\_lock} a mutex used to protect the object pointed by the smart pointer.
+\end{itemize}
+
+\begin{verbatim}
+def lock(): 
+    obj_lock.lock()
+    with qlock: update_queue.execute_all()
+
+def unlock(): 
+    with qlock: 
+        update_queue.execute_all()
+        obj_lock.unlock()
+
+def async(f, args)
+    with qlock:
+        if obj_lock.try_lock():
+            update_queue.execute_all()
+            f(args)
+            obj_lock.unlock()
+        else: update_queue.append((f, args))
+\end{verbatim}
+
+Note that the async method does not block when trying to acquire {\tt obj\_lock} since it uses the non-blocking {\tt try\_lock} method. 
+
+Every thread that acquires the {\tt obj\_lock} mutex executes all updates that were added to the {\tt update\_queue} before accessing the underlying object of the smart pointer. This way we ensure that after the exclusive access to the object is given to the application, the object is in a serialy consistent state. As an optimization, we also execute all updates before releasing the {\tt obj\_lock}.
+
+\subsubsection*{Custom mechanisms}
+
+We also provide a smart pointer that uses callbacks to allow user to implement its own synchronization mechanisms such as, for example, per-cpu counters that are added up before publishing them.

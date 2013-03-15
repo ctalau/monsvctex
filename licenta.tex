@@ -9,7 +9,7 @@
 \usepackage[square, numbers, comma, sort&compress]{natbib}  % Folosim "Natbib" pentru bibliografie
 
 % Macrouri
-\newcommand\fhat{$F\hspace{4pt}\widehat{}\hspace{4pt}$}
+\newcommand\fhat{$F\hspace{4pt}\widehat{•}widehat{}\hspace{4pt}$}
 \newcommand\frec{$F^{\emph{rec}}\hspace{2pt}$}
 \newcommand\app{\hspace{2pt}}
 %\newcommand\fixme[1]{ {\large \color[rgb]{1.0,0.0,0.0} \textbf{#1}} }
@@ -30,20 +30,13 @@
 \mainmatter	  % Numerotare normala (1,2,3...)
 
 % Capitolele lucrarii
-\input{./Capitole/Motivatie} % Motivatie
+\input{./Chapters/Introduction}
 
-\input{./Capitole/Notiuni} % Notiuni preliminare
+\input{./Chapters/Library}
 
-\input{./Capitole/SysFhat} % Prezentarea System F hat
+\input{./Chapters/Configuration}
 
-\input{./Capitole/Proprietati} % Principalele caracteristici ale SystemF^
-
-\input{./Capitole/Expresivitate} % Expresivitate
-
-\input{./Capitole/Implementare} % Implementare
-
-\input{./Capitole/Planuri} % Planuri de dezvoltare ulterioara
-
+\input{./Chapters/Synchronization}
 %% ----------------------------------------------------------------
 \backmatter
 
@@ -51,7 +44,7 @@
 \addtocontents{toc}{\vspace{2em}}  % Spatiu in cuprins inainte de bibliografie
 
 \label{Bibliografie}
-\lhead{\emph{Bibliografie}}  % Headerul paginii este "Bibliografie"
+\lhead{\emph{Bibliography}}  % Headerul paginii este "Bibliografie"
 \bibliographystyle{unsrtnat}  % Stilul "unsrtnat"
 \bibliography{bibliografie}  % Fisierul cu bibliografia
 

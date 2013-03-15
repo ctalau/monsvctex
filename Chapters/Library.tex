@@ -1,0 +1,22 @@
+\chapter{The {\tt monsvc} library} % Titlul capotilului
+\label{Capitolul2}
+
+The goal of my master project is to implement a library used to publish monitoring information from the applications to the IS servers. This section is a brief overview of the functionality of the library and the next sections will present more details about specific aspects of the implementation such as configuration, serialization, synchronization, scheduling and performance.
+
+During a data taking session of an LHC production fill which lasts between 10 and 20 hours it is important to be able to monitor different operational parameters of the ATLAS TDAQ system and to react to abnormal conditions. For example, one needs to readjust parameters of the event selection software if the acceptance rate becomes so high that persistence services cannot handle it. 
+
+To this end, all the applications in the system need to provide real-time updates about their operational conditions. These updates consist of (multidimensional) histograms, counters, numbers, boolean variables, strings and collections thereof. I will call them monitored objects. For example, counter of wrong checksums for event data read from the L1 filter or a histogram of the event sizes for the events accepted by the L2. The updates are sent either periodically, or on demand (usually at the end of the run, when some exceptional condition occurs or when requested by the operator).
+
+The monsvc library takes care of the periodic publication of the monitored information, completely abstracting it leaving the application programer only with the task of updating the information with the operational values. This is benefic since the monitoring information is updated more often and irregularly than it is published. For example, the counter of wrong checksums is updated every time such an error occurs, but it is expected to be published every 5 seconds. The interval between to publications of a monitored object is called call publishing interval.
+
+In the monsvc approach, the monitoring is split into two operations: registration and publishing. The registration consists of passing a reference to an object to be monitored together with a name for that object to the monsvc library. The publishing deals with sending the data periodically to an IS server from where other applications will read it and either present it to the user or take corrective actions upon failures. 
+
+The programmer needs to register the monitored objects (via the {\tt MonitoringService}), to configure the publishing process and to start it (via the {\tt PublishingController}). After this the programmer just needs to update the registered objects to reflect the current operational values. The image below presents an example workflow that the user may employ when working with the library.  
+
+\begin{center}
+\includegraphics[scale=0.6]{Images/workflow.png}
+\end{center}
+
+The separation of registration and publishing also makes the life of third party library developers easier since their only job is to register the objects they want to be monitored while the main application is concerned with configuring and starting the publishing.
+
+This usage pattern allows us to  create a lightweight version of the monsvc library with no transitive linking dependencies which contains only the registration functionality and which can be used by other libraries. The main application has to use the normal version which depends on a number of other packages like IPC, ROOT, IS, etc.

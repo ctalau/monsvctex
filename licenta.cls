@@ -28,10 +28,10 @@
 \newcommand\btypeout[1]{\bhrule\typeout{\space #1}\bhrule}
 
 % Luna in limba romana
-\def\today{\ifcase\month\or
-  Ianuarie\or Februarie\or Martie\or Aprilie\or Mai\or Iunie\or
-  Iulie\or August\or Septembrie\or Octombrie\or Noiembrie\or Decembrie\fi
-  \space \number\year}
+%\def\today{\ifcase\month\or
+%  Ianuarie\or Februarie\or Martie\or Aprilie\or Mai\or Iunie\or
+%  Iulie\or August\or Septembrie\or Octombrie\or Noiembrie\or Decembrie\fi
+%  \space \number\year}
 
 \usepackage{setspace}
 \singlespacing
@@ -68,27 +68,27 @@
 % Denumiri in romana pentru keyworduri matematice
 \usepackage{amsmath,amsfonts,amssymb,amscd,amsthm,xspace}
 \theoremstyle{plain}
-\newtheorem{example}{Exemplu}[chapter]
-\newtheorem{theorem}{Teorema}[chapter]
-\newtheorem{corollary}[theorem]{Corolar}
-\newtheorem{lemma}[theorem]{Lem\u a}
-\newtheorem{proposition}[theorem]{Propozi\c tie}
-\newtheorem{axioma}[theorem]{Axioma}
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Defini\c tie}
-\theoremstyle{remark}
-\newtheorem{remark}[theorem]{Observa\c tie}
+%\newtheorem{example}{Exemplu}[chapter]
+%\newtheorem{theorem}{Teorema}[chapter]
+%\newtheorem{corollary}[theorem]{Corolar}
+%\newtheorem{lemma}[theorem]{Lem\u a}
+%\newtheorem{proposition}[theorem]{Propozi\c tie}
+%\newtheorem{axioma}[theorem]{Axioma}
+%\theoremstyle{definition}
+%\newtheorem{definition}[theorem]{Defini\c tie}
+%\theoremstyle{remark}
+%\newtheorem{remark}[theorem]{Observa\c tie}
 
 % Parametri pentru figuri
 \usepackage[centerlast,small,sc]{caption}
 \setlength{\captionmargin}{20pt}
-\newcommand{\fref}[1]{Figura~\ref{#1}}
-\newcommand{\sref}[1]{sect.~\ref{#1}}
+%\newcommand{\fref}[1]{Figura~\ref{#1}}
+%\newcommand{\sref}[1]{sect.~\ref{#1}}
 
-\renewcommand{\chaptername}{Capitolul}
-\renewcommand{\contentsname}{Cuprins}
-\renewcommand{\bibname}{Bibliografie}
-\renewcommand{\figurename}{Figura}
+%\renewcommand{\chaptername}{Capitolul}
+%\renewcommand{\contentsname}{Cuprins}
+%\renewcommand{\bibname}{Bibliografie}
+%\renewcommand{\figurename}{Figura}
 
 \renewcommand{\topfraction}{0.85}
 \renewcommand{\bottomfraction}{.85}
@@ -155,7 +155,8 @@
 }
 
 % Pentru pagina de titlu
-\newcommand*{\supervisor}[1]{\def\supname{#1}}
+\newcommand*{\fstsupervisor}[1]{\def\fstsupname{#1}}
+\newcommand*{\sndsupervisor}[1]{\def\sndsupname{#1}}
 \newcommand*{\authors}[1]{\def\authornames{#1}}
 \newcommand*{\UNIVERSITY}[1]{\def\UNIVNAME{#1}}
 \newcommand*{\faculty}[1]{\def\facname{#1}}
@@ -190,9 +191,10 @@
       \begin{table*}[h]
         \begin{center}
 		  \begin{tabular}{lcccccl}
-		      \Large \textbf{\Large Conduc\u{a}tor \c{S}tiin\c{t}ific:}
-			  \vspace*{1mm} &&&&&& \Large \textbf{\Large Autor:}\vspace*{1mm} \\
-			  \large \supname &&&&&& \large \authornames
+		      \Large \textbf{\Large Supervisors:}
+			  \vspace*{1mm} &&&&&& \Large \textbf{\Large Author:}\vspace*{1mm} \\
+			  \large \fstsupname &&&&&& \large \authornames \\
+        \large \sndsupname &&&&&& \\
 		  \end{tabular}
 		\end{center}
 	  \end{table*}
