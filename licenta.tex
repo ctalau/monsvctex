@@ -1,0 +1,61 @@
+%% ----------------------------------------------------------------
+%% licenta.tex Fisierul principal
+%% ----------------------------------------------------------------
+
+\documentclass[a4paper, 11pt, oneside]{licenta}
+\graphicspath{{Imagini/}}  % Folderul pentru imagini
+
+% Pachete necesare
+\usepackage[square, numbers, comma, sort&compress]{natbib}  % Folosim "Natbib" pentru bibliografie
+
+% Macrouri
+\newcommand\fhat{$F\hspace{4pt}\widehat{}\hspace{4pt}$}
+\newcommand\frec{$F^{\emph{rec}}\hspace{2pt}$}
+\newcommand\app{\hspace{2pt}}
+%\newcommand\fixme[1]{ {\large \color[rgb]{1.0,0.0,0.0} \textbf{#1}} }
+\newcommand\fixme[1]{#1}
+
+%% ----------------------------------------------------------------
+\begin{document}
+
+\frontmatter	  % Numerotare cu cifre romane( i, ii, iii, iv...)
+\input{Speciale/Titlu}
+
+%% ----------------------------------------------------------------
+
+\pagestyle{fancy}  % Folosim titlul sectiunii in antetul paginii
+\tableofcontents
+
+%% ----------------------------------------------------------------
+\mainmatter	  % Numerotare normala (1,2,3...)
+
+% Capitolele lucrarii
+\input{./Capitole/Motivatie} % Motivatie
+
+\input{./Capitole/Notiuni} % Notiuni preliminare
+
+\input{./Capitole/SysFhat} % Prezentarea System F hat
+
+\input{./Capitole/Proprietati} % Principalele caracteristici ale SystemF^
+
+\input{./Capitole/Expresivitate} % Expresivitate
+
+\input{./Capitole/Implementare} % Implementare
+
+\input{./Capitole/Planuri} % Planuri de dezvoltare ulterioara
+
+%% ----------------------------------------------------------------
+\backmatter
+
+\setstretch{0.9}  % Spatierea intre linii de 0.9 - o singura pagina de bibliografie
+\addtocontents{toc}{\vspace{2em}}  % Spatiu in cuprins inainte de bibliografie
+
+\label{Bibliografie}
+\lhead{\emph{Bibliografie}}  % Headerul paginii este "Bibliografie"
+\bibliographystyle{unsrtnat}  % Stilul "unsrtnat"
+\bibliography{bibliografie}  % Fisierul cu bibliografia
+
+% Todo-uri in faza de lucru
+%\todos
+\end{document}
+%% ---------------------------------------------------------------- 

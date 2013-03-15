@@ -1,0 +1,49 @@
+\begin{tikzpicture}[node distance=4cm, auto,>=latex', thick]
+    \tikzstyle{type} = [shape=circle, fill=white, draw, thin]
+    \tikzstyle{constructor} = [draw, ->,color=blue!50!black ]
+
+% Nat
+    \node [type,minimum size=3.6cm,pin={[pin edge={<-,red}]90:$\textbf{\emph{Nat}}^{\infty}$}] at (0cm,0cm) (nat) {};
+    \node [type,minimum size=2.4cm,label=above:$\vdots$,pin={[pin edge={<-,red}]50:$\textbf{\emph{Nat}}^{{\hat{\hat{\iota}}}}$}] at (0cm,0cm) (natssp) {};
+    \node [type,minimum size=2.0cm,pin={[pin edge={<-,red}]30:$\textbf{\emph{Nat}}^{{{\hat{\iota}}}}$}] at (0cm,0cm) (natsp) {};
+    \node [type,minimum size=1.6cm,pin={[pin edge={<-,red}]10:$\textbf{\emph{Nat}}^{{{{\iota}}}}$}] at (0cm,0cm) (natp) {};
+
+    % succesor
+    \path [constructor] (natp.south east)  node[above] {\scriptsize s} parabola[bend pos=0.5] bend +(0,-1cm) (natsp.south west) ;
+    \path [constructor] (natsp.south east) node[above] {\scriptsize s} parabola[bend pos=0.5] bend +(0,-1cm) (natssp.south west);
+    \path [constructor] {(nat.south)+ (0.5cm,0.08cm)}   node[above] {\scriptsize s} parabola[bend pos=0.5] bend +(0,-1cm) (nat.south);
+
+    % zero
+    \path [constructor] (0,0) circle (0) node[pin={[pin edge={<-,blue!50!black},pin distance=2cm]180:{\scriptsize z}}] (centru) {};
+
+% Liste
+    \tikzstyle{cons} = [shape=rectangle, thin, minimum width=0.03cm, minimum height=0.03cm]
+
+    \node [cons,right of=nat,yshift=-1cm,label=below:{\scriptsize cons}] (consp) {};
+    \node [cons,right of=nat,label=below:{\scriptsize cons}] (conssp) {};
+    \node [cons,right of=nat,yshift=+1cm,label=below:{\scriptsize cons}] (consssp) {};
+
+    \tikzstyle{type} = [shape=circle, fill=white, draw, thin, xshift=8cm]
+
+    \node [type,minimum size=3.6cm,pin={[pin edge={<-,red}]90:$\textbf{\emph{List}}^{\infty}$}] at (0cm,0cm) (list) {};
+    \node [type,minimum size=2.4cm,label=above:$\vdots$,pin={[pin edge={<-,red}]50:$\textbf{\emph{List}}^{{\hat{\hat{\iota}}}}$}] at (0cm,0cm) (listssp) {};
+    \node [type,minimum size=2.0cm,pin={[pin edge={<-,red}]30:$\textbf{\emph{List}}^{{{\hat{\iota}}}}$}] at (0cm,0cm) (listsp) {};
+    \node [type,minimum size=1.6cm,pin={[pin edge={<-,red}]10:$\textbf{\emph{List}}^{{{{\iota}}}}$}] at (0cm,0cm) (listp) {};
+
+    % cons
+    \path [constructor,-] (nat.east) edge[bend right]  (consp.center);
+    \path [constructor,-] (nat.east) edge             (conssp.center);
+    \path [constructor,-] (nat.east) edge[bend left] (consssp.center);
+
+    \path [constructor] (consp.center)   parabola[bend pos=0.5] bend +(0,+0.5cm) (listsp.south west) ;
+    \path [constructor] (conssp.center)  parabola[bend pos=0.5] bend +(0,+0.2cm) (listssp.west);
+    \path [constructor] (consssp.center) parabola[bend pos=0.5] bend +(0,-0.5cm) (list.north west);
+
+    \path [constructor,-] (listp.south west)     parabola[bend pos=0.5] bend +(0,-0.5cm) (consp.center) ;
+    \path [constructor,-] (listsp.west)     parabola[bend pos=0.5] bend +(0,-0.2cm) (conssp.center);
+    \path [constructor,-] (list.north west) parabola[bend pos=0.5] bend +(0,+0.5cm) (consssp.center);
+
+    % nil
+    \path [constructor] (list.center) circle (0) node[pin={[pin edge={<-,blue!50!black},pin distance=2cm]0:{\scriptsize nil}}] (centru) {};
+
+\end{tikzpicture}

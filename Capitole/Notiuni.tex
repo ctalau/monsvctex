@@ -1,0 +1,356 @@
+% Capitolul 2 - 7 pag
+
+\chapter{No\c tiuni preliminarii}
+\label{Capitolul2}
+
+\^ In aceasta lucrare voi prezenta construc\c tia unui compilator pentru un limbaj de programare func\c tional care verific\u a static (corect dar incomplet) proprietatea de terminare a programelor pe baza teoriei tipurilor.
+
+\section{Terminologie}
+\done\todo{de scris exact defini\c tia normalizarii puternice}
+\begin{definition}
+Un sistem de tipuri are proprietatea de \textbf{normalizare puternic\u a} dac\u a pentru orice expresie c\u areia \^ ii este asociat un tip exist\u a un num\^ ar $n\in\mathbb{N}$ astfel \^ incat orice evaluare a expresiei p\^ n\u a la o valoare s\u a necesite mai pu\c tin de $n$ pa\c si.
+\end{definition}
+
+\begin{definition}
+Un sistem are proprietatea de \textbf{conservare} dac\u a pentru orice context de tip $\Gamma$ , daca $\Gamma \vdash t : T$ \c si $t \to t'$, atunci $\Gamma \vdash t' : T$
+\end{definition}
+
+\begin{definition}
+Un sistem are proprietatea de \textbf{progres} dac\u a orice expresie $t$,  fie $t$ este o \emph{valoare}, fie exist\u a o alt\u a expresie $t'$ astfel \^ incat $t \to t'$.
+\end{definition}
+
+\begin{definition}
+Un sistem are proprietatea de \textbf{siguran\c ta} dac\u a are \c si proprietatea de conservare, \c si proprietatea de progres.
+\end{definition}
+
+\section{Vedere de ansamblu}
+
+Exemple simple de limbaje cu proprietatea de normalizare puternic\u a sunt \emph{calculul lambda cu tipuri simple (simply typed lambda calculus)} sau \emph{calculul lambda polimorfic (System F)}. Totu\c si motivul pentru care aceste sisteme de tipuri nu sunt folosite \^ in practic\u a este c\u a unele concepte comune (de ex. numere naturale) au o reprezentare complicat\u a \c si multi algoritmi sunt expresibili doar cu o complexitate foarte mare.
+
+\begin{example}
+De exemplu, pentru a calcula predecesorul unui num\u ar natural, trebuie ca nu\-m\u a\-rul sa fie reprezentat \^ in forma Church, apoi algoritmul de are o complexitate $O(n)$ \^ in valoarea numarului. Un exemplu de astfel de implementare \^ in Haskell este prezentat\u a \^ in programul \ref{church_pred}.
+\done\todo{implementare haskell}
+\end{example}
+
+\begin{lstlisting}[label=church_pred,captionpos=b,caption=Func\c tia predecesor \^ in codificare Church,language=Haskell,float=tb]
+-- perechi in codificare Church
+cpair = \x y -> \p -> p x y
+cfst  = \p -> p (\x y -> x)
+csnd  = \p -> p (\x y -> y)
+-- numere naturale \^ in codificare Church
+czero = \s z -> z
+csucc = \n -> \s z -> s (n s z)
+-- func\c tia predecesor \^ in codificare Church
+cpred = \n -> n
+            (\m -> (cpair (csucc (cfst m)) (cfst m)) )
+            (cpair czero czero)
+\end{lstlisting}
+
+Din aceast\u a cauza a fost introdus\u a o extensie a System F - System \frec, ce con\c tine \^ in plus tipuri de date \c si func\c tii recursive. Din p\^ acate acest sistem de tipuri nu mai garateaz\^ a finitudinea evalu\u arii expresiilor c\u arora le asociaz\u a un tip. \^In final o s\u a introduc System \fhat care este o extindere a System \frec, cu unele constr\^ angeri \c si care respect\u a proprietarea de normalizare puternic\u a.
+
+\section{System F}
+
+Calculul lambda polimorfic sau System F a fost descoperit de Jean-Yves Girard \citep{64805} \^ in contextul \emph{teoriei demonstra\c tiei} \^ in logica. Acest sistem de tipuri a fost folosit ca un cadru pentru studiul teoretic al polimorfismului \c si ca baz\u a pentru proiectarea mai multor limbaje de programare.
+
+System F mai este numit \c si calcul lambda de ordinul doi. Acest nume provine de la faptul c\u a \^ in transpunerea sa \^ in logica prin izomorfismul Curry-Howard, sunt permise propozi\c tii cuantificate nu doar peste termeni de ordinul \^ intai - lambda expresii, ci \c si peste predicate - tipuri.
+
+\subsection{Sintaxa}
+
+Sintaxa acestui limbaj este una simpl\u a, dat\u a de urmatoarea gramatic\u a:
+
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+\begin{align*}
+t :=  &                  &\textbf{lambda-expresii}\\
+      &x                 &\text{variabila}\\
+      &\lambda x:T . t   &\text{functie lambda}\\
+      &t\app t    &\text{aplicare functie}\\
+      &\Lambda X . t     &\text{paramtetrizare tip}\\
+      &t\app [T]  &\text{instantiere tip}
+\end{align*}
+\begin{align*}
+v :=  &                  &\textbf{valori}\\
+      &\lambda x:T . t   &\text{val. functie}\\
+      &\Lambda X . t     &\text{val. param. tip}\\
+T :=  &                  &\textbf{tipuri}\\
+      &X                 &\text{variabila de tip}\\
+      &T\to T            &\text{tip functional}\\
+      &\Pi X.T       &\text{tip universal}
+\end{align*}
+\end{multicols}
+
+Se observ\u a c\u a, spre deosebire de calculul lambda simplu, expresiile pot fi parametrizate \c si de o variabil\u a de tip. Valorile sunt forme normale pentru expresii. Evaluarea unei expresii se \^ incheie atunci c\^ and ea devine o valoare.
+
+\begin{example}\label{church_numbers}
+\^ In acest limbaj de programare putem defini func\c tii polimorfice precum $id = \Lambda X . (\lambda x:X . x) $. De asemenea, spre deosebire de calculul lambda cu tipuri simple aici se pot exprima numere naturale \c si valori booleene \^ in forma Church
+\begin{align*}
+    \emph{true} &= \Lambda X.\lambda t:X.\lambda f:X.t                     \\
+    \emph{ifthenelse}   &= \Lambda X . \lambda c : (\forall X. X \to X \to X). \lambda t : X.\lambda f : X . x\app [X]\app y\app z\\
+    \emph{two}  &= \Lambda X.\lambda s:(X \to X).\lambda z:X . s\app s\app z \\
+\end{align*}
+\end{example}
+
+\subsection{Reguli de evaluare}
+\done\todo{reguli evaluare sysf}
+Semantica opera\c tional\u a a limbajului este dat\u a de urmatoarele reguli de evaluare:
+
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+
+\begin{prooftree}
+\AxiomC{$t_1 \to t_1'$}
+\RightLabel{\scriptsize(CTX-APP)}
+\UnaryInfC{$t_1\app t_2 \to t_1' \app t_2$}
+\end{prooftree}
+
+$(\lambda x :T_{11} . t_{12})\app v_2 \to [x \mapsto v_2] t_{12}$ {\scriptsize (E-APP)}
+\columnbreak
+
+\begin{prooftree}
+\AxiomC{$t_1 \to t_1'$}
+\RightLabel{\scriptsize(CTX-TAPP)}
+\UnaryInfC{$t_1\app [T_2] \to t_1' \app [T_2]$}
+\end{prooftree}
+
+$(\Lambda X . t_{12})\app [T_2] \to [X \mapsto T_2] t_{12}$ {\scriptsize(E-TAPP)}
+\end{multicols}
+\hyphenation{e-va-lu-at}
+Aceste reguli corespund unei strategii de evaluare lene\c s\u a, argumentul unei func\c tii nefiind evaluat dec\^ at dup\u a aplicarea func\c tiei. 
+
+\subsection{Reguli de tip}
+
+Pentru determinarea tipului unei expresii trebuie folosit un context de tip \^ in care se re\c tin in\-for\-ma\-\c ti\-i despre variabilele care apar libere \^ in expresie. Tipurile asociate expresiilor \c si contextele de tip se determin\u a dup\u a urmatoarele reguli:
+
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+\flushleft{\textbf{Context de tip}}
+\begin{align*}
+\Gamma := &             &\textbf{context de tip}\\
+          & \Phi        &\text{context gol}\\
+          &\Gamma,x:T   &\text{asociere var-tip}\\
+          &\Gamma,X     &\text{var. de tip legata}\\
+\end{align*}
+\flushleft{\textbf{Reguli de tip}}
+
+\begin{prooftree}
+\AxiomC{$x:T\in\Gamma$}
+\RightLabel{\scriptsize(T-VAR)}
+\UnaryInfC{$\Gamma \vdash x:T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma,x:T_1 \vdash t_2:T_2$}
+\RightLabel{\scriptsize(T-ABS)}
+\UnaryInfC{$\Gamma \vdash \lambda x :T_1. t_2 : T_1 \to T_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t_1 : T_{1} \to T_{2}$}
+\AxiomC{$\Gamma \vdash t_2 : T_{1}$}
+\RightLabel{\scriptsize(T-APP)}
+\BinaryInfC{$\Gamma \vdash t_1 \app t_2 : T_{2}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma,X \vdash t_2 : T_2 $}
+\RightLabel{\scriptsize(T-TABS)}
+\UnaryInfC{$\Gamma \vdash \Lambda X.t_2 : \Pi X . T_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t_1 : \Pi X.T_1 $}
+\RightLabel{\scriptsize(T-TAPP)}
+\UnaryInfC{$\Gamma \vdash t_1\app [T_2] : [X \mapsto T_2] T_1$}
+\end{prooftree}
+
+\end{multicols}
+
+Determinarea tipurilor pentru System F este un procedeu simplu, dirijat de sintax\u a. Singura dificultate const\u a \^ in substitu\c tia $[X \mapsto T_2] T_1$ la care trebuie \^ inlocuite doar variabilele $X$ libere \^ in tipul $T_1$.
+
+\begin{example}
+Dup\u a cum se vede \^ in exemplul \ref{church_numbers}, tipurile \textbf{\emph{Bool}} \c si \textbf{\emph{Nat}} pot fi definite ca prescurt\u ari pentru $\Pi X. X \to X \to X$ respectiv $\Pi X. (X \to X) \to X\to X$.
+\end{example}
+
+\subsection{Propriet\u a\c ti}
+\begin{theorem}[Siguranta]
+System F are propriet\u a\c tile de conservare \c si progres, deci are proprietatea de siguran\c t\u a.
+\end{theorem}
+\begin{proof}[Demonstra\c tie]
+Demonstra\c tia poate fi gasit\u a \^ in \citep{Pierce:TypeSystems}.
+\end{proof}
+\hyphenation{pu-ter-ni-ca}
+\begin{theorem}[Normalizare puternic\u a]
+System F are proprietatea de normalizare puternic\u a.
+\end{theorem}
+\begin{proof}[Demonstra\c tie]
+Demonstra\c tia poate fi gasit\u a \^in \citep{64805}.
+\end{proof}
+
+\begin{corollary}
+System F nu este Turing complet.
+\end{corollary}
+\begin{proof}[Demonstra\c tie]
+Teorema este o consecin\c t\u a direct\u a a teoremei \ref{turing_incomplete} utilizate \^ in demonstra\c tia incompletitudinii pentru System \fhat.
+\end{proof}
+
+\section[System F rec]{System \frec}
+
+System \frec \citep{1614481} este o extensie a System F care are \^ in plus tipuri de date recursive \c si functii recursive texutal. Acest lucru face ca exprimarea unor concepte naturale precum numere, valori booleene, liste, arbori s\u a poata fi facut\u a mai direct dec\^ at prin codificare Church. Mai mult, prin ad\u augarea func\c tiilor recursive, Sytem \frec devine Turing complet.
+
+\subsection{Sintaxa}
+
+\subsubsection{Declara\c tii de tipuri}
+Fiecare tip de date este determinat de un identificator (constructor) \c si de aritatea acelui identificator. To\c ti identificatorii fac parte din mul\c timea $\mathcal{D}$.
+
+\begin{example}
+Tipul numerelor naturale este are identificatorul \emph{\textbf{Nat}} \c si de aritatea $ar(Nat) = 0$. Tipul listelor polimorfice este dat de identificatorul \textbf{\emph{List}} \c si aritatea $ar(List) = 1$, parametrul reprezent\^ and tipul elementelor ce se afl\u a in lista.
+\end{example}
+
+Fiecare tip de date $d \in \mathcal{D}$ are o mul\c time de constructori $\mathcal{C}(d)$. Mul\c timile de constructori sunt disjuncte pentru constructori diferi\c ti $\mathcal{C}(d_1) \cap \mathcal{C}(d_2) = \emptyset $ pentru $d_1 \neq d_2$. Fiecare constructor $c\in \mathcal{C}(d)$ are tipul de forma
+$$ \Pi \textbf{X}.\theta_1\to\dots\to\theta_n \to d \textbf{X}$$
+unde $\textbf{X}$ este un vector de parametrii de dimensiune egal\u a cu aritatea lui $d$.
+
+\begin{example}
+\label{nat_def} Multimea de constructori pentru \emph{\textbf{Nat}} este:
+$$\mathcal{C}(\emph{\textbf{Nat}})=\{z : \emph{\textbf{Nat}} , s : \emph{\textbf{Nat}} \to \emph{\textbf{Nat}} \}.$$
+Mul\c timea de constructori pentru \emph{\textbf{List}} este
+$$\mathcal{C}(\emph{\textbf{List}})=\{ nil : \Pi X. \emph{\textbf{List}}\app X , cons : \Pi X . X \to \emph{\textbf{List}}\app X \to \emph{\textbf{List}}\app X\}.$$
+\end{example}
+
+Declara\c tia unui tip care include identificatorul de tip, parametri tipului, constructorii \c si tipurile acestora are urmatoarea sintax\u a:
+$$ \textbf{Datatype  } d\app X := c_1 : \Pi X . \theta_1 \to d \app X \ | \
+                                 \ldots \ |\
+                                 c_k : \Pi X . \theta_k \to d\app X
+$$
+unde $X = X_1 \dots X_n$, $\ ar(d) = n$, $\mathcal{C}(d) = \{c_1, \dots,c_k\}$, $\theta_i = \theta_{i_1} \to \dots \to \theta_{i_m} $.
+\begin{example}
+Declara\c tiile pentru valori booleene, numere naturale \c si liste sunt urm\u atoarele:
+\begin{align*}
+ \textbf{\emph{Datatype}  } \emph{\textbf{Bool}}       &:= true : \emph{\textbf{Bool}} \ |\  false : \emph{\textbf{Bool}} \\
+ \textbf{\emph{Datatype}  } \emph{\textbf{Nat}}        &:= z : \emph{\textbf{Nat}} \ |\ s : \emph{\textbf{Nat}} \to \emph{\textbf{Nat}} \\
+ \textbf{\emph{Datatype}  } \emph{\textbf{List}}\app X &:= nil : \Pi X. \emph{\textbf{List}}\app X\ |\ cons :  \Pi X.X \to \emph{\textbf{List}}\app X \to \emph{\textbf{List}} \app X
+\end{align*}
+\end{example}
+
+\subsubsection{Tipuri}
+
+Pe lang\u a tipurile de date ale System F, se mai adaug\u a tipuri de forma
+$$ d\app T_1\app T_2\app \dots\app T_n  \text{, unde } ar(d) = n$$
+\begin{example}
+Un astfel de tip este \emph{\textbf{Nat}} sau \emph{\textbf{List}} \app \emph{\textbf{Nat}}.
+\end{example}
+Condi\c tia ca num\u arul de argumente s\u a fie egal cu aritatea constructorului de tip este asemanatoare cu aceea care cere ca o func\c tie s\u a fie aplicat\u a unui num\^ ar de argumente egal cu aritatea sa. Aceast\u a a doua conditie se rezolva in general prin verificarea tipului expresiei rezultate. Pentru a face acela\c si lucru pentru tipuri putem acorda fiec\u arui tip un \emph{kind} introduc\^ and practic un nou sistem de tipuri la nivelul tipurilor.
+\begin{example}
+Kind-ul pentru \emph{\textbf{Nat}} este $*$, kind-ul pentru \emph{\textbf{List}} este $* \Rightarrow *$.
+\end{example}
+Kind-ul fiec\ uarei expresii trebuie s\u a fie $*$. Din fericire, orice identificator are un kind de genul $* \Rightarrow \dots \Rightarrow *$ \c si deci sistemul de kinduri este mult mai simplu dec\^ at calculul lambda cu tipuri simple.
+
+\subsubsection{Termeni}
+La termenii System F se mai adaug\u a urmatoarele construc\c tii sintactice:
+\begin{align*}
+t :=  &\dots                                    &\textbf{lambda-expresii}\\
+      &\mathcal{C}                              &\text{constructori}\\
+      &\text{case}_T of \{\mathcal{C} \Rightarrow t\}     &\text{analiza de cazuri}\\
+      &\text{letrec}_T \{ x = t \}                       &\text{recursivitate textuala}
+\end{align*}
+Aceste construc\c tii sunt \^ int\^ alnite \^ in limbaje de programare func\c tional\u a precum Haskell \c si ML. Dintre ace\c sti termeni, contructorii, aplica\c tiile de constructori \c si defini\c tiile de func\c tii textual recursive sunt considerate valori.
+
+\subsection{Reguli de evaluare}
+
+System \frec adaug\u a reguli de evaluare pentru noile construc\c tii introduse.
+
+\begin{prooftree}
+\AxiomC{$e \to e' $}
+\RightLabel{\scriptsize (CTX-CASE)}
+\UnaryInfC{$\text{case}_{\sigma}\ e \text{ of } \{ c_1 \Rightarrow \ e_1 |\ \dots \ |\ c_k \Rightarrow e_k \} \to \text{case}_{\sigma}\ e' \text{ of } \{ c_1 \Rightarrow \ e_1 |\ \dots \ |\ c_k \Rightarrow e_k \} $ }
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$e \to e' $}
+\RightLabel{\scriptsize (CTX-LETREC)}
+\UnaryInfC{$(\text{letrec}_{d\app \tau \to \sigma} f = g)\app e  \to (\text{letrec}_{d\app \tau \to \sigma} f = g)\app e'  $ }
+\end{prooftree}
+$$\text{case}_{\sigma}\ c_i\app \tau\app a \text{ of } \{ c_1 \Rightarrow \ e_1 |\ \dots \ |\ c_k \Rightarrow e_k \} \to e_i \app a \text{ \scriptsize (E-CASE)}$$
+$$ (\text{letrec}_{d\app \tau \to \sigma} f = g)(c\app a) \to [ f \mapsto (\text{letrec}_{d\app \tau \to \sigma} f = g)] g\app (c\app a) \text{  \scriptsize (E-LETREC)} $$
+
+Se observ\u a c\u a regula de evaluare pentru analiza de cazuri corespunde unei strategii lene\c s\u a, evalu\^ andu-se \^ int\^ ai expresia care este analizat\u a \c si abia apoi, doar expresia corespunz\u atoare cazului care se aplic\u a.
+
+\subsection{Reguli de tip}
+Regulile de tip ad\u augate au ca rol validarea construc\c tiilor sintactice nou introduse
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{\scriptsize(T-CONS)}
+\UnaryInfC{$\Gamma \vdash c_k : \Pi X . \theta_k \to d \app X$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{ $\Gamma , f : \tau \vdash e : \tau $}
+\RightLabel{\scriptsize(T-LETREC)}
+\UnaryInfC{$\Gamma \vdash (\text{letrec}_\tau f = e) : \tau $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{ $\Gamma \vdash e : d \app \tau $}
+\AxiomC{ $\Gamma \vdash e_k : [X \mapsto \tau]\theta_k \to \sigma \  ( 1 \le k \le n) $}
+\RightLabel{\scriptsize(T-CASE)}
+\BinaryInfC{$\Gamma \vdash \text{case}_{\sigma}\ e \text{ of } \{ c_1 \Rightarrow e_1\  |\ \dots \ |\ c_n \Rightarrow e_n \} : \sigma$}
+\end{prooftree}
+
+Se observ\u a c\u a tipul expresiilor \emph{case} \c si \emph{letrec} este deja specificat, astfel regulile au ca rol doar verificarea unor constr\^ angeri asupra expresiei.
+
+\begin{remark}
+\^ In cazul \emph{letrec}, este necesar\u a specificarea tipului. Un argument pentru acest fapt este urmatoarea expresie:
+$$ \text{letrec } f = \lambda x:{\textbf{Nat}} . f\app x $$
+care poate avea orice tip de forma $\bf{Nat} \to X $.
+
+Pentru \emph{case} nu este necesar\u a specificarea tipului. Pentru a elimina anota\c tia de tip putem \^ inlocui regula (E-CASE) cu urmatoarea regul\u a:
+
+\begin{prooftree}
+\AxiomC{ $\Gamma \vdash e : d \app \tau $}
+\AxiomC{ $\Gamma \vdash e_k : [X \mapsto \tau]\theta_k \to \sigma_k \  ( 1 \le k \le n) $}
+\AxiomC{ $\sigma_i = \sigma_j \ \forall i,j $}
+\RightLabel{\scriptsize(T-CASE')}
+\TrinaryInfC{$\Gamma \vdash \text{case}\ e \text{ of } \{ c_1 \Rightarrow e_1\  |\ \dots \ |\ c_n \Rightarrow e_n \} : \sigma_1$}
+\end{prooftree}
+
+\end{remark}
+
+\done\todo{se poate renun\c ta la specifica\c tiile de tip pentru letrec / case?}
+
+\subsection{Propriet\u a\c ti}
+\begin{theorem}[Siguran\c ta]
+System \frec are propriet\u a\c tile de progres \c si conservare, deci are proprietatea de siguran\c t\u a.
+\end{theorem}
+
+\begin{theorem}[Completitudine Turing] \label{compl_sysfrec}
+System \frec este Turing complet.
+\end{theorem}\done\todo{demonstra\c tie? completitudine turing}
+\begin{proof}[Demonstra\c tie]
+Voi ar\u ata c\u a orice func\c tie $\mu$-recursiv\u a este caclulabil\u a in System \frec. Consider\u am defini\c tia pentru tipul de numere naturale din exemplul \ref{nat_def}. Func\c tiile constant\u a, succesor, identitate \c si opreatorii de compunere, recursivitatea primitiv\u a \c si minimizare sunt calculabile.
+
+\begin{align*}
+\text{const}_{k}  &:= \lambda x_1:{\textbf{Nat}}. \dots \lambda x_k:{\textbf{Nat}}. z \\
+\text{succ}         &:= \lambda x:{\textbf{Nat}} . s\app x\\
+\text{id}_{k,n}     &:= \lambda x_1:{\textbf{Nat}}. \dots \lambda x_n:{\textbf{Nat}}.x_k \\
+\text{comp}_{k,m}   &:= \lambda h: \textbf{Nat}^{m} \to \textbf{Nat}. \lambda g_1: \textbf{Nat}^{k} \to \textbf{Nat} \dots \lambda g_m:\textbf{Nat}^{k} \to \textbf{Nat}. \\
+                    & \lambda x_1:\textbf{Nat}. \dots \lambda x_k:\textbf{Nat}. h \app (g_1\app \bar{x} )\app \dots \app (g_m\app \bar{x}) \\
+\text{p\_rec}_k     &:= \lambda g:\textbf{Nat}^{k} \to \textbf{Nat}. \lambda h:\textbf{Nat}^{k+2} \to \textbf{Nat}.\\
+                    & \text{letrec}_{\textbf{Nat}^{k+1} \to \textbf{Nat}} \ f =\lambda y:\textbf{Nat}.\lambda x_1:\textbf{Nat}. \dots \lambda x_k:\textbf{Nat}. \text{case}_{\textbf{Nat}}\ y \text{ of } \\
+                    & \qquad z \Rightarrow (g\app \bar{x}) \\
+                    & \qquad s \Rightarrow \lambda y' : \textbf{Nat}. (h\app y'\app (f\app y'\app \bar{x})\app \bar{x})\\
+\text{min}_k        &:= \lambda f. \lambda x_1:\textbf{Nat} \dots \lambda x_n:\textbf{Nat}. \\
+                    & (\text{letrec}_{\textbf{Nat}^{k+1} \to \textbf{Nat}}\  \mu = \lambda y:\textbf{Nat}. \text{case}_{\textbf{Nat}}\  f(y, \bar{x}) \text{ of } \\
+                    & \qquad z \Rightarrow y \\
+                    & \qquad s \Rightarrow \lambda x' .  \mu\app (s\app y))\app z
+\end{align*}
+
+
+unde $\bar{x} = x_1\app \dots\app x_k$ si $\textbf{Nat}^k = \textbf{Nat}\to\dots\to\textbf{Nat}$. Pentru simplitate am omis adnotarile de tip. \^ In orice caz toate variabilele sunt fie numere naturale fie func\c tii care lucreaz\u a cu numere naturale.
+
+Cum multimea functiilor $\mu$-recursive coincide cu mul\c timea func\c tiilor calculabile Turing, am ob\c tinut completitudinea limbajului.
+\end{proof}
+\begin{remark}
+O consecint\u a trivial\u a a completitudinii Turing este faptul c\u a System \frec nu are proprietatea de normalizare puternic\u a. Un exemplu de func\c tie a c\u arei evaluare nu se termin\u a este $(min_1\app succ)$.
+\end{remark}
+
+\done\todo{mai multe detalii.. Totu\c si se poate formula o versiune f\u ar\u a func\c tii recursive textual care s\u a aib\u a proprietaeta de normalizare puternic\u a}.
+

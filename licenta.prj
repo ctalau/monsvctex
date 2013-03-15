@@ -1,0 +1,98 @@
+303 Patch Control
+
+0
+0
+1
+licenta.tex
+19
+12
+9
+
+
+
+
+
+
+licenta.tex
+TeX
+152055795 0 -1 301 -1 237 0 0 1213 432 0 129 68 -1 -1 0 0 67 -1 -1 67 1 0 237 -1   0
+Capitole\Motivatie.tex
+TeX:UNIX
+17936371 2 -1 87 -1 68 0 0 1213 432 0 25 51 -1 -1 0 0 13862 -1 -1 13862 1 0 68 -1   0
+Capitole\Notiuni.tex
+TeX:UNIX
+17936371 0 -1 15117 -1 15056 0 0 1213 432 0 345 238 -1 -1 0 0 19961 -1 -1 19961 1 0 15056 -1   0
+Capitole\Expresivitate.tex
+TeX:UNIX
+17838067 0 -1 10463 -1 10474 0 0 1213 432 0 25 221 -1 -1 0 0 0 -1 -1 0 1 0 10474 -1   0
+Capitole\Implementare.tex
+TeX
+17838067 1 -1 3547 -1 3828 0 0 1213 432 0 25 323 -1 -1 0 0 11 -1 -1 11 1 0 3828 -1   0
+licenta.cls
+TeX:STY:UNIX
+17936370 0 68 41 149 20 0 0 1213 432 0 177 187 -1 -1 0 0 3 0 0 3 1 0 20 149   0
+Capitole\SysFhat.tex
+TeX
+17838067 0 -1 13956 -1 13639 0 0 1213 432 0 217 272 -1 -1 0 0 22270 -1 -1 22270 1 0 13639 -1   0
+Capitole\Proprietati.tex
+TeX
+17838067 0 -1 29176 -1 29416 0 0 1213 432 0 81 221 -1 -1 0 0 11 -1 -1 11 1 0 29416 -1   0
+Imagini\adj_sysfhat.tex
+TeX
+17838067 1 -1 0 -1 3286 0 0 1213 432 0 25 408 -1 -1 0 0 62 -1 -1 62 1 0 3286 -1   0
+Imagini\adj_sysfhat-mon.tex
+TeX
+286273523 0 -1 4263 -1 4575 0 0 1213 432 0 25 408 -1 -1 0 0 28 -1 -1 28 1 0 4575 -1   0
+Capitole\Planuri.tex
+TeX:UNIX
+1159155 0 -1 1558 -1 1169 0 0 1213 432 0 905 136 -1 -1 0 0 11 -1 -1 11 1 0 1169 -1   0
+bibliografie.bib
+BibTeX:UNIX
+1147891 0 159 23 31 16 0 0 1213 432 0 145 340 -1 -1 0 0 18 0 0 18 1 0 16 31   0
+Imagini\overview.tex
+TeX
+286273523 0 -1 1860 -1 263 0 0 1213 432 0 25 187 -1 -1 0 0 325 -1 -1 325 1 0 263 -1   0
+Speciale\Titlu.tex
+TeX
+269496307 0 -1 0 -1 10 0 0 1213 432 0 105 0 -1 -1 0 0 0 -1 -1 0 1 0 10 -1   0
+Imagini\thm_prover_arch.tex
+TeX
+269496307 0 -1 1291 -1 740 0 0 1213 543 0 577 85 -1 -1 0 0 60 -1 -1 60 1 0 740 -1   0
+Imagini\tbt_arch.tex
+TeX
+269496307 0 -1 0 -1 2127 0 0 1213 543 0 225 340 -1 -1 0 0 60 -1 -1 60 1 0 2127 -1   0
+C:\Users\cristi\AppData\Roaming\WinEdt Team\WinEdt 6\ConfigEx\Font.ini
+DATA:INI:EDT
+269484282 0 0 1 0 1 0 0 1213 537 1 73 0 -1 -1 0 0 -1 -1 -1 -1 1 0 1 0   0
+C:\Users\cristi\AppData\Roaming\WinEdt Team\WinEdt 6\Dict\User.dic
+DATA
+273678578 0 0 1 0 1 0 0 1213 537 1 73 0 -1 -1 0 0 -1 -1 -1 -1 1 0 1 0   0
+C:\Users\cristi\AppData\Roaming\WinEdt Team\WinEdt 6\Samples\Examples\Demo.tex
+TeX:Hard
+269496315 0 698 1133 690 1 0 0 1148 537 0 25 119 -1 -1 0 0 -1 -1 -1 -1 1 0 1 690   0
+
+*licenta.tex
+>
+*Speciale/Titlu
+*./Capitole/Motivatie
+>
+*Imagini/thm_prover_arch.tex
+*Imagini/tbt_arch.tex
+<
+*./Capitole/Notiuni
+*./Capitole/SysFhat
+>
+*Imagini/adj_sysfhat.tex
+<
+*./Capitole/Proprietati
+*./Capitole/Expresivitate
+>
+*Imagini/adj_sysfhat-mon.tex
+<
+*./Capitole/Implementare
+>
+*Imagini/overview.tex
+<
+*./Capitole/Planuri
+*bibliografie.bib
+<

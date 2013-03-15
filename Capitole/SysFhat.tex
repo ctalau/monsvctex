@@ -1,0 +1,345 @@
+% Capitolul 3 - 7 pag
+
+\chapter{System F\^{}}
+\label{Capitolul3}
+
+Se observ\u a c\u a pentru a rec\u apata proprietatea de normalizare puternic\u a, trebuie impuse unele constr\^ angeri asupra System \frec.
+\section{Scheme de recursivitate}
+\label{scheme_rec}
+\^ Inainte de a stabili ce constr\^ angeri trebuie impuse, vom prezenta unele scheme de recursivitate des folosite \citep{varmo_vene}. Acestea trebuie s\u a poat\u a fi exprimate \^ in limbaj \^ intr-un mod natural \c si cu o complexitate mic\u a.
+
+\subsection{Recursivitate structural\u a}
+Acest tip de recursivitate este folosit\u a \^ in general pe structuri de date cu un \emph{tip de date algebric} \c si se aplic\u a pentru cazul \^ in care valoarea func\c tiei pentru un termen depinde doar de valorile func\c tiei pe subtermenii direc\c ti ai acestui termen.
+\begin{definition}
+Un tip de date recursiv se nume\c ste \textbf{tip de date algebric} dac\u a fiecare constructor are tipul $ c_i : \Pi X . T_1\app X_1 \to \dots \to T_n\app X_n\to T X $, unde $T_k$ sunt identificatori de tipuri de date, si $X_k \subset X$.
+\end{definition}
+Aceste tipuri se mai numesc \emph{sume de produse}. Aceast\u a denumire provine din faptul c\u a un termen cu constructorul principal $c : T_1\to \dots T_n\to T $ poate fi reprezentat de tuplul argumentelor c\u arora acesta le este aplicat $(t_1,\dots,t_n)\in P = T_1 \times \dots \times T_n $, deci de un element din produsul cartezian al $T_1, \dots, T_n$. Cum tipul de date are mai mul\c ti constructori, elementele apartin $P_1 \cup \dots \cup P_m $ cu $P_i$ produse carteziene. \^ In teoria categoriilor reuniunea a doua mul\c timi se cheam\u a \emph{coprodus} sau \emph{sum\u a}, iar produsul cartezian \emph{produs}.
+\begin{example}
+Un exemplu de astfel de func\c ie recursiv\u a este functia
+\begin{align*}
+double(succ(x)) &= 2 + double(x)\\
+      double(0) &= 0
+\end{align*}
+\end{example}
+
+\subsection{Recursivitate primitiv\u a}
+Recursivitatea primitiv\u a este folosit\u a atunci c\^ and valoarea func\c tiei pentru un termen depinde de valorile func\c tiei pentru subtermenii direc\c ti ai termenului \c si de ace\c sti subtermeni. Se observ\u a c\u a recursivitatea primitiv\u a este mai expresiva decat cea structural\u a.
+
+\begin{example}
+Un exemplu de astfel de func\c tie recursiv\u a este func\c tia
+\begin{align*}
+fact(succ(x)) &= (x+1) \cdot fact(x)\\
+      fact(0) &= 1
+\end{align*}
+\end{example}
+
+\subsection{Recursivitate couse-of-value}
+\done\todo{cum sa zic in romana course-of-value}
+Recursivitatea {course-of-value} difer\u a de cea primitiv\u a prin faptul c\u a valoarea func\c tiei pentru un termen poate depinde \c si de valoare func\c tiei pentru subtermeni ai acestuia care nu sunt direc\c ti, dar ad\^ ancimea la care apar este finit\u a.
+
+\begin{example}
+Un exemplu de astfel de func\c tie recursiv\u a este func\c tia
+\begin{align*}
+fibo(succ(succ(x))) &= fibo(succ(x)) + fibo(x)\\
+      fibo(1) &= 1 \\
+      fibo(0) &= 1
+\end{align*}
+\end{example}
+
+Se observ\u a c\u a printr-un procedeu de memoizare, aceast\u a schem\u a de recursivitate este echivalent\u a cu recursivitatea primitiv\u a.
+\begin{example}
+Func\c tia din exemplul anterior se poate rescrie ca
+\begin{align*}
+fibo(n) &= x \text{ unde } (x,y) = fibo'(n)\\
+fibo'(succ(x)) &= (x+y, x) \text{ unde } (x,y) = fibo(x)\\
+      fibo'(0) &= (1,0)
+\end{align*}
+\end{example}
+Totu\c si, pentru a codifica aceast\u a schem\u a de recursivitate cu func\c tii primitiv recursive, trebuie folosit\u a o tehnic\u a  artificial\u a.
+\section{Renun\c tarea la recursivitatea textuala}
+
+Din demonstra\c tia teoremei \ref{compl_sysfrec} se poate observa c\u a pentru introducerea posibilit\u a\c tii de exprimare a unor func\c tii par\c tiale prin operatorul de minimizare s-a folosit recursivitatea textual\u a. O idee natural\u a pentru redob\^ andirea normaliz\u arii puternice este eliminarea acestei construc\c tii din limbaj. Totu\c si urmatoarea propozi\c tie infirm\u a proprietatea normaliz\u arii puternice pentru System \frec f\u ar\u a recursivitate textual\u a.
+\begin{proposition}\label{case_nonterm}
+Se pot construi \^ in System \frec expresii care nu se reduc la o form\u a normal\u a f\u ara\u  a folosi recursivitatea textual\u a.
+\end{proposition}
+\begin{proof}[Demonstra\c tie]
+Vom porni de la urmatoarea lem\u a.
+\begin{lemma}\label{inconsistence_to_nonterm}
+Dac\u a exist\u a expresii cu tipul $\bot := \Pi X. X$, atunci System \frec nu are proprietatea de normalizare puternic\u a.
+\end{lemma}
+\done\todo{demonstratie lema}
+Vom \^ incerca apoi s\u a construim un termen de tipul $\bot$. Pentru a demonstra aceast\u a propozi\c tie ne vom baza pe leg\u atura dintre logic\u a \c si teoria tipurilor prin \emph{izomorfisuml Curry-Howard} \citep{130367}. Vom nota prin $T$ propozi\c tia $\exists x . x : T$. Cu aceasta nota\c tie, obiectivul nostru devine acela de a demonstra propozi\c tia $\bot$. Consider\u am tipul de date
+$$ \textbf{{Datatype}  } D := c : (D \to \bot) \to D $$
+Regula de tip pentru analiza de cazuri pe $D$ corespunde urmatoarei reguli de deduc\c tie :
+\begin{prooftree}
+        \AxiomC{$D$}
+        \AxiomC{$(D \Rightarrow \bot) \Rightarrow X $}
+        \LeftLabel{$\forall X$}
+        \BinaryInfC{$ X $}
+\end{prooftree}
+Care se traduce prin urmatoarea propozi\c tie
+\begin{equation} \label{case_prop}
+\forall X. D \wedge ((D \Rightarrow \bot) \Rightarrow X) \Rightarrow X
+\end{equation}
+Atunci urmatorul arbore de deduc\c tie demonstreaz\u a propozi\c tia $\bot$.
+\begin{prooftree}
+\AxiomC{$c : (D \to \bot) \to D$}
+\UnaryInfC{$ (D \Rightarrow \bot) \Rightarrow D $ }
+        \AxiomC{\eqref{case_prop}}
+        \AxiomC{$(D \Rightarrow \bot) \Rightarrow (D \Rightarrow \bot)$}
+        \BinaryInfC{$D \Rightarrow (D \Rightarrow \bot)$}
+        \UnaryInfC{$D \Rightarrow \bot$}
+    \BinaryInfC{$D$}
+                    \AxiomC{$\vdots $}
+                    \UnaryInfC{$D \Rightarrow \bot$}
+        \BinaryInfC{$\bot$}
+\end{prooftree}
+Am folosit urmatoarea lem\u a clasic\u a ce apare \^ in contextul izomorfismului Curry-Howard.
+\begin{lemma}\label{curry_howard_impl}
+Propozi\c tia $ A \to B $ implic\u a propozi\c tia $A \Rightarrow B$. \qedhere
+\end{lemma}
+\end{proof}
+In continuare vom da \c si demonstra\c tiile celor dou\u a leme.
+\begin{proof}[Demonstra\c tia lemei \ref{inconsistence_to_nonterm}]
+Presupunem c\u a System \frec are proprietatea de normalizare puternic\u a \c si c\u a exist\u a o expresie $e : \bot $. Cum $e$ este normalizabil\u a de tipul $\Pi X. X$ inseamn\u a c\u a $\exists e'. e \downarrow \Lambda X.e'$. Prin $e \downarrow v$ am notat faptul c\u a $e$ se reduce la forma normal\u a $v$.
+
+Consider\u am acum expresia $e \app [ \textbf{{Bool}} ]$. Aceasta are tipul \textbf{{Bool}} \c si deci se reduce la o form\u a normal\u a care poate fi \textbf{{true}} sau \textbf{{false}}. Presupunem f\u ar\u a a restr\^ ange generalitatea c\u a aceasta este \textbf{{false}}. Deci
+\begin{equation*}
+(\Lambda X.e')\app [\textbf{{Bool}}] \downarrow \textbf{{false}} \Rightarrow [X \mapsto\textbf{{Bool}}] e' \downarrow \textbf{{false}}
+\end{equation*}
+
+Fie $e''$ astfel incat $e'\downarrow e''$ . Avem
+\begin{equation*}
+[X \mapsto\textbf{{Bool}}] e' \downarrow [X \mapsto\textbf{{Bool}}] e'' \Rightarrow
+[X \mapsto\textbf{{Bool}}] e'' = \textbf{{false}}  \Rightarrow
+e'' = \textbf{false}
+\end{equation*}
+
+Din proprietatea de conservare, ob\c tinem urm\u atoarele concluzii cu privire la tipul lui $e$.
+
+\begin{equation*}
+    e'' : \textbf{{Bool}} \Rightarrow
+    e'  : \textbf{{Bool}} \Rightarrow
+    e = \Lambda X.e' : \Pi X. \textbf{{Bool}} \neq \Pi X.X = \bot \qedhere
+\end{equation*}
+\end{proof}
+
+\begin{proof}[Demonstratia lemei \ref{curry_howard_impl}]
+Fie $e_{A \to B}$ astfel \^ inc\^ at $e_{A \to B} : A \to B$. Avem urmatoarele propozi\c tii
+\[\exists e_A. e_A : A \Rightarrow \exists e_B . e_B = e_{A \to B}\app e_A \Rightarrow \exists e_B : B \qedhere\]
+\end{proof}
+Se poate da \c si o demonstra\c tie mai artificial\u a, dar constuctiv\u a pentru propozi\c tia \ref{case_prop} (\citep{1614481}).
+\begin{proof}[Demonstra\c tia propozi\c tiei \ref{case_prop}]
+\begin{align*}
+p &:= \lambda x : D. \text{{case}}_{D\to \bot}\ x \text{ {of} } \{ c \Rightarrow \lambda y : D \to \bot . y \} &{ (D \Rightarrow (D \Rightarrow \bot))} \\
+\omega_D &:= \lambda x : D. p\app x\app x &{ (D \Rightarrow \bot)}\\
+\omega &:= p\app  (c\app \omega_D) \app (c\app \omega_D) &{ (\bot)}
+\end{align*}
+Expresia $\omega$ este cea cautat\u a. O secven\c t\u a infinit\u a de reduceri este urmatoarea
+\[ \omega \to p\app (c\app \omega_D)\app (c\app \omega_D) \to (\lambda y : D \to \bot . y\app  \omega_D)\app (c\app \omega_D) \to \omega_D (c\app \omega_D) \to p\app (c\app \omega_D)\app (c\app \omega_D)\to \dots \qedhere \]
+\end{proof}
+
+Pe baza propozi\c tiei \ref{case_nonterm} putem trage concluzia c\u a trebuie restric\c tionate ambele construc\c tii introduse: \c si analiza de cazuri \c si recursivitatea textual\u a.
+
+\section{Recursori}
+
+O alternativ\u a ar fi creearea unor operatori de ordin \^ inalt care s\u a \^ inlocuiasca recursivitatea textual\u a \c si s\u a reprezinte cele trei tipuri de recursivitate indicate la sec\c tiunea \ref{scheme_rec}.
+
+\begin{example}
+Pentru a exprima recursivitatea structural\u a pe arbori se poate defini o func\c tie similar\u a func\c tiei \emph{\textbf{fold}} pe liste cu urmatorul comportament
+\begin{align*}
+\textbf{\emph{Datatype}  } \emph{\textbf{Tree}} &:= leaf : \emph{\textbf{Tree}} \ |\  node : \emph{\textbf{Tree}} \to \emph{\textbf{Nat}} \to \emph{\textbf{Tree}} \to \emph{\textbf{Tree}} \\
+foldTree &:= \Lambda X .\lambda l:X. \lambda n : (X\to \emph{\textbf{Nat}} \to X \to X). \\
+ &\text{\emph{letrec}}_{\emph{\textbf{Tree}} \to X}\ f =  \lambda t'. \text{\emph{case}}_X \ t' \text{ \emph{of} }\\
+ &\qquad leaf \Rightarrow l\\
+ &\qquad node \Rightarrow \lambda t_1 : \emph{\textbf{Tree}}.\lambda nr :\emph{\textbf{Nat}}. \lambda t_2 : \emph{\textbf{Tree}} . n\app (f\app t_1)\app nr\app (f\app t_2)
+\end{align*}
+\end{example}
+
+Problema cu acest\u a alternativ\u a este c\u a folosirea recursorilor nu este deloc intuitiv\u a pentru programatori.
+\begin{example}
+Pentru a calcula dimensiunea unui arbore se foloseste urmatoarea expresie
+$$foldTree \app [\emph{\textbf{Nat}}]\app z \app  (\lambda l : \emph{\textbf{Nat}}.\lambda  n : \emph{\textbf{Nat}}.\lambda r :\emph{\textbf{Nat}} . (add\app l\app r\app (s\app z))) $$
+spre deosebire de varianta cu recursivitate textual\u a
+\begin{align*}
+\text{\emph{letrec}}_{\emph{\textbf{Tree}} \to \emph{\textbf{Nat}}} sz &= \lambda t  :\emph{\textbf{Tree}}.  \text{case}_{\emph{\textbf{Nat}}}\ t \text{ of } \\
+&\qquad leaf \Rightarrow z \\
+&\qquad node \Rightarrow \lambda l :\emph{\textbf{Tree}} .\lambda n: \emph{\textbf{Nat}}.\lambda r : \emph{\textbf{Tree}}. (add\app (sz\app l) \app (sz \app r)\app (s\app z))
+\end{align*}
+\end{example}
+
+\begin{remark}
+Aceast\u a construc\c tie poate fi generalizat\u a doar pentru o parte din tipurile de date recursive care se pot defini \^ in System \frec. De exemplu, pentru un tip cu un constructor de forma $ c : (T \to \emph{\textbf{Nat}}) \to T$, construc\c tia nu se extinde \^ in mod natural.
+\end{remark}
+
+\begin{remark}
+O mul\c time de tipuri pentru care extinderea func\c tioneaz\u a sunt tipurile de date \emph{algebrice}.
+\end{remark}
+
+\section{Tipuri cu dimensiune}
+
+Ideea din spatele System \fhat \citep{1614481} este de a extinde Sysyem \frec si de a folosi sistemul de tipuri pentru a exprima constr\^ angerile asupra analizei de cazuri \c si a recursivit\u a\c tii textuale.
+
+Pentru a restric\c tiona recursivitatea textual\u a, se folose\c ste reprezentarea tipurilor de date din System \frec ca limita unui \c sir de subtipuri (numite \c si aproximari) astfel \^ incat, \^ in cazul schemelor clasice de recursivitate, apelurile recursive sunt f\u acute asupra unor argumente al c\u aror tip \emph{des\-cres\-te} (\^ in raport cu relatia de subtip). \^ In urma restric\c tiei puse pentru a rezolva problema analizei de cazuri, rela\c tia de subtip devine \fixme{well-founded} (defini\c tia \ref{well_founded}), lucru care asigura terminarea apelurilor recursive.
+
+\begin{example}
+Daca pornim de la interpretarea tipului de numere naturale $\textbf{\emph{Nat}} \equiv \{ z, s(z), \dots \}$ atunci interpretarile subtipurilor acestuia sunt
+$$\textbf{\emph{Nat}}^p \equiv \{ z, s(z), \dots , s^p(z)\} \subset \textbf{\emph{Nat}}^{p+1} \subset \dots \subset \textbf{\emph{Nat}}^\infty \equiv \textbf{\emph{Nat}} $$
+\end{example}
+
+Vom reprezenta aceste aproximari prin \emph{tipuri cu dimensiune} cu urmatoarea sintax\u a:
+\begin{gather*}
+s := V_s \ |\ \hat{s}\ |\ \infty\\
+\overline{T} := X \ |\ \overline{T} \to \overline{T}\ |\ \Pi X. \overline{T}\ |\ d^s\app \overline{T}
+\end{gather*}
+
+\begin{example}
+Dimensiuni: $\infty$, $\hat{\iota}$. Tipuri cu dimensiune: $\textbf{\emph{Nat}}^\infty$, $\textbf{\emph{Nat}}^{\hat{\iota}}$. Din punct de vedere intuitiv, dac\u a $\textbf{\emph{Nat}}^{\iota}$ are interpretarea $\textbf{\emph{Nat}}^{p}$ atunci $\textbf{\emph{Nat}}^{\hat{\iota}}$ are interpretarea $\textbf{\emph{Nat}}^{p+1}$.
+\end{example}
+Problema analizei de cazuri este rezolvat\u a prin introducerea \emph{tipurilor inductive cu dimensiune}.
+\begin{definition}
+Un tip de date se nume\c ste \textbf{tip inductiv cu dimensiune} dac\u a to\c ti constructorii au tipul $c_k : \Pi X. \overline{\theta}_k \to d^{\hat{\iota}} X$, unde
+\begin{itemize}\addtolength{\itemsep}{-0.5\baselineskip}
+  \item Constructorul de tip de date $d$ apare in $\overline{\theta}_k$ doar pe pozi\c tii pozitive. O pozi\c tie este pozitiv\u a, dac\u a \^ in calea c\u atre r\u adacin\u a, \^ in arborele sintactic al tipului, se afl\u a \^ in st\^ anga constructorului $\to$ de numar par de ori.
+  \item Orice apari\c tie a lui $d$ in $\overline{\theta}_k$ are dimensiunea $\iota$.
+  \item Orice apari\c tie a altui constructor de tip de date $d' \neq d$ are dimensiuneea $\infty$.
+\end{itemize}
+\end{definition}\done\todo{poza cu diagrama adj}
+Func\c tia $|.|:\overline{T} \to T$ este func\c tia care \c sterge adnot\u arile de dimensiune, de exemplu $|d^\iota X| = d X $.
+Sintaxa termenilor si regulile de evaluare sunt identice cu cele ale System \frec.
+\begin{example}
+\^ In urmatoarea diagram\u a ADJ \citep{adj} este prezentat\u a structura tipului de liste de numere naturale. Discurile reprezint\u a tipuri, cu incluziunea de discuri reprezent\^ and rela\c tia de subtip. S\u agetile albastre reprezint\u a constructori, sursele s\u age\c tilor reprezint\u a tipuri din aritate, iar destina\c tiile reprezinta tipul rezultat. Fiecare constructor apare de mai multe ori pentru fiecare valoare a dimensiunii (polimorfism de dimensiune).
+\begin{figure}
+\begin{center}
+\input{Imagini/adj_sysfhat.tex}
+\end{center}
+\caption{Diagrama ADJ pentru List \c si Nat}
+\label{adj_list_nat}
+\end{figure}
+\end{example}
+
+
+\subsection{Rela\c tia de subtip}
+Rela\c tia de subtip \^ intre tipurile cu dimensiune este derivat\u a din rela\c tia de ordine \^ intre dimensiuni
+\begin{align*}
+s &\le s &  s \le s'  \wedge s' &\le s''  \Rightarrow s \le s''\\
+s &\le \hat{s} & s &\le \infty
+\end{align*}
+Constructorul de tip $\to$ este contravariant \^ in primul argument \c si covariant \^ in al doilea. Intuitiv, o func\c tie care poate fi apelat\u a cu argumente de tip $T$, poate fi apelat\u a \c si cu argumente de tip $T' \sqsubseteq T$ \^ in timp ce rezultatul unei func\c tii $T_r$ poate fi considerat ca fiind de tip $T_r' \sqsupseteq T_r$. Regula pentru constructorii de tip defini\c ti de utilizator combin\u a regula de mo\c stenire a rela\c tiei de subtip din rela\c tia de ordine \^ intre dimensiuni cu regula de covarian\c t\u a a constructorilor.
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+\begin{prooftree}
+\AxiomC{$\overline{\tau}'\sqsubseteq \overline{\tau}$}
+\AxiomC{$\overline{\sigma}\sqsubseteq \overline{\sigma}'$}
+\BinaryInfC{$ \overline{\tau} \to\overline{\sigma} \sqsubseteq \overline{\tau}' \to\overline{\sigma}'$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{}
+\UnaryInfC{$X \sqsubseteq X $}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$s \le s'$}
+\AxiomC{$\overline{\tau}\sqsubseteq \overline{\sigma}$}
+\BinaryInfC{$ d^s \overline{\tau} \sqsubseteq d^{s'} \overline{\sigma}$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$\overline{\tau}\sqsubseteq \overline{\sigma}$}
+\UnaryInfC{$ \Pi X.\overline{\tau} \sqsubseteq \Pi X.\overline{\sigma}$}
+\end{prooftree}
+\end{multicols}
+
+\subsection{Reguli de tip}
+\label{reguli_sysfhat}
+Chiar dac\u a la nivel sintactic, adnot\u arile cu tipuri folosesc tipuri din System \frec, tipurile deduse automat \^ in System \fhat sunt tipuri cu dimensiune.
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+
+\begin{prooftree}
+\AxiomC{$x : \overline{\sigma} \in \overline{\Gamma} $}
+\RightLabel{\scriptsize (T-VAR)}
+\UnaryInfC{$\overline{\Gamma} \vdash x : \overline{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\overline{\Gamma}, x : \overline{\tau} \vdash e : \overline{\sigma} $}
+\RightLabel{\scriptsize (T-ABS)}
+\UnaryInfC{$\overline{\Gamma} \vdash \lambda x : |\overline{\tau}|. e : \overline{\tau} \to \overline{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\overline{\Gamma} \vdash e : \overline{\sigma} $}
+\RightLabel{\scriptsize (T-TABS)}
+\UnaryInfC{$\overline{\Gamma} \vdash \Lambda X . e : \Pi X. \overline{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$c_k \in \mathcal{C}(d)$}
+\RightLabel{\scriptsize (T-CONS)}
+\UnaryInfC{$\overline{\Gamma} \vdash c_k : \Pi X. \overline{\theta}_k\to d^{\hat{\iota}} X $}
+\end{prooftree}
+
+\columnbreak
+
+\begin{prooftree}
+\AxiomC{$\overline{\Gamma} \vdash e : \overline{\sigma}$}
+\AxiomC{$\overline{\sigma} \sqsubseteq \overline{\tau} $}
+\RightLabel{\scriptsize (T-SUB)}
+\BinaryInfC{$\overline{\Gamma} \vdash e : \overline{\tau} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\overline{\Gamma} \vdash e : \overline{\tau} \to \overline{\sigma}$}
+\AxiomC{$\overline{\Gamma} \vdash e' : \overline{\tau} $}
+\RightLabel{\scriptsize (T-APP)}
+\BinaryInfC{$\overline{\Gamma} \vdash e\app e' : \overline{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\overline{\Gamma} \vdash e : \Pi X.\overline{\sigma} $}
+\RightLabel{\scriptsize (T-TAPP)}
+\UnaryInfC{$\overline{\Gamma} \vdash e \app [|\overline{\tau}|] : [ X \mapsto \overline{\tau}] \overline{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{\scriptsize (T-LETREC)}
+\noLine
+\UnaryInfC{$\overline{\Gamma}, f : d^\iota\tau \to \overline{\theta} \vdash e : d^{\hat{\iota}}\tau \to [\iota \mapsto \hat{\iota}] \overline{ \theta}$}
+\AxiomC{$\iota \text{\scriptsize pos} \overline{\theta} $}
+\insertBetweenHyps{\hskip 2pt}
+\BinaryInfC{$\overline{\Gamma} \vdash (\text{letrec}_{d|\overline{\tau}| \to |\overline{\theta}|} f = e) : d^s \overline{\tau} \to [\iota \mapsto s]\overline{\theta}$}
+\end{prooftree}
+
+\end{multicols}
+\begin{prooftree}
+
+\AxiomC{$\overline{\Gamma} \vdash e : d^{\hat{s}} \overline{\tau}$}
+\AxiomC{$\overline{\Gamma} \vdash e_k : [X \mapsto \overline{\tau}, \iota \mapsto s]\overline{\theta}_k \to \overline{\sigma} $}
+\AxiomC{$\overline{\Gamma} \vdash c_k : \Pi X. \overline{\theta}_k \to d^{\hat{\iota}} X$}
+\RightLabel{\scriptsize (T-CASE)}
+\TrinaryInfC{$\overline{\Gamma} \vdash \text{case}_{|\overline{\sigma}|}\ e \text{ of } \{c_1 \Rightarrow e_1\ |\ \dots \ |\ c_n \Rightarrow e_n\} : \overline{\sigma} $}
+\end{prooftree}
+
+\begin{remark}
+Regula \textbf{ {\scriptsize (T-CONS)}} spune c\u a aplicarea unui constructor unor valori aflate \^ intr-o aproximatie a tipului de date, d\u a ca rezultat o valoare din aproximarea urmatoare.
+\end{remark}
+
+\begin{remark}
+Regula \textbf{{\scriptsize (T-CASE)}} spune contrariul, \c si anume c\u a orice valoare care se afl\u a \^ intr-o aproximatie de dimensiune $\hat{s}$ poate fi supus\u a analizei de cazuri pentru a ob\c tine valori din aproxima\c tia $s$.
+\end{remark}
+
+\begin{remark}
+Regula \textbf{{\scriptsize (T-LETREC)}} spune c\u a dac\u a o func\c tie definit\u a pe o aproxima\c tie poate fi extins\u a pe urmatoarea aproxima\c tie, atunci ea poate fi extins\u a pe intreg tipul de date, ca limit\u a a defini\c tiilor sale pe aproxim\u ari. Variabila $\iota$ trebuie s\u a nu apar\u a \^ in $\overline{\Gamma},\overline{\tau}$.
+\end{remark}
+
+\begin{remark}
+\^ In procesul de deduc\c tie a tipului pentru o expresie, regula care trebuie aplicat\u a este unic determina\u ta de structura sintactic\u a a expresiei. Totu\c si procesul de stabilire a tipului bazat pe regulile de mai sus are o component\u a de nedeterminism deoarece trebuie s\u a \emph{ghiceasca} dimensiunile tipurilor. Astfel, spre deosebire de regulile System \frec, aceste reguli au doar rol teoretic; \^ in implementare se va folosi alt set de reguli echivalent.
+\end{remark}
+
+\subsection{Calita\c ti ca limbaj de programare}
+
+Din punct de vedere al utiliz\u arii practice, System \fhat are aceeasi sintax\u a cu cea a System \frec ca\-re la r\^ andul s\u au se apropie de cea a unor limbaje de programare func\c tionala ca Haskell sau ML. O diferen\c t\u a major\u a fa\c t\u a de acastea este faptul c\u a programatorul trebuie s\u a adnoteze programele cu informa\c tii de tip. Totu\c si dimensiunile tipului se deduc automat.
+
+Un lucru important \^ in cazul programelor despre care compilatorul nu poate decide dac\u a se termin\u a, este c\u a programatorul s\u a aiba \emph{apriori} intui\c tia dac\u a acestea vor trece de verificarea de tip \c si s\u a in\c teleag\u a \emph{aposteriori} din ce cauz\u a nu s-a putut demonstra terminarea programului. \^ In cazul System \fhat, ideea de demonstra\c tie este simpl\u a: dimensiunea argumentelor unei func\c tii textual recursive trebuie s\u a scad\u a. Mai mult, pentru tipuri de date comune precum liste sau arbori, dimensiunea tipului are o semnifica\c tie foarte natural\u a : lungimea listei sau ad\^ ancimea arborelui.
+
+\done\todo{calitati ca limbaj de prog.}
+

@@ -1,0 +1,343 @@
+\chapter{Expresivitatea System F\^{} \c si a extensiilor sale}
+\label{Capitolul5}
+\lhead{Capitolul 5. \emph{Expresivitate}}
+
+\section{Incompletitudinea Turing}
+
+Un neajuns al System \fhat \^ in privin\c ta expresivit\u a\c tii este remarcat de urmatoarea teorem\u a \citep{citeulike:4023285}
+
+\begin{theorem}\label{turing_incomplete}
+Dac\u a toate programele ce pot fi scrise \^ intr-un limbaj de programare se termin\u a, atunci exist\u a programe (expresibile cu ma\c sini Turing) care se termin\u a intotdeauna, printre care \c si interpretorul limbajului respectiv, \c si care nu pot fi scrise \^ in acel limbaj.
+\end{theorem}
+
+\begin{proof}[Demonstra\c tie]
+Vom ar\u ata c\u a nu se poate scrie \^ in System \fhat un interpretor pentru acesta. Mai exact, vom considera doar cazul \^ in care singurul tip de date definit \^ in limbajul interpretat este \textbf{Bool}. Expresiile sunt reprezentate prin arborele lor sintactic ca membrii ai unui tip de date \textbf{Expresie} (Figura \ref{expresie_datatype}) . Am folosit numerotarea deBrujin pentru a re\c tine variabilele din program.
+\begin{figure}
+\begin{equation*}
+\begin{split}
+Datatype\ \textbf{Expresie}
+                    &:= var : \textbf{Nat} \to \textbf{Expresie}^{\hat{\iota}}\\
+                    &|\ lambda : \textbf{Expresie}^{\iota} \to \textbf{Expresie}^{\hat{\iota}} \\
+                    &|\ app : \textbf{Expresie}^{\iota}\to \textbf{Expresie}^{\iota}\to \textbf{Expresie}^{\hat{\iota}}  \\
+                    &|\ tLambda : \textbf{Expresie}^{\iota} \to\textbf{Tip} \to \textbf{Expresie}^{\hat{\iota}} \\
+                    &|\ tApp : \textbf{Nat} \to \textbf{Expresie}^{\iota}\to \textbf{Expresie}^{\iota}\to \textbf{Expresie}^{\hat{\iota}}  \\
+                    &|\ case : \textbf{Tip} \to \textbf{Expresie}^{{\iota}} \to \textbf{Expresie}^{{\iota}}\to \textbf{Expresie}^{{\iota}}\to \textbf{Expresie}^{\hat{\iota}}\\
+                    &|\ letrec : \textbf{Tip} \to \textbf{Nat} \to \textbf{Expresie}^{{\iota}} \to \textbf{Expresie}^{\hat{\iota}}\\
+                    &|\ true : \textbf{Expresie} \\
+                    &|\ false : \textbf{Expresie} \\
+Datatype\ \textbf{Tip}
+                    &:= tvar   : \textbf{Nat} \to \textbf{Tip}^{\hat{\iota}}\\
+                    &|\ func   : \textbf{Tip}^{{\iota}}\to \textbf{Tip}^{{\iota}}\to \textbf{Tip}^{\hat{\iota}}\\
+                    &|\ pi     : \textbf{Tip}^{{\iota}}\to \textbf{Tip}^{\hat{\iota}} \\
+                    &|\ tBool  : \textbf{Tip}^{\hat{\iota}}
+\end{split}
+\end{equation*}
+\caption{Tipul de date Expresie}
+\label{expresie_datatype}
+\end{figure}
+Un interpretor pentru subsetul System \fhat propus mai sus este o func\c tie matematic\u a $interpret$ care prime\c ste reprezentarea unui program, \c si a unei expresii \c si \^ intoarce $true$ dac\u a programul aplicat expresiei respect\u a condi\c tiile legate de tip \c si se evalueaz\u a la $true$ \c si $false$ altfel.
+
+Presupunem c\u a exist\u a o func\c tie \^ in System \fhat, $f : \textbf{Expresie} \to \textbf{Expresie} \to \textbf{Bool}$ care calculeaz\u a rezultatul func\c tiei $interpret$. Consider\u am func\c tia
+$$ g := \lambda x : \textbf{Expresie}. \text{case}_{\textbf{Bool}} f\app x\app x \text{ of } \{ true \Rightarrow false | false \Rightarrow true \} $$
+\c si reprezentarea acesteia ca valoare a tipului de date \textbf{Expresie}:
+$$ e_g := lambda\app (case\app tBool \app  (app\app (app\app f\app (var\app z)) (var\app z))\app false\app true ) $$
+Cum expresia $(g\app e_g)$ respect\u a constrangerile de tip cerute, avem c\u a:
+$$ (g\app e_g) \downarrow v \in \{true, false\} \Rightarrow (interpret\app e_g\app e_g) = v $$
+Din confluen\c ta sistemului de rescriere, avem c\u a:
+$$ (g\app e_g) \downarrow v \wedge (g\app e_g) \to not(f\app e_g\app e_g) \Rightarrow (f\app e_g\app e_g) \downarrow not\app v $$
+Deci $f$ difer\u a de func\c tia $interpret$.
+\done\todo{de demostrat cu interpretorul}
+\end{proof}
+
+\begin{corollary}
+Limbajul System \fhat este Turing incomplet.
+\end{corollary}
+
+\section[Programe expresibile]{Programe expresibile in System F\^{}}
+% 1 pag
+Toate cele trei tipuri de recursivitate descrise \^ in sec\c tiunea \ref{scheme_rec} pot fi exprimate \^ in System \fhat. Pentru cazul recursivit\u a\c tii primitive putem adapta demonstra\c tia teoremei \ref{compl_sysfrec}. Singurul lucru care trebuie facut este determinarea unui tip pentru operatorului de recursivitate primitiv\u a. Vom prezenta un exemplu de abore de deduc\c tie pentru tipul acestui operator \^ in System \fhat
+\begin{align*}
+\text{p\_rec}_0     &:= \lambda g:\textbf{Nat}. \lambda h:\textbf{Nat} \to \textbf{Nat}\to \textbf{Nat}.\\
+                    & \text{letrec}_{\textbf{Nat}\to\textbf{Nat}}\ f =\lambda y : \textbf{Nat} . \text{case}_{\textbf{Nat}}\ y \text{ of } \\
+                    & \qquad z \Rightarrow g \\
+                    & \qquad s \Rightarrow \lambda y'. (h\app y'\app (f\app y'))
+\end{align*}
+Not\u am cu  $\Gamma := g:\textbf{Nat}^{\infty} , h:\textbf{Nat}^{\infty} \to \textbf{Nat}^{\infty}\to \textbf{Nat}^{\infty}, f : \textbf{Nat}^{\iota}\to \textbf{Nat}^{\infty}$. Conform {\scriptsize (T-LETREC)}, este suficient s\u a demonstr\u am
+\begin{prooftree}
+\AxiomC{$ y :  \textbf{Nat}^{\hat{\iota}} \in \Gamma_1$}
+\UnaryInfC{$\Gamma_1 \vdash y :  \textbf{Nat}^{\hat{\iota}}$}
+    \AxiomC{$g :  \textbf{Nat}^{\infty} \in \Gamma_1 $}
+    \UnaryInfC{$\Gamma_1 \vdash g :  \textbf{Nat}^{\infty}$}
+
+        \AxiomC{\scriptsize \dots continua mai jos}
+        \UnaryInfC{$\Gamma_1 \vdash \lambda y': \textbf{Nat}.(h\app y'\app(f\app y')): \textbf{Nat}^{{\iota}} \to \textbf{Nat}^{\infty}$}
+
+\RightLabel{\scriptsize (T-CASE)}
+\TrinaryInfC{$\Gamma_1 := \Gamma, y : \textbf{Nat}^{\hat{\iota}} \vdash \text{case}_{\textbf{Nat}}\ y \text{ of } \{z \Rightarrow g \:|\: s
+\Rightarrow \lambda y' :\textbf{Nat}. (h\app y'\app (f\app y')) \} : \textbf{Nat}^{\infty}$ }
+
+\RightLabel{\scriptsize (T-ABS)}
+\UnaryInfC{$\Gamma \vdash \lambda y : \textbf{Nat} . \text{case}_{\textbf{Nat}}\ y \text{ of } \{z \Rightarrow g \:|\: s \Rightarrow \lambda y' : \textbf{Nat}. (h\app y'\app (f\app y')) \}  : \textbf{Nat}^{\hat{\iota}} \to \textbf{Nat}^{\infty}$}
+\end{prooftree}
+
+Aplicarea regulilor de tip continu\u a cu
+\begin{prooftree}
+\AxiomC{\scriptsize \dots continua mai jos}
+\UnaryInfC{$\Gamma_2 \vdash (h\app y'): \textbf{Nat}^{\infty}\to \textbf{Nat}^{\infty}$}
+
+        \AxiomC{$ y' :  \textbf{Nat}^{{\iota}} \in \Gamma_2$}
+        \UnaryInfC{$\Gamma_2 \vdash y': \textbf{Nat}^{\iota}$}
+            \AxiomC{$ f :  \textbf{Nat}^{\iota}\to \textbf{Nat}^{\infty} \in \Gamma_2$}
+            \UnaryInfC{$\Gamma_2 \vdash f : \textbf{Nat}^{\iota}\to \textbf{Nat}^{\infty}$}
+        \BinaryInfC{$\Gamma_2 \vdash (f\app y') : \textbf{Nat}^{\infty}$}
+\BinaryInfC{$\Gamma_2:=\Gamma_1, y':\textbf{Nat}^\iota \vdash h\app y'\app (f\app y') : \textbf{Nat}^{\infty}$}
+\UnaryInfC{$\Gamma_1 \vdash \lambda y': \textbf{Nat}.(h\app y'\app(f\app y')): \textbf{Nat}^{{\iota}} \to \textbf{Nat}^{\infty}$}
+\end{prooftree}
+Pentru a completa ra\c tionamentul mai trebuie demonstrat c\u a
+\begin{prooftree}
+\AxiomC{$ y' :  \textbf{Nat}^{{\iota}} \in \Gamma_2$}
+    \AxiomC{$ \iota \le \infty$}
+    \UnaryInfC{$ \textbf{Nat}^{{\iota}} \sqsubseteq \textbf{Nat}^{{\infty}}$}
+\BinaryInfC{$\Gamma_2 \vdash y': \textbf{Nat}^{\infty}$}
+    \AxiomC{$ h :  \textbf{Nat}^{\infty}\to \textbf{Nat}^{\infty} \in \Gamma_2$}
+    \UnaryInfC{$\Gamma_2 \vdash h : \textbf{Nat}^{\infty}\to \textbf{Nat}^{\infty}$}
+\BinaryInfC{$\Gamma_2 \vdash (h\app y'): \textbf{Nat}^{\infty}\to \textbf{Nat}^{\infty}$}
+\end{prooftree}
+
+\^ In acelasi mod se aplic\u a regulile de tip \c si pentru demonstra\c tia termin\u arii \c si \^ in celealte scheme de recursivitate. \done\todo{functii primitiv recursive}
+
+\section[Programe (greu /in)expresibile]{Programe (greu /in)expresibile in System F\^{}}
+% 1 pag
+Cu siguranta c\u a exist\u a \c si programe care se termina dar caro\u ra, scrise \^ in forma naturala, nu li se poate stabili un tip \^ in System \fhat. Un exemplu este dat de parcurgerea \^ in l\u a\c time a unui arbore binar. Aceasta poate fi scris\u a in Haskell astfel:
+
+\begin{lstlisting}[label=bfs,captionpos=b,caption=Parcurgerea \^ in l\u a\c time a unui arbore binar,language=Haskell]
+data Tree = Nd Tree Int Tree | Lf deriving Show;
+bfs [] o                   = ([] , o)
+bfs ((Nd l val r) : nds) o = let ( q' , o') = bfs (nds ++ [l,r]) o  in
+                                 ( q' , val : o')
+bfs (Lf : nds) o           = bfs nds o
+mainBfs root               = snd $ bfs [root] []
+\end{lstlisting}
+
+Prin \^ inlocuirea defini\c tiilor prin pattern-mathcing cu expresii bazate pe construc\c tia \emph{case} \c si adnotari cu tipuri, acest program poate fi scris \c si in System \frec. Totusi dimensiunea tipului nici unuia din argumentele func\c tiei \emph{bfs} nu scade. Lista cu noduri ce trebuie parcurse cre\c ste atunci c\^ and este atins un nod \c si scade atunci c\^ and este atins\u a o frunz\u a. Argumentul ce con\c tine lista nodurilor parcurse cre\c ste la fiecare apel al func\c tiei.
+\done\todo{ gasit un exemplu care nu poate fi tipat / greu tipat, parcurgerea in latime}
+\section{Tipuri de date coinductive}
+% 1 pag
+\done\todo{ scurta descriere a extensiei + referinta la 1. }
+O categorie important\u a de programe care sunt folosite \^ in practica dar nu pot fi exprimate in System \fhat sunt programele reactive, de exemplu: sisteme de operare, programe cu interfa\c ta grafica, etc. Acestea pot fi modelate ca func\c tii de la un flux (posibil infinit) de cereri catre un flux (posibil infinit) de r\u aspunsuri. Pentru introducerea acestui tip de programe \^ in limbaj, acesta ar trebui extins cu \emph{tipuri de date coinductive} \citep{citeulike:4023285}.
+\begin{example}
+$$ coDatatype \quad \textbf{\emph{coList}} := co\_cons : \textbf{\emph{Nat}}\to \textbf{\emph{coList}} \to \textbf{\emph{coList}} $$
+\end{example}
+
+Acestea sunt un concept dual al celui de tipuri de date inductive, \c si sunt folosite pentru a exprima obiecte infinite, dar care au o structur\u a regulat\u a. \^ In cazul func\c tiilor care lucreaz\u a pe astfel de tipuri de date nu se pune problema terminarii. Totu\c si, daca luam drept valori (forme normale) toate expresiile care sunt aplicatii de \emph{co-constructori}, cu o strategie de evaluare lene\c s\u a, se poate stabili proprietatea de normalizare (slaba) \^ in condi\c tii similare cu cele ale System \fhat \citep{DBLP:journals/ita/Abel04}.
+
+Aceast\u a tactic\u a a fost folosita in Haskell pentru a scrie programe interactive \^ inainte de introducerea monadului IO, sub forma \emph{dialogurilor}\citep{158524}. Astfel programul principal trebuia sa aib\u a tipul $\texttt{Dialogue} \equiv \texttt{[Request]} \to \texttt{[Response]}$. Acesta era executat de un wrapper care construia pe baza interac\c tiunii utilizatorului (co)lista \texttt{[Request]} \c si apoi prezenta utilizatorului, pe masur\u a ce erau \^ intoarse de program, elementele din (co)lista \texttt{[Response]}.
+
+\section{Tipuri monadice}\label{tip_monad}
+% 3 pag
+\newcommand\id[1]{ {#1}_{\text{id}} }
+\newcommand\nt[1]{ {#1}_{\text{nt}} }
+
+O alta solu\c tie pentru includerea \^ in limbaj a unor programe care nu se termina este sa le asociem acestora un alt set de tipuri de date disjunct fa\c ta de tipurile System \fhat. O solu\c tie similara este folosita \^ in Haskell pentru separarea \^ intre programele care fac opera\c tii de IO fa\c ta de programele \emph{pure} \citep{158524}. \^ In Haskell o expresie care se evalueaz\u a la un \^ intreg \c si este posibil sa fac\u a opera\c tii de IO are tipul $\textbf{IO Int}$, altfel are tipul $\textbf{Int}$ sau echivalent $\textbf{ID Int}$. \^ In cazul nostru o expresie care se evalueaz\u a la o un \^ intreg, dar a carei evaluare este posibil s\u a nu se termine, o sa aiba tipul $\nt{\textbf{Int}}$, altfel $\id{\textbf{Int}}$.
+
+\subsection{Nota\c tie}
+
+Cu toate c\u a sintaxa declara\c tiilor de tipuri r\u amane neschimbat\u a, semantica acestora este diferit\u a. Astfel, pentru fiecare tip de date inductiv cu dimensiune, $d$, declarat vor exista dou\u a tipuri de date: $\id{d}$ pentru programe care au un tip \^ in System \fhat, \c si $\nt{d}$ pentru programe a c\u aror terminare nu se poate demonstra conform System \fhat dar respecta reguli de tip de genul celor din System \frec.
+
+Tipurile de date sunt formate cu constructorii $\id{d},\nt{d},\to,\Pi$. Vom numi aceste tipuri, \textbf{tipuri monadice} pentru c\u a tipurile de date etichetate cu \emph{nt} sunt similare monazilor folosi\c ti in Haskell. Vom nota cu \textbf{ID} mul\c timea tipurilor care au \^ in componen\c ta doar constructori de tip de forma $\id{d}$, \c si cu \textbf{NT} complementara sa.
+
+Pentru tipuri monadice vom folosi variabile precum $\widetilde{\tau}, \widetilde{\sigma}$, pentru tipuri cu dimensiune vom folosi $\overline{\tau}, \overline{\sigma}$ iar pentru tipuri simple System \frec - $\tau, \sigma$. Nota\c tia $\id{\tau}$ reprezinta adnotarea fiecarui constructor de tip din $\tau$ cu "id". Func\c tia $|.| : \widetilde{T} \to T_{\text{System \frec}}$ va \c sterge \c si dimensiunile tipurilor \c si adnotarile specifice tipurilor monadice.
+\done\todo{Notatie}
+
+\subsection{Reguli de tip}
+
+Singura modificare \^ in regulile de subtip este aceea c\u a regula pentru constructori de tip defini\c ti de utilizator este \^ impartita in dou\u a. Pentru tipuri din \textbf{NT} ea face toate aproxim\u arile egale \^ intre ele \c si izomorfe cu tipul de date System \frec corespunz\u ator:
+
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+\begin{prooftree}
+\AxiomC{$s \le s'$}
+\AxiomC{$ \widetilde{\tau} \sqsubseteq \widetilde{\sigma}$}
+\BinaryInfC{$ \id{d}^s \widetilde{\tau} \sqsubseteq \id{d}^{s'} \widetilde{\sigma}$}
+\end{prooftree}
+\columnbreak
+\begin{prooftree}
+\AxiomC{$\widetilde{\tau}\sqsubseteq \widetilde{\sigma}$}
+\UnaryInfC{$ \nt{d}^s \widetilde{\tau} \sqsubseteq \nt{d}^{s'} \widetilde{\sigma}$}
+\end{prooftree}
+\end{multicols}
+Regulile de tip sunt inlocuite cu cele de mai jos
+\begin{multicols}{2}
+\setlength\columnseprule{.4pt}
+\begin{prooftree}
+\AxiomC{$x : \widetilde{\sigma} \in \widetilde{\Gamma} $}
+\RightLabel{\scriptsize (MT-VAR)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash x : \widetilde{\sigma} $}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma}, x : \id{\tau} \vdash e : \widetilde{\sigma} $}
+\RightLabel{\scriptsize (MT-ABS)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash \lambda x : {\tau} . e : \id{\tau} \to \widetilde{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \widetilde{\sigma}$}
+\RightLabel{\scriptsize (MT-TABS)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash \Lambda X . e : \Pi X. \widetilde{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$c \in \mathcal{C}(d)$}
+\RightLabel{\scriptsize (MT-CONS)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash c : \Pi X. \id{\theta} \to \id{d}^{\hat{\iota}} X $}
+\end{prooftree}
+
+\columnbreak
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \widetilde{\sigma}$}
+\AxiomC{$\widetilde{\sigma} \sqsubseteq \widetilde{\tau} $}
+\RightLabel{\scriptsize (MT-SUB)}
+\BinaryInfC{$\widetilde{\Gamma} \vdash e : \widetilde{\tau} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \widetilde{\tau} \to \widetilde{\sigma}$}
+\AxiomC{$\widetilde{\Gamma} \vdash e' : \widetilde{\tau} $}
+\RightLabel{\scriptsize (MT-APP)}
+\BinaryInfC{$\widetilde{\Gamma} \vdash e\app e' : \widetilde{\sigma} $}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \Pi X.\widetilde{\sigma} $}
+\RightLabel{\scriptsize (MT-TAPP)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash e \app [{\tau}] : [ X \mapsto \id{\tau}] \widetilde{\sigma} $}
+\end{prooftree}
+
+\end{multicols}
+\vspace{2pt}
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \id{d^{\hat{s}}} \app \id{{\tau}} $}
+\AxiomC{$\widetilde{\Gamma} \vdash e_k : [X \mapsto \id{{\tau}}, \iota \mapsto s]\widetilde{\theta}_k \to \id{\sigma} $}
+\AxiomC{$\widetilde{\Gamma} \vdash c_k : \Pi X. \widetilde{\theta}_k \to d^{\hat{\iota}} X$}
+\RightLabel{\scriptsize (MT-CASE)}
+\insertBetweenHyps{\hskip 5pt}
+\TrinaryInfC{$\widetilde{\Gamma} \vdash \text{case}_{{\sigma}}\ e \text{ of } \{c_1 \Rightarrow e_1\ |\ \dots \ |\ c_n \Rightarrow e_n\} : \id{\sigma}$}
+\end{prooftree}
+
+Regulile de mai sus sunt \^ in principal rescrierea regulilor System \fhat pentru tipuri din \textbf{ID}. Cu toate acestea, regulile {\scriptsize (MT-VAR), (MT-APP)} \c si {\scriptsize (MT-SUB)} sunt aplicabile \c si pentru tipuri din \textbf{NT}. Totu\c si, abstractizarea tipurilor se face doar peste \textbf{ID}, iar func\c tiile lambda se pot defini doar cu argument cu tip din \textbf{ID}.
+
+Pentru a putea avea un calcul suficient de expresiv \c si pentru expresii cu tipuri din \textbf{NT}, regula {\scriptsize (MT-LETREC)} este extinsa \c si pentru acestea. \^ In cazul \^ in care regula este aplicat\u a pentru \emph{m := nt}, datorit\u a noilor reguli de subtip, ea este echivalent\u a regulii {\scriptsize (T-LETREC)} din System \frec.
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma}, f : d^\iota_m \tau_m \to {\theta}_m \vdash e : d^{\hat{\iota}}_m\tau_m \to [\iota \mapsto \hat{\iota}] { \theta}_m $}
+\AxiomC{$\iota \text{ pos } {\theta}_m $}
+\AxiomC{$m\in \{\text{id, nt}\}$}
+\RightLabel{\scriptsize (MT-LETREC)}
+\TrinaryInfC{$\widetilde{\Gamma} \vdash (\text{letrec}_{d{\tau} \to {\theta}} f = e) : d^s_m {\tau}_m \to [\iota \mapsto s]{\theta}_m$}
+\end{prooftree}
+
+La nivel sintactic, se introduc dou\u a construc\c tii noi: \textbf{unit}, \textbf{bind}. Aceste construc\c tii sunt o\-mo\-lo\-a\-ge\-le lui \texttt{>>=} \c si \texttt{return} din Haskell \c si fac mul\c timea \textbf{NT} s\u a se comporte ca un monad. Pentru a explica roulul lor trebuie facuta distinc\c tia intre expresii (programe) cu tipuri din \textbf{NT} \c si valori cu tipuri din \textbf{ID} \citep{Moggi89notionsof}.
+\begin{example}
+Pentru o expresie de tip $\nt{\textbf{Bool}}$, valorile posibile sunt $\textbf{true}, \textbf{false} \in  \id{\textbf{Bool}}$, dar este posibil \c si ca evaluarea expresiei s\u a nu se termine.
+\end{example}
+\begin{itemize*}
+\item Construc\c tia \textbf{unit} creeaz\u a pentru o valoare $v : \id{\tau}$, un program $(\text{unit}\app v) : \nt{\tau}$ care nu "face" nimic, dar "intoarce" expresia respectiv\u a.
+\item Construc\c tia \textbf{bind} creeaza un program ob\c tinut prin pasarea c\u atre func\c tia $e$ a rezultatului rul\u arii programului $e'$. Dac\u a $e'$ nu se termin\u a, nici programul nou creeat nu se termin\u a.
+\end{itemize*}
+Semantica operational\u a a acestor dou\u a constructii e dat\u a de urmatoarele reguli de reducere:
+\begin{gather*}
+(\text{bind}\app e\app e') \to (e\app e') \qquad\text{\scriptsize (E-BIND)}\\
+\text{unit}\app e \to e \qquad \text{\scriptsize (E-UNIT)}
+\end{gather*}
+Rolul acestor construc\c tii este de a permite prin sistemul de tipuri un calcul mai expresiv peste tipurile din \textbf{NT} fara a altera proprietatea de normalizare puternic\u a pentru tipurile din \textbf{ID}.
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \id{\overline{\tau}} \to \nt{\widetilde{\sigma}} $}
+\AxiomC{$\widetilde{\Gamma} \vdash e' : \widetilde{\tau} $}
+\AxiomC{$ |\widetilde{\tau}| = |\id{\overline{\tau}}|$}
+\RightLabel{\scriptsize (MT-BIND)}
+\TrinaryInfC{$\widetilde{\Gamma} \vdash \text{bind}\app e\app e' : \nt{\widetilde{\sigma}}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\widetilde{\Gamma} \vdash e : \widetilde{\tau} $}
+\RightLabel{\scriptsize (MT-UNIT)}
+\UnaryInfC{$\widetilde{\Gamma} \vdash \text{unit}\app e : \nt{\overline{\tau}}$}
+\end{prooftree}
+
+
+\subsection{Diagrama}
+Pentru a ilustra mai bine noul sistem de tipuri vom ar\u ata cum este transformat\u a diagrama \ref{adj_list_nat} pentru a include tipuri monadice.
+\done\todo{terminat diagrama}
+\begin{center}
+\input{Imagini/adj_sysfhat-mon.tex}
+\end{center}
+Se observ\u a pe diagram\u a mul\c timile \textbf{ID} \c si \textbf{NT} pentru tipurile de date \textbf{List}, \textbf{Nat}. De fapt func\c tiile $\text{bind}\app (\lambda l . (\text{return len }l))\app (\text{return nil}) $ si $\lambda l . (\text{return len }l)$ au \c si ele tipuri din mul\c timea \textbf{NT}. Cu linie ro\c sie punctat\u a este desenat modul \^ in care operatorul \emph{bind} aplic\u a functia $\lambda l . (\text{return len }l)$ valorii $(\text{return nil})$.
+
+\subsection{Propriet\u a\c ti}
+
+\begin{lemma}
+$\widetilde{\Gamma} \vdash e : \widetilde{\tau} \in \textbf{ID}$ atunci \^ in tot arborele de deduc\c tie apar doar reguli cu tipuri din \textbf{ID}.
+\end{lemma}
+\begin{proof}[Demonstra\c tie]
+Se demonstreaz\u a prin induc\c tie structural\u a pe arborele de deduc\c tie al propozi\c tiei $\widetilde{\Gamma} \vdash e : \widetilde{\tau} \in \textbf{ID}$. \^ In afara de cazurile {\scriptsize (MT-APP)} \c si {\scriptsize (MT-SUB)}, toate tipurile care nu sunt adnotate cu \emph{id} \c si apar \^ in premisele unei reguli, apar \c si \^ in concluzie.
+\begin{description*}
+\item [{\scriptsize (MT-SUB)}] Datorit\u a faptului c\u a tipurile din \textbf{NT} \c si cele din \textbf{ID} sunt incomparabile \^ in raport cu rela\c tia de subtip, nu este posibil ca $\widetilde{\sigma} \in \textbf{NT}$ \c si $\widetilde{\tau} \in \textbf{ID}$
+\item [{\scriptsize (MT-SUB)}] Pentru acest caz, este suficient s\u a demonstr\u am c\u a
+    \begin{equation}
+    \nexists e,\widetilde{\tau} \in \textbf{NT},\widetilde{\sigma} \in \textbf{ID},\widetilde{\Gamma}.\: \widetilde{\Gamma} \vdash e : \widetilde{\tau} \to \widetilde{\sigma}
+    \end{equation}
+    Aceast\u a propozi\c tie, din punct de vedere intuitiv, spune c\u a nu exist\u a o coresponden\c ta \^ intre programe \c si valori, ci doar \^ intre valori \c si programe, \c si anume prin \textbf{bind}.
+
+    Demonstra\c tia este una prin induc\c tie dup\c a arborele de derivare al propozi\c tiei $\widetilde{\Gamma} \vdash e : \widetilde{\tau} \to \widetilde{\sigma}$, dar se folose\c ste o ipotez\u a de induc\c tie mai puternic\u a.
+    \begin{equation}
+        \nexists e,\vec{X},\widetilde{\theta},\widetilde{\tau} \in \textbf{NT},\widetilde{\sigma} \in \textbf{ID},\widetilde{\Gamma}.\: \widetilde{\Gamma} \vdash e : \Pi \vec{X}.\widetilde{\theta}\to\widetilde{\tau} \to \widetilde{\sigma}
+        \qedhere
+    \end{equation}
+    \done\todo{terminat demonstratia}
+\end{description*}
+\end{proof}
+
+\begin{corollary}
+Dac\u a $\widetilde{\Gamma} \vdash e : \widetilde{\tau} \in \textbf{ID}$ atunci $\Gamma \vdash e : \overline{\tau}$, unde $\overline{\tau}$ este ob\c tinut din $\widetilde{\tau}$ prin \c stergerea adnotarilor tipurilor monadice, deci evaluarea lui $e$ se termin\u a.
+\end{corollary}
+\begin{proof}[Demonstra\c tie]
+Cum toate regulile sunt aplicate doar pentru tipuri din \textbf{ID}, ele corespund bijectiv regulilor din System \fhat, deci $e$ este o expresie System \fhat, deci evaluarea ei se termin\u a.
+\end{proof}
+\begin{corollary}[Conservare]
+Dac\u a $\widetilde{\Gamma} \vdash t : \widetilde{\tau} \in \textbf{ID}$ \c si $t \to t'$, atunci $\widetilde{\Gamma} \vdash t' : \widetilde{\tau}$ \\
+Dac\u a $\widetilde{\Gamma} \vdash t : \widetilde{\tau} \in \textbf{NT}$ \c si $t \to t'$, atunci $|\widetilde{\Gamma}| \vdash_{\text{System \frec}} t' : |\widetilde{\tau}|$.
+\end{corollary}
+\begin{proposition}[Progres]
+Limbajul System \fhat extins cu tipuri monadice, are proprietatea de progres.
+\end{proposition}
+
+\begin{proposition}
+Limbajul System \fhat extins cu tipuri monadice, la fel ca \c si System \fhat, nu are tipuri principale.
+\end{proposition}
+\begin{proof}[Demonstra\c tie]
+Odat\u a cu ad\u augarea tipurilor monadice, o expresie poate avea un tip din \textbf{ID} \c si unul din \textbf{NT}. Expresia urm\u atoare poate fi considerat\u a de tipul $\nt{\textbf{Nat}^{\infty}}\to\nt{\textbf{Nat}^{\infty}}$ dar \c si de tipul $\id{\textbf{Nat}^{\infty}}\to\id{\textbf{Nat}^{\infty}}$ care nu sunt compatibile \^ in raport cu rela\c tia de subtip.
+\begin{equation*}
+\text{letrec}_{\textbf{Nat}\to\textbf{Nat}}\: id := \lambda x : \textbf{Nat}. \text{case}_{\textbf{Nat}} e \text{ of } \{ z \Rightarrow z \:|\: s \Rightarrow \lambda px : {\textbf{Nat}}. s (id\app px) \} \qedhere
+\end{equation*}
+\end{proof}
+\begin{proposition}
+Limbajul System \fhat extins cu tipuri monadice este turing complet.
+\end{proposition}
+\begin{proof}[Demonstra\c tie] \label{proof_ntcompl}
+Pentru a repeta demonstra\c tia teoremei \ref{compl_sysfrec} este suficient s\u a construim un o\-pe\-ra\-tor echivalent cu $case_\textbf{Nat}$ peste tipul $\nt{\textbf{Nat}}$. Aplicarea de func\c tii \c si recursivitatea textual\u a peste tipuri din \textbf{NT} sunt deja acoperite de regulile de tip {\scriptsize (MT-$\star$)}.
+\begin{align*}
+& caseNT := \lambda x : {\textbf{Nat}}_{\text{nt}}^\infty. \lambda fz : {\textbf{Nat}}_{\text{nt}}^\infty. \lambda fs : {\textbf{Nat}}_{\text{nt}}^\infty\to {\textbf{Nat}}_{\text{nt}}^\infty.            \\
+& (\text{bind } \lambda ax : {\textbf{Nat}}_{\text{id}}^{\hat{\iota}}.                                          \\
+& \qquad (\text{bind } \lambda az : \textbf{Nat}_{\text{id}}^\infty.                                            \\
+& \qquad \qquad (\text{bind } \lambda as : \textbf{Nat}_{\text{id}}^\iota \to \textbf{Nat}_{\text{id}}^\infty . \\
+& \qquad \qquad \qquad (\text{unit case}_{\textbf{Nat}}\ ax \text{ of } \{ z \Rightarrow az | s \Rightarrow as \})     \\
+& \qquad \qquad fs)                                                                                             \\
+& \qquad fz)                                                                                                   \\
+& x) \qedhere
+\end{align*}
+\end{proof}
+
+
+
+

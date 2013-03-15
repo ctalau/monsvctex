@@ -1,0 +1,77 @@
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+\begin{tikzpicture}[node distance=4cm, auto,>=latex', thick]
+
+
+    \tikzstyle{type} = [shape=circle, fill=white ,draw, thin]
+    \tikzstyle{constructor} = [draw, ->,color=blue!50!black ]
+
+% Nat
+    \node [type,minimum size=3.2cm,pin={[pin edge={<-,red}]90:$\textbf{\emph{Nat}}_{\text{id}}^{\infty}$}] at (0cm,0cm) (nat) {};
+    \node [type,minimum size=2.0cm,label=above:$\vdots$,pin={[pin edge={<-,red}]30:$\textbf{\emph{Nat}}_{\text{id}}^{{{\hat{\iota}}}}$}] at (0cm,0cm) (natsp) {};
+    \node [type,minimum size=1.6cm,pin={[pin edge={<-,red}]10:$\textbf{\emph{Nat}}_{\text{id}}^{{{{\iota}}}}$}] at (0cm,0cm) (natp) {};
+
+    % succesor
+    \path [constructor] (natp.south east)  node[above] {\scriptsize s} parabola[bend pos=0.5] bend +(0,-1cm) (natsp.south west) ;
+    \path [constructor] {(nat.south)+ (0.5cm,0.08cm)}   node[above] {\scriptsize s} parabola[bend pos=0.5] bend +(0,-1cm) (nat.south);
+
+    % zero
+    \path [constructor] (0,0) circle (0) node[pin={[pin edge={<-,blue!50!black},pin distance=2cm]180:{\scriptsize z}}] (centru) {};
+
+% Liste
+    \tikzstyle{cons} = [shape=rectangle, thin, minimum width=0.03cm, minimum height=0.03cm]
+
+    \node [cons,right of=nat,label=below:{\scriptsize cons}] (conssp) {};
+    \node [cons,right of=nat,yshift=+1cm,label=below:{\scriptsize cons}] (consssp) {};
+
+    \tikzstyle{type} = [shape=circle, fill=white, draw, thin, xshift=8cm]
+
+    \node [type,minimum size=3.2cm,pin={[pin edge={<-,red}]90:$\textbf{\emph{List}}_{\text{id}}^{\infty}$}] at (0cm,0cm) (list) {};
+    \node [type,minimum size=2.0cm,label=above:$\vdots$,pin={[pin edge={<-,red}]30:$\textbf{\emph{List}}_{\text{id}}^{{{\hat{\iota}}}}$}] at (0cm,0cm) (listsp) {};
+    \node [type,minimum size=1.6cm,pin={[pin edge={<-,red}]10:$\textbf{\emph{List}}_{\text{id}}^{{{{\iota}}}}$}] at (0cm,0cm) (listp) {};
+
+    % cons
+    \path [constructor,-] (nat.east) edge             (conssp.center);
+    \path [constructor,-] (nat.east) edge[bend left] (consssp.center);
+
+    \path [constructor] (conssp.center)  parabola[bend pos=0.5] bend +(0,+0.4cm) (listsp.west);
+    \path [constructor] (consssp.center) parabola[bend pos=0.5] bend +(0,-0.5cm) (list.north west);
+
+    \path [constructor,-] (listp.west)      parabola[bend pos=0.5] bend +(0,-0.2cm) (conssp.center);
+    \path [constructor,-] (list.north west)  parabola[bend pos=0.5] bend +(0,+0.5cm) (consssp.center);
+
+    % nil
+    \path [constructor] (list.center) circle (0) node[pin={[pin edge={<-,blue!50!black},pin distance=2cm]0:{\scriptsize nil}}] (centru) {};
+
+    \begin{pgfonlayer}{background}
+        \node [rounded corners,fill=red!20,fit=(list) (nat),pin={[pin edge={<-,black}]above:\textbf{\huge ID}}] {};
+    \end{pgfonlayer}
+
+
+    \begin{scope}[yshift=-4cm]
+        \tikzstyle{nttype} = [circle, fill=white,draw,thin,minimum size=2cm,xshift=2.0cm]
+        \node [nttype,pin={[pin edge={<-,red}]below:$\textbf{\emph{Nat}}_{\text{nt}}^{\infty}$}] at (0cm,0cm) (natNT) {};
+        \node [nttype,pin={[pin edge={<-,red}]below:$\textbf{\emph{List}}_{\text{nt}}^{\infty}$}, right of=natNT] at (0cm,0cm) (listNT) {};
+    \end{scope}
+
+    \begin{pgfonlayer}{background}
+        \node [rounded corners,fill=black!20,fit=(listNT) (natNT),pin={[pin edge={<-,black}]below:\textbf{\huge NT}}] {};
+    \end{pgfonlayer}
+
+    \tikzstyle{monad} = [draw, ->,color=brown!50!black ]
+    \begin{scope}[node distance=2.2cm]
+        \node [cons,right of=natNT] (consNT) {};
+    \end{scope}
+    \path [monad]   (nat.center) -- (natNT.center) node[pos=1] {\scriptsize unit z};
+    \path [monad]   (list.center) -- (listNT.center) node[pos=0.9] {\scriptsize unit nil};
+    \path [monad]   (list.south west) -- (natNT.north east) node[sloped,pos=0.5] {\scriptsize $\lambda l . (\text{unit len }l)$};
+    \path [monad]   (listsp.west) node[below,xshift=-2cm,yshift=-0.4cm] {\scriptsize len} parabola[bend pos=0.5] bend +(0,-1cm) (natsp.east)  ;
+
+    \tikzstyle{bind} = [style={draw,dashed}, ->,color=brown!50!red ]
+    \path [bind,-] (listNT.center) to[bend right] (list.center);
+    \path [bind,-] (list.center)   to[bend right] (list.south west);
+    \path [bind] (list.south west) edge[>=stealth',bend right] (natNT.center) node[above,xshift=-3.8cm,yshift=-1cm] {\scriptsize $\text{bind}\app (\lambda l . (\text{unit len }l))\app (\text{unit nil}) $};
+    \tikzstyle{bindfinal} = [draw, ->,color=brown!50!red ]
+    \path [bindfinal]  (listNT.center) -- (natNT.center);
+\end{tikzpicture}
+

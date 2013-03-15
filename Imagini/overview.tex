@@ -1,0 +1,126 @@
+
+\newenvironment{good_points}{
+    \begin{list}{+}{\labelsep=2pt \leftmargin=1pt \parsep=0pt \itemsep=0pt}
+}{
+    \end{list}
+}
+\newenvironment{bad_points}{
+    \begin{list}{-}{\labelsep=2pt \leftmargin=1pt \parsep=0pt \itemsep=0pt}
+}{
+    \end{list}
+}
+
+\begin{tikzpicture}[node distance=3cm, auto,>=latex', thick]
+    \tikzstyle{typesys} =   [rectangle split,
+                            rounded corners,
+                            draw=black,
+                            rectangle split parts=3,
+                            rectangle split draw splits=true,
+                            rectangle split part fill={green!20, blue!20, red!20},
+                            text width=6.8em]
+
+    \node[typesys] (lambda)
+    {\scriptsize {\bf Calcul Lambda}
+        \nodepart {second} {\scriptsize
+            \begin{good_points}
+                \item Turing complet
+            \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        \begin{bad_points}
+            \item F\u ar\u a tipuri
+            \item Codificare Church
+            \item F\u ar\u a normalizare
+        \end{bad_points}
+        }
+    };
+
+    \node[typesys,right of=lambda,yshift=-3.5cm] (sysf)
+    {\scriptsize {\bf System F}
+        \nodepart {second} {\scriptsize
+        \begin{good_points}
+            \item Tipuri
+            \item Polimorfism
+            \item Normalizare
+        \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        \begin{bad_points}
+            \item Codificare Church
+            \item Turing incomplet
+        \end{bad_points}
+        }
+    };
+
+    \node[typesys,above right of=sysf, yshift=1.5cm] (sysfrec)
+    {\scriptsize {\bf System \frec}
+        \nodepart {second} {\scriptsize
+        \begin{good_points}
+            \item Turing complet
+            \item Tipuri recursive
+            \item Polimorfism
+        \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        \begin{bad_points}
+            \item F\u ar\u a normalizare
+        \end{bad_points}
+        }
+    };
+
+    \node[typesys,below right of=sysfrec,yshift=-1.5cm] (sysfhat)
+    {\scriptsize {\bf System \fhat}
+        \nodepart {second} {\scriptsize
+        \begin{good_points}
+            \item Tipuri recursive
+            \item Polimorfism
+            \item Normalizare
+        \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        \begin{bad_points}
+            \item Turing incomplet
+            \item F\u ar\u a tipuri prin\-ci\-pa\-le (\sref{tip_princ})
+        \end{bad_points}
+        }
+    };
+
+
+    \node[typesys,below right of=sysfhat,yshift=5.5cm] (sysfco)
+    {\scriptsize {\bf System \fhat + co}
+        \nodepart {second} {\scriptsize
+        \begin{good_points}
+            \item Tipuri (co)recursive
+            \item Tipuri recursive
+            \item Obiecte infinite
+            \item Normalizare slab\u a
+        \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        \begin{bad_points}
+            \item Turing incomplet
+        \end{bad_points}
+        }
+    };
+
+    \node[typesys,below right of=sysfhat, xshift=2cm, yshift=2.1cm] (sysfmon)
+    {\scriptsize {\bf System \fhat + mon}
+        \nodepart {second} {\scriptsize
+        \begin{good_points}
+            \item Tipuri recursive
+            \item Polimorfism
+            \item Normalizare \^ in \textbf{ID}
+            \item Turing $\subseteq$ \textbf{NT}
+        \end{good_points}
+        }
+        \nodepart {third} {\scriptsize
+        }
+    };
+
+    \path [draw,->] (lambda) edge node[pos=0.5,sloped] {$\subset$} (sysf);
+    \path [draw,->] (sysf) edge node[pos=0.5,sloped] {$\subset$} (sysfrec);
+    \path [draw,->] (sysfrec) edge node[pos=0.5,sloped] {$\subset$} (sysfhat);
+    \path [draw,->] (sysfhat) edge node[pos=0.5,sloped] {$\subset$} (sysfco);
+    \path [draw,->] (sysfhat) edge node[pos=0.5,sloped] {$\subset$} (sysfmon);
+
+\end{tikzpicture} 
