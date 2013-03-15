@@ -1,0 +1,135 @@
+\chapter{Scheduling} % Titlul capotilului
+\label{Capitolul4}
+
+
+In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library on every application instance. We first identify the objectives of the scheduling algorithm, present some solutions and assess them by using both a simulation and a test-bed deployment of the system. 
+
+\section*{System overview}
+
+Our monitoring system is composed of 12000 applications which send data to 32 multithreaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF selection applications. Instances of the same application have the same set of registered objects.
+
+Since applications talking to different IS servers are independent, we chose to model a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba}, the server has 8 threads by default and runs on a machine with 12 CPUs. We also assume that every application sends most of its data to a single IS server in the same rack connected in the same switch with a 1Gbps connection.
+
+A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 nodes, there are 5087 histograms with 1126 bins in average. The publishing interval is usually configured between 1 second and 10 minutes. Although applications publish also many kinds of objects such as counters or flags, most of the published monitoring information consists of histogram. Since histograms have the biggest influence the performance of the system I will use the name histogram to refer to any kind of such object.
+
+\section*{Publishing requirements}
+
+\begin{description}
+\item[Minimize jitter.]
+
+First of all, we should be able to publish each histogram periodically, with the interval between two consecutive publications approximately equal to the interval configured by the user. We should be able to handle multiple publishing intervals. A number of intervals of the order of 10 is expected.
+
+Let's consider a histogram with publishing interval $I$ and let the time of the $k$-th publication of a histogram be $T_k$; we call $J=\max(\lvert T_k-((k-1) \cdot I+T_1\rvert)$ the jitter of the histogram. We want to have $J < 0.1\cdot I$ for every histogram.
+
+\item[Minimize latency.]
+
+We publish the histograms using a separate thread from that of the main application which does the event filtering. In this thread we call a black-box function that takes care of all the details of sending the histogram to the IS server (buffering, marshaling, etc.). We have to keep the histogram locked while we are calling this function in order to prevent a concurrent access from the thread that is updating the histogram. As the application may block waiting for the histogram to be published instead of doing useful work, we want to minimize the publishing latency.
+
+\item [Minimize publishing skew.]
+
+Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system’s operational state we need to take a snapshot of the histogram from all nodes at some point in time and to aggregate them.
+
+In order to take a snapshot of a histogram across all nodes at some point in time, we need to have all nodes publishing their instance of that histogram with minimal skew. The publishing skew of a histogram is defined to be the difference between the moments when the first and the last instance of the histogram is received by the IS server.  
+
+\item [Maximize throughput]
+
+We want the published information in the IS server to be as fresh as possible. So we need to publish as many histograms per second as possible allowing the user user to configure smal publishing intervals.
+
+\item [Efficient incremental reconfiguration]
+
+We want to allow the users to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don’t want the system to stop publishing for a long time in order to apply the new configuration changes. 
+
+We also want that if we change the publishing interval for some histograms, the rest of them should continue to be published according to the same schedule as before.
+
+\item [Avoid bursty traffic]
+
+A bursty traffic pattern seen by the IS server impacts the overall system performance in multiple ways. First, it requires big inbound queues both in IS server and in all the upstream applications to which the IS server pushes information. 
+
+Another effect is related to the IS subscriber applications that use garbage collection for memory management. They are known to suffer from periodic freezes \citep{aho2007compilers}, but more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn’t allocate memory at a very high rate which is exactly what bursty traffic causes.
+
+Although important, this requirement has the same cause as the first one, namely contention, so we will treat it as a secondary one.
+
+\end{description}
+
+\section*{Global and local scheduling}
+
+The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application intance in isolation, we call them local requirements. These are the jitter minimization and reconfiguration efficiency. 
+
+As it can be seen from the requirements above, although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other’s performance by creating contention in the monitoring network of the ATLAS TDAQ system. Indeed, requirements like skew and latency minimization and bursty traffic avoidance are global requirements that can be satisfied only if the application instances cooperate.
+
+If we consider the time as being divided in equal length slots, we can think of local scheduling as assigning which histograms are published in which slot and the global scheduling as when to publish the histograms within a time slot. 
+
+The slot size choice is not simple since it has many conflicting requirements, but on the positive side it does not depend on the configuration, so it has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
+
+This separation also helps us in presenting to the users a simple model for configuring the publishing intervals. The system reports the number of available slots per second and the users need just to calculate how many slots per second their rules require. The users, however, should not expect 100\% utilization of the slots due to irregularities of the publishing intervals set.
+
+\section*{Global scheduling}
+
+For this problem we assume that we every application has the same set of histograms to publish in a particular time slot. The set of histograms is very small, ideally only one histogram, but due to the imperfection of the local scheduling there can be several of them.
+
+We have to satisfy two conflicting requirements, namely publishing skew and latency minimization. In order to minimize publishing skew we should try to make all the applications publish simultaneously. But this practice will create contention in the IS server and the latency will increase. 
+The strategy that we adopted for this problem is to make each application choose the moment of the publishing randomly within the first part of the time slot of length $f\cdot I$, where $f<1$ is a configuration parameter and $I$is the size of the time slot.
+
+In order to deal with the case in which the interval is too short for publishing all the histograms, we extend it until we are done publishing everything and reduce the length of the next interval.
+
+An example of scheduling is depicted below, where we have three applications that start the publishing within the first $f=0.75$ part of the interval.
+
+\begin{center}
+\includegraphics[scale=0.6]{Images/local_sched.png}
+\end{center}
+
+Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (smaller than 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
+
+\section*{Real-time formulation of local scheduling}
+
+The local requirements for our scheduling requirements can be viewed as a real-time scheduling problem \citep{liu1973scheduling}, \citep{sha2004real}. In order to make this more apparent, we establish the following mapping of concepts:
+\begin{itemize}
+\item Each of the $n$ histograms is considered a task that generates jobs periodically. 
+\item A job means to publish the histogram to the IS server.
+\item The latency of a publishing a histogram corresponds to the execution time of a job $C_i$.
+\item The publishing interval is the task period $T_i$. 
+\item The maximum jitter of a histogram is the deadline of the corresponding job $D_i=0.1\cdot T_i$.
+\item The IS server has a similar role to the CPU that need to be scheduled among the tasks.
+\item The throughput of our system is the utilization of the corresponding real-time system.
+\end{itemize}
+
+\subsection*{Related work}
+
+In the real-time scheduling literature there are two main classes of algorithms: static ones in which the priority of a task is determined before the system is started and dynamic ones in which the priority of a task can change dynamically. 
+
+The most popular static algorithm is the Rate Monotonic Scheduling (RMS) \citep{liu1973scheduling} in which the priority of a task is higher for tasks with small periods. The algorithm is preemptive, so when a task with small period becomes available, the ones with larger period are preempted and it starts running. Another variation is Deadline Monotonic Scheduling which gives higher priority to tasks with shorter deadlines. In our case, we cannot preempt a histogram from being published, so this algorithms are not applicable. 
+
+Among the dynamic algorithms, we mention Earliest Deadline First (EDF) \citep{liu1973scheduling} in which, whenever the processor is idle and some tasks are available, we start the task whose deadline comes first and run it up to completion. This algorithm is optimal in the sense that if a system is schedulable with some algorithm, then it is also schedulable with EDF.
+
+People concentrated on developing criteria to check whether a real-time system is schedulable with these algorithms. For EDF the condition XXX is that the utilization $U < 1$ and the following holds:
+
+$$ \forall L > 0.\,  \sum_{i=1}^n \left\lfloor \frac{L+T_i-D_i}{T_i}\right\rfloor C_i \le L $$
+
+which in our case, for $C_i=10$ms, $T_i=5$mn, $L=D_i=30$s, $n=5000$, becomes:
+
+$$ \sum_{i=1}^n 1 \cdot C_i \le L \Leftrightarrow 50s \le 30s $$
+
+Note that the utilization in our case is $U=\sum_{i=1}^n\frac{C_i}{T_i}=n\frac C T = \frac 1 6 = 0.166$ which is very low. 
+
+For DMS in order to check the schedulability, we have to determine the worst case response time for every task using the following recursive equations XXX.
+
+ $$ \forall i.\, R_i=C_i+\sum_{j=1}^{i-1} \left\lceil \frac{R_i}{T_i} \right\rceil \cdot C_j \Leftrightarrow R_i = i\cdot C$$
+ 
+ So, again, the response time for the last histogram is $R_n=n\cdot C=50s >D_n=30s$. We can notice that since all the histograms have the same period they have the same priority so they are published sequentially. So, in order to satisfy the deadlines with this algorithm we should be able to publish all the histograms in 10\% of the time. Note that having higher priorities for some of the histograms does not improve the situation of the ones with low priority.
+
+\subsection*{Offset-free systems} 
+ The common assumption of these algorithms that render them ineffective for our system is that all histograms should start to be published in time slot 0. However, this is not necessary in our case, so, we have more degrees of freedom in choosing the time offset at which the first publication of each histogram occurs. Multiple choice strategies are presented in the literature about offset-free systems \citep{goossens2003scheduling}, \citep{grenier2008pushing}.
+ 
+In \citep{goossens2003scheduling} the author proves a number of useful results about offset-free systems and presents two algorithms for assigning offsets to a set of tasks. The first algorithm finds an optimal offset assignment and it has a complexity of $O(n^2 \cdot \frac{\prod_{i=1}^n Ti}{\text{lcm}(T_i)})$ which renders it useless for any practical purpose. The second algorithm is an heuristic one which runs in $O(n^2\cdot \log(\max_{i=1\ldots n}(T_i)))$ and has space complexity $O(n^2)$. The algorithm works by considering pairs of tasks in decreasing order of greatest common divisor of their periods and trying to assign offsets such that the jobs of these two tasks are as distant as possible. The limitation of this algorithm is that it looks only at one other task offset before making the choice of the offset.
+
+In the context of scheduling messages in CAN networks, Grenier et al. \citep{grenier2008pushing} propose another heuristic algorithm which runs in $O(n\cdot \max_{i=1 \ldots n}(T_i))$ and has better experimental results than the previous one. The algorithm tries to assign offsets such that the first job of every task is as far as possible from other jobs. It does this by considering tasks in the increasing order of their periods and assigns the offset such that the first job of task is as far as possible from every job of a task that was assigned so far. The drawback of this approach is that the algorithm does not look at the subsequent jobs of a task and it creates collisions (two jobs scheduled for the same time) even for simple scenarios.
+
+Once the offsets have been chosen, we still have to design a scheduling algorithm. For offset-free systems, the DMS algorithm is no longer optimal among static algorithms but an optimal priority assignment can be found with $O(n^2)$ time complexity \citep{audsley2001priority}. On the other hand, among dynamic algorithms EDF is still optimal. 
+
+\section*{Hash based offset assignment}
+
+A simple offset assignment algorithm chooses the offsets by hashing the names of the histograms and taking the value modulo their period. In order to have histograms with different names published with small skew one can configure an identical \emph{hashing name} which, if present, is used instead of the histogram name to determine the time slot 
+
+This strategy ensures that every application will assign the same offset to a histogram even if they have different histogram sets. However, this situation can only occur when we change the configuration at runtime and only for brief periods. Another positive aspect is that the reconfiguration can be done in $O(1)$ time: we just assign offsets to the changed histograms and keep the existing ones unchanged.
+
+The problem of this algorithm is that even for a perfect hashing function the expected maximum number of histograms assigned to a single slot is $O(\frac{\log n}{\log \log n})$ \citep{mitzenmacher1996power}. They will overload the IS server, will overflow to the next time slots and increase the publishing skew. On the other hand, the expected number of empty slots is newhich gives us a throughput of 63\% of the maximum.
