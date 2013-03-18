@@ -14,25 +14,15 @@ We use smart pointers to implement the synchronization between the application a
 The smart pointers offer a simple interface to the application developer. They have two functions called lock and unlock which ensure exclusive access to the underlying object. Moreover, we use an interesting C++ feature \citep{andrei2001modern} that allows us to overload the dereference operator to lock the smart pointer just before any method call or field access and unlock it afterwards.
 
 Due to the nice syntactical similarities between smart pointers and raw pointers we can easily port the code to use the former. It usually requires just changing the type of the declaration of the pointer. For example, the following function can be ported just by changing the type of the parameter:
-
-\verb+void do_work(histo * h) { ... h->observe(42); ...  }+
-
+\input{Code/dow1}
 to obtain the following form:
-
-\verb+void do_work(sync_ptr<histo> h) { ... h->observe(42); ...  }+
-
+\input{Code/dow2}
 As explained above, the smart pointer takes care of the synchronization with the library on every function call and field access.
 
 There is an exception to the previous case in which the pointer should be passed to a legacy function which we cannot change. For example:
-
-\verb+void do_work(histo * h) { ... do_legacy_work(h); ... }+
-
+\input{Code/dow3}
 in which case we replace it with:
-\begin{verbatim}
-void do_work(sync_ptr<histo> h) { 
-  ... h.lock(); do_legacy_work(h.get()); h.unlock(); ...
-}
-\end{verbatim}
+\input{Code/dow4}
 Note that in this case even the change was very small, there is a trade-off between lock granularity and the amount of code that needs to be changed. 
 
 
@@ -62,12 +52,7 @@ An important observation is that in our use cases, the application that updates 
 With the asynchronous updates strategy, we still use a mutex to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. Since updates can be represented very compactly this strategy has low space usage and does not block the application threads while sending it over the network.
 
 The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provides asynchronous updates to any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
-
-\begin{verbatim}
-template <typename T>
-template <typename R, typename... Args>
-void async_ptr<T>::async(R (T::*fn)(Args...), Args... args);
-\end{verbatim}
+\input{Code/async_ptr}
 
 This method takes a pointer to a member function and its arguments and calls it asynchronously. It requires a change of the method calls from \verb+h->observe(42)+ to \verb+h.async(Histo::observe, 42);+.
 
@@ -81,26 +66,8 @@ In this section we will present the pseudocode for the main operations on the sm
 \item {\tt qlock} a mutex used to protect the {\tt update\_queue}.
 \item {\tt obj\_lock} a mutex used to protect the object pointed by the smart pointer.
 \end{itemize}
-
-\begin{verbatim}
-def lock(): 
-    obj_lock.lock()
-    with qlock: update_queue.execute_all()
-
-def unlock(): 
-    with qlock: 
-        update_queue.execute_all()
-        obj_lock.unlock()
-
-def async(f, args)
-    with qlock:
-        if obj_lock.try_lock():
-            update_queue.execute_all()
-            f(args)
-            obj_lock.unlock()
-        else: update_queue.append((f, args))
-\end{verbatim}
-
+And the pseudocode is given below:
+\input{Code/async}
 Note that the async method does not block when trying to acquire {\tt obj\_lock} since it uses the non-blocking {\tt try\_lock} method. 
 
 Every thread that acquires the {\tt obj\_lock} mutex executes all updates that were added to the {\tt update\_queue} before accessing the underlying object of the smart pointer. This way we ensure that after the exclusive access to the object is given to the application, the object is in a serialy consistent state. As an optimization, we also execute all updates before releasing the {\tt obj\_lock}.

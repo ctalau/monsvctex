@@ -133,3 +133,213 @@ A simple offset assignment algorithm chooses the offsets by hashing the names of
 This strategy ensures that every application will assign the same offset to a histogram even if they have different histogram sets. However, this situation can only occur when we change the configuration at runtime and only for brief periods. Another positive aspect is that the reconfiguration can be done in $O(1)$ time: we just assign offsets to the changed histograms and keep the existing ones unchanged.
 
 The problem of this algorithm is that even for a perfect hashing function the expected maximum number of histograms assigned to a single slot is $O(\frac{\log n}{\log \log n})$ \citep{mitzenmacher1996power}. They will overload the IS server, will overflow to the next time slots and increase the publishing skew. On the other hand, the expected number of empty slots is newhich gives us a throughput of 63\% of the maximum.
+
+\section*{Subperiod offset assignment algorithm}
+
+In this section we present a heuristic algorithm that leverages the particularities of our system to assign offsets for histogram with no jitter, no collisions and high throughput. 
+
+In our configuration files, all the periods are expressed in seconds which means that the greatest common divisors among periods are large - equal to the number of slots per second which is 30-50. Moreover, large subsets of histograms have periods which are multiple of 5 or 10 seconds. We will also take advantage of the fact that we have only a few (5-10) distinct periods in order to achieve better time complexities for offset assignment.
+
+\subsection*{Terminology}
+
+It is proved in \citep{goossens2003scheduling} that we can choose the offset for a histogram to be less than its period without loss of generality. 
+
+In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ means the slots $\{k+n\cdot P | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we explicitly mention it: offset $k$ modulo $P$.
+
+\subsection*{Intuition and pseudocode}
+
+The algorithm operates in two steps. First it repeatedly approximates unions of histogram groups with different periods with one group having a smaller period until we are left with only one group. Then we start with this group and assign offsets recursively to groups that it approximates until we get to assign offsets to all histograms.
+
+At the beginning every histogram will form its own group:
+\begin{verbatim}
+group = {period : histo.period, n : 1, offset : None}
+\end{verbatim}
+In order to describe the approximation operation let’s assume that our configuration include two histogram groups: one having 4 histograms to be published every 10 sec. and another one 4 histograms to be published every 15 sec. So, we need to assign 4 offsets in the range [0s, 10s) and 4 offsets in the range [0s, 15s).
+ 
+Let’s consider the time being divided in 5 sec subperiods. Denote by x the number of offsets from the first group that are chosen in the interval [0s, 5s) and by y the number of those in the interval [5s, 10s). Similarly, denote by a, b, c the number of offsets from the second group in the three 5 seconds subperiods of the interval [0s, 15s). In the figure below we represented the number of slots used to publish histograms in 6 consecutive subperiods of 5 sec:
+
+\begin{center}
+\includegraphics[scale=0.6]{Images/subperiod.png}
+\end{center}
+
+We have a fixed number of slots per second, so we have a bound on the number of slots that we can use in each of the subperiods. In order to stay within this bound our strategy is to minimize the maximum number of used slots in a subperiod. In our case this reduces to the following optimization problem:
+$$ \text{minimize } \max(x+a, y+b, x+c, y+a, x+b, y+c) \text{ subject to } a+b+c=4 \text{ and } x+y = 4 $$
+One can easily prove that:
+$$ \max(x+a, y+b, x+c, y+a, x+b, y+c) = \max(x, y, z) = \max(a, b, c)$$
+So, we only need to minimize the maximum number of slots used in a subperiod for each of the two task groups. The minimum of 4 slots is achieved if we distribute the offsets uniformly among subperiods of 5 sec, that is, choosing $x=2, y=2$ and $a=2, b=c=1$. With this setting we can (over-)approximate the union of the two groups with one (synthetic) group of 4 histograms to be published every 5 sec.
+
+In general the following function computes the approximation of two groups:
+\input{Code/approximate}
+The \verb+sons+ store the groups that it approximates together with their maximum number of slots per subperiod.
+
+This is an over-approximation in the sense that if we can assign offsets for the resulting group, then we can also assign offsets for the initial groups. Let’s assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
+\input{Code/assign}
+The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
+\input{Code/expand}
+A sketch of a possible algorithm execution is presented in the figure below, where we have 5 histograms with period 2 sec, 4 histograms with period 10 sec. and another 4 histograms with period 15 sec. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
+\begin{center}
+\includegraphics[scale=0.6]{Images/subperiod_tree.png}
+\end{center}
+Now we just need to assign offsets to the root group and they will be pushed up to the histograms in the leafs:
+\begin{verbatim}
+assign(build_tree(groups), offsets)
+\end{verbatim}
+
+\subsection*{Incremental version}
+
+In the algorithm presented above we assign a set of offsets to the root group of the tree and it takes care of pushing subsets of it to its child nodes, which recursively push subsets of them up the tree until they reach the leafs where they are assigned to histograms. We leave unused offsets along the way. For example, in order to assign 4 offsets to the group with period 15 sec we need to allocate 2 slots modulo 5 sec. from the parent node that actually which actually mean 6 offsets modulo 15 sec leaving us with 2 unused offset modulo 15 sec.
+
+When a new histogram is added, it is attached to the tree as a leaf. Next, we should locate some unused offsets in the tree and try to push them towards the node corresponding to that histogram. However, it is simpler to use a pull model in which the node corresponding to the newly added histogram is pulling an unused offset from its parent. If the parent has no unused offsets, it tries to pull one from its parent and so on, until the root is reached. At this point algorithm fails if there are no unused offsets.
+
+We associate an OffsetSupply to each of the groups to hold its unused offsets. Initially all the supplies are empty except from the root whose buffer is pre-filled with all the offsets modulo its period. When a node pulls an offset from its parent supply, it converts it to multiple offsets modulo its period.
+\input{Code/offsetsupply}
+The algorithm for adding a histogram is the following:
+\input{Code/addhisto}
+If this incremental addition of a histogram to the tree with pull-based offset assignment succeeds, the previously assigned offsets are preserved. However, this incremental changes to may determine a sub-optimal tree structure. So, if the algorithm fails, as a last resort, we rebuild the tree from scratch and possibly change all previously assigned offsets.
+
+\subsection*{Complexity analysis}
+
+In this section we will discuss the tradeoff between the complexity of the strategy to choose the next pair of groups to approximate and the quality of the resulting schedule.
+
+Let’s first introduce a quality measure for a subperiods tree built by our algorithm. 
+
+\begin{definition}
+Definition. For a node with period $P$ whose parent node has period $P_1$ we define the maximum number of offsets modulo 1 sec. wasted along the edge between the two nodes to be $c(P_1,P)=\frac{1}{P_1}-\frac 1 P$.
+\end{definition}
+
+This maximum is achieved if the child pulled a slot from its parent, so it reserves $\frac P {P_1}$ slots modulo $P$, and delivered only one slot to its children. This means $\frac P {P_1}-1$ wasted slots every $P$ seconds, which is $\frac 1 {P_1}- \frac 1 P$ wasted slots per second. 
+
+\begin{definition}
+The total maximum number of unused slots for a tree is $c(T)=\sum_{e\in T}c(e)$. 
+\end{definition}
+
+For convenience we call these numbers the cost of an edge and of a tree respectively. A strategy is better than another one if it produces trees with smaller cost. 
+
+Note that this measure is very conservative. First because we assume that the worst case happens for every edge which usually is not the case. Second, because that these slots are wasted by our algorithm when compared to a perfect schedule that uses $\frac 1 P $ slots for a histogram with period $P$. Even an optimal schedule that satisfies the deadlines of our system wastes some slots compared to this perfect schedule. Finally, these slots are not entirely wasted - they can be used when we add new histograms incrementally.
+
+\subsubsection*{NP-completeness of optimal strategy}
+
+Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. Let’s consider the graph with vertices denoted by numbers $1,2,,P=\max_{i=1,\ldots,n}(P_i)$ with edge between the vertices $a, b$ of cost $\frac 1 b -\frac 1 a$ if $b \vert a$; find the minimum-cost tree that contains vertices $P_1,\ldots,P_n$ and $\gcd(P_i)$.
+
+We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
+
+We will prove that our problem is also NP-hard by reducing from the Bounded Frequency Set Cover problem \citep{gary1979computers, cmulecture}. In fact, since our problem has numeric inputs we will prove it strongly NP-hard \citep{garey1978strong}, that is, it is NP-complete even if the numeric inputs, i.e. the periods, are bounded by a polynomial in the input size.
+
+The Bounded Frequency Set Cover (BFSC) problem for $B \ge 2$ is the following: Given a finite set $X=\{x_1,\ldots,x_q\}$ and a collection of its subsets $C=\{C_1,\ldots, C_n\}$ such that each $x_i$ occurs in at most $B$ subsets, does it contain a subcollection of size kthat covers the set $X$?
+
+Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover to our problem. Let’s associate with every $C_i$ a prime number $p_i$ and with every $x_i$ a set of histograms with period $Pi=\prod_{x_i\in C_k}p_k$.
+
+We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to [25] it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction we just have to prove the following theorem. 
+
+\begin{theorem}
+The optimal tree for this set of histograms with periods $P_i$ has the cost between $k-0.5$ and $k+0.5$ if and only if to the BFSC instance has a subcover of size $k$ for $k \ge  1$.
+\end{theorem}
+
+First we prove an useful lemma which says that the cost of the tree is concentrated in the edges connected to the root node which has period 1.
+
+\begin{lemma}
+The cost of a subtree that contains $k$ leafs and whose root is $p$ has the cost at most $\frac{k}{p}$.
+\end{lemma}
+
+\begin{proof}
+We proceed by induction on the number of nodes. If there is only one node, it is a leaf and the cost of the tree is $0<\frac 1p$. Otherwise, the root has two children with periods $p_1$ and $p_2$ that have $k_1$ and $k_2$ leafs in the corresponding subtree. The cost of the tree is: 
+
+\begin{eqnarray*}
+c(p) &=& \left(\frac 1p - \frac 1 {p_1}\right) + \left(\frac 1 p - \frac 1 {p_2}\right)+c(p_1)+c(p_2) \\
+    &\leq & \frac 2p-\frac 1 {p_1}-\frac 1 {p_2} + \frac {k_1}{p_1}+\frac {k_2}{p_2} \\
+    &=&\frac 2p + \frac{k_1-1}{p_1}+\frac{k_2-1}{p_2} \\
+    &\leq & \frac{k_1+k_2}p \\
+    &=&\frac kp
+\end{eqnarray*}
+
+We applied the induction hypothesis for the subtrees starting at $p_1$ and $p_2$ which are smaller. 
+\end{proof}
+
+\begin{proof}[Proof of Theorem]
+We will prove the two parts of the equivalence between the two problems separately:
+\begin{description}
+\item[Opt. strategy $\Rightarrow$ BFSC] 
+Since our tree has the cost between $k-0.5$ and $k+0.5$ it means that it has at exactly $k$ edges incident to the node 1 because their cost is $k-\sum{j=1}^k \frac 1 {p_j} \geq k-\frac k {2r} \geq k-0.5$ and the cost of the rest of the tree is $ <\frac k {p_1}< \frac r{2r}<0.5$ according to the lemma we just proved. Let $D_1, \ldots, D_k$ be the neighbors of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
+
+\item[BFSC $\Rightarrow$ Opt. strategy] Let’s consider a subcover $\{C_1,\ldots,C_k\}$. The tree in which the root is connected to the nodes $p_i$ which are connected to leafs $P_j$ for which $p_i \vert P_j$ has the cost $c$ which satisfies the relations: $c > \sum_{i=1}^k 1-\frac 1{p_i} > k-\frac k{2r}>k-0.5$ and according to the lemma $c<\sum_{i=1}^k 1-\frac 1{p_i}+0.5<k+0.5$.
+\end{description}\end{proof}
+ 
+Following the same lines we can prove that even a strategy that chooses a minimal number of neighbors for the root is NP-hard to find.
+
+\subsubsection*{Heuristic strategy}
+
+In this section I will present a heuristic strategy to compute a near optimal subperiods tree with reasonable complexity. 
+
+A first step is to approximate not only pairs of groups but also multiple groups with the same period. It is easy to see that all k histograms with period Pcan be approximated (exactly) by a group of khistograms and period P. Before building the tree we can create these groups in $O(n)$ leaving us with only mnodes to be processed by the \verb+build_tree+ function. 
+
+In the \verb+build_tree+ function we can then consider the pairs of groups in decreasing order of their common subperiod. In order to implement this function efficiently we use a priority queue:
+
+\begin{verbatim}
+def build_tree(groups):
+  subperiods = priority_queue(lambda (g1, g2): gcd(g1.period, g2.period))
+  for g1, g2 in cross_product(groups, groups):
+    subperiods.add((g1, g2))
+  while len(groups) > 1:
+    g1, g2 = subperiods.popmax()
+    groups -= [g1, g2]
+    g’ = approximate(g1, g2)
+    for g in groups:
+      subperiods.remove((g1, g))
+      subperiods.remove((g2, g))
+      subperiods.add((g’, g))
+    groups += [g’]
+  return groups[0]
+\end{verbatim}
+
+Since we have mgroups of histograms at the beginning, we end up with $2m-1$ groups in the entire tree. So, the number of pairs inserted in the priority queue is at most $O(m^2)$ since we don’t insert the same pair twice. The number of removals is at most as big, and the number of times the maximum is popped is $O(m)$ since we have at most miterations in the while loop. The of each of these operations is $O(\log m^2+T)$, the second term coming from the  computation. So, the total complexity of the \verb+build_tree+ function is $O(m^2(\log m + \log T))$. 
+
+\subsubsection*{Offset assignment complexity}
+For the complexity analysis of the offset assignment I will use the pull version presented in the previous section. I assume that the offset buffer of the \verb+OffsetSupply+ is built lazily, so its construction and pop operation are $O(1)$. I also assume that in $O(m)$ we merge all nodes with their parents that have the same period.
+
+Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every ditimes. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
+
+$$ f(s_i, k) = k + f\left(s_{i-1}, \left\lceil \frac k {d_i} \right\rceil \right)$$
+
+The solution of this recurrence is:
+
+\begin{eqnarray*}
+f(s_l,k) &=& k+ \left\lceil \frac k {d_l} \right\rceil + \left\lceil \frac k {d_l\cdot d_{l-1}} \right\rceil + \ldots + \left\lceil \frac k {d_l\cdot \ldots d_2}\right\rceil \\
+         &<&l+k+\frac k {d_l}+ \frac k {d_l\cdot d_{l-1}} + \ldots \\
+         &\leq & l+k+\frac k 2+\frac k 4 + \ldots \\
+         &<& m+2k
+\end{eqnarray*}
+
+So, the complexity of all $n$ pull operations from moffset supplies associated $w$ ith mdistinct nodes is $O(m^2+n)$ and the complexity of an incremental change which adds $k$ histograms with the same period is $O(m+k)$. 
+
+\subsection*{Scheduling algorithm}
+The scheduler should return for every time slot the histogram that was assigned to that time slot. In order to speed up the scheduling decisions we split histograms into groups according to their period and sort them by offset inside each group. 
+
+\subsubsection*{Heap-based scheduler}
+One possible implementation of the scheduler is to use a min-heap to hold the next histogram to be published from each group, ordered by the time of publishing. After a histogram is popped from the heap, the next one for that group is added. This approach has a complexity $O(\log m)$ per scheduling decision which is low enough for our purpose. The space complexity is $O(m)$.
+
+\subsubsection*{Table-based scheduler}
+
+We can implement the scheduler with only $O(1)$ time complexity per scheduling decision at the price of higher space complexity. The common approach is to precompute the schedule for a time duration equal to the least common multiple of the periods. Since we do not have collisions, we can improve over this approach by storing only a small window of the future schedule as a circular buffer. The schedule decision consists of removing and returning the histogram at the beginning of the buffer and adding the next histogram from the same group at its corresponding position.
+ 
+The buffer size is equal to the greatest interval between two offsets of histograms having the same period. This is $O\left(\frac {m \cdot T}  n\right)$ in expected value and $O(T)$ in the worst case, where $T=\max_{i=1,\ldots,n}(T_i)$.
+
+\subsubsection*{Incremental schedule changes}
+
+In order not to stop the publishing for too long while making changes to the histogram configuration, we can continue publishing according to the old schedule until the new offsets are all assigned in another thread using the previously described algorithm. Only when we know all the offsets, we stop the scheduler and commit the changes.
+
+This technique allows us to have smooth incremental changes even when the subperiod tree is rebuilt - process that runs in time $O(n+m^2(\log m+\log T))$. The actual complexity of changing the table-based scheduler is $O(m)$ for a complete offset reassignment and $O(1)$ for incremental changes. For the heap-based one, the times are $O(m\log m)$ and $O(m)$ respectively.
+
+\section*{Experimental results}
+How real experiments differ from simulation.
+How do they scale with the number of nodes.
+How to tune parameters.
+How it is better than the previous system.
+
+\subsection*{Simulation}
+
+\subsection*{Testbed measurements}
+\subsubsection*{Jitter measurements}
+\subsubsection*{Traffic shaping}
+\subsubsection*{Publishing skew and latency}
+
+

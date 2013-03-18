@@ -68,16 +68,11 @@
 % Denumiri in romana pentru keyworduri matematice
 \usepackage{amsmath,amsfonts,amssymb,amscd,amsthm,xspace}
 \theoremstyle{plain}
-%\newtheorem{example}{Exemplu}[chapter]
-%\newtheorem{theorem}{Teorema}[chapter]
-%\newtheorem{corollary}[theorem]{Corolar}
-%\newtheorem{lemma}[theorem]{Lem\u a}
-%\newtheorem{proposition}[theorem]{Propozi\c tie}
-%\newtheorem{axioma}[theorem]{Axioma}
-%\theoremstyle{definition}
-%\newtheorem{definition}[theorem]{Defini\c tie}
-%\theoremstyle{remark}
-%\newtheorem{remark}[theorem]{Observa\c tie}
+\newtheorem{example}{Example}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
 
 % Parametri pentru figuri
 \usepackage[centerlast,small,sc]{caption}
@@ -138,9 +133,9 @@
     basicstyle=\scriptsize, %\small,
     keepspaces=true,
 }
-\lstset{
-        language=TBT,
-        style=tbt,
+\lstset { %
+    language=C++,
+    basicstyle=\footnotesize,% basic font setting
 }
 \renewcommand{\lstlistingname}{Program}
 
