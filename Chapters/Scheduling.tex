@@ -468,9 +468,22 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which represent 5\% for 50 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we need only 20\% more slots than the optimum.
 
 \subsection*{Testbed measurements}
+In this section we present the results obtained running the system on a testbed consisting of nodes with two 6 cores CPUs with hyperthreading enabled. The IS server is run on a separate machine from those running publishing applications.
+
 \subsubsection*{Jitter measurements}
-- Example where my strategy is better than the old one. Hitograms of jitter.
-- Take real histogram sizes and show the jitter distribution.
+
+In order to evaluate the jitter created by our algorithm, we created an workload consisting of 300 histograms with size 100 and periods 2, 4, 6, 8, 10 and 12. We started 10 applications on one node to match the number of applications per node in the real system and we ran the system for 4 minutes. The IS server was set to use two threads to serve the requests.
+
+We compared the subperiod algorithm with a simple algorithm that uses one thread per period that wakes up for every publishing deadline and publishes all the histograms sequentially. Our algorithm was configured to use 100 slots per second and a random delay fraction of 0.75. Figure \ref{fig:jitter_histo} shows the histograms of jitter percentage in both cases.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.6]{Images/jitter_histo.png}
+\caption{Histogram of jitter percentages for the thread-based algorithm (above) and subperiod algorithm (below).}
+\label{fig:jitter_histo}
+\end{figure}
+
+It can be noticed that the jitter is considerably smaller with our algorithm and that the thread-based algorithm actually does not satisfy the requirement to have jitter less than 10 percent.
 
 \subsubsection*{Traffic shaping}
 
@@ -484,8 +497,6 @@ As we mentioned we are interested in reducing traffic spikes as they produce mem
 
 One can see that the size of the highest spike is reduced 8 times, with our new algorithm.
 
-
-- Graphs obtained.
 \subsubsection*{Publishing skew and latency}
 - f, slotsize -> skew or latency
 - no. of nodes, slot size
