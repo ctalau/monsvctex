@@ -49,14 +49,29 @@ This strategy is the opposite of copy-on-write but we prefer it since in our cas
 
 An important observation is that in our use cases, the application that updates an object with the current operational values does not need to wait for the update to be applied. All we are interested in is serial consistency of the operations on that object. 
 
-With the asynchronous updates strategy, we still use a mutex to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. Since updates can be represented very compactly this strategy has low space usage and does not block the application threads while sending it over the network.
+With the asynchronous updates strategy, we still use a mutex to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. Our updates usually increment a counter or a histogram bin, hence they can be represented very compactly. So this strategy has low space usage and does not block the application threads while sending the monitored objects over the network.
 
 The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provides asynchronous updates to any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
 \input{Code/async_ptr}
 
-This method takes a pointer to a member function and its arguments and calls it asynchronously. It requires a change of the method calls from \verb+h->observe(42)+ to \verb+h.async(Histo::observe, 42);+.
+This method takes a pointer to a member function and its arguments and calls it asynchronously. It requires to change the method calls of the from \verb+h->observe(42)+ to use the following form: \verb+h.async(Histo::observe, 42);+.
 
 Another positive point of this implementation is that we can rewrite only some of the method calls to be asynchronous, so there is again a trade-off between the amount of code to be modified and performance.
+
+\subsubsection*{Intuition}
+
+The first figure below represents the operation of the locking strategy while the second one corresponds to the asynchronous updates strategy. One can see that in the second case, the application thread is not disturbed by the monitoring thread which is publishing the object it is trying to update.
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.6]{Images/async_before.png}
+\caption{Locking strategy}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.6]{Images/async_after.png}
+\caption{Asynchronous updates strategy}
+\end{figure}
 
 \subsubsection*{Implementation}
 
@@ -74,4 +89,4 @@ Every thread that acquires the {\tt obj\_lock} mutex executes all updates that w
 
 \subsubsection*{Custom mechanisms}
 
-We also provide a smart pointer that uses callbacks to allow user to implement its own synchronization mechanisms such as, for example, per-cpu counters that are added up before publishing them.
+We also provide a smart pointer that uses callbacks to allow user to implement its own synchronization mechanisms such as, for example, per-cpu counters that are added up only before being read.

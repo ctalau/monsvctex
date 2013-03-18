@@ -13,9 +13,11 @@ In the monsvc approach, the monitoring is split into two operations: registratio
 
 The programmer needs to register the monitored objects (via the {\tt MonitoringService}), to configure the publishing process and to start it (via the {\tt PublishingController}). After this the programmer just needs to update the registered objects to reflect the current operational values. The image below presents an example workflow that the user may employ when working with the library.  
 
-\begin{center}
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.6]{Images/workflow.png}
-\end{center}
+\caption{{\tt monsvc} library usage example workflow.}
+\end{figure}
 
 The separation of registration and publishing also makes the life of third party library developers easier since their only job is to register the objects they want to be monitored while the main application is concerned with configuring and starting the publishing.
 

@@ -6,12 +6,21 @@ The LHC (Large Hadron Collider) is a 27km circumference synchrotron that acceler
 
 The image below presents a section of the detector which has a layered structure with the interaction point in the center of the detector. The different layers are specialized in measuring different properties of the particles as detailed in \citep{aad2008atlas}. 
 
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.2]{Images/Overview.jpg}
+\caption{ATLAS detector section view.}
+\end{figure}
+
 
 \section*{Event selection}
 The two counter-rotating beams consist of trains of particle bunches. The distance between two consecutive particle bunches is around 25 ns and with the bunch crossing duration less than 1 ns. So bunch collisions events happen with a frequency of 40MHz, each one consisting of 25 particle collisions in average. The data collected about these collisions has to be sent to the CERN persistent storage \citep{baud2003castor} for offline analysis. The amount of data collected for a single collision event is 1.5MB in average, which would mean a throughput of 60TB/s which is far more than what can be stored at a reasonable cost. Moreover, the number of events that are interesting for the offline analysis is only a small fraction of the total number of events. Hence, the events are filtered before being persisted using a three level data acquisition system (DAQ). 
 
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.5]{Images/Trigger.png}
+\caption{TDAQ system overview.}
+\end{figure}
 
 The first level trigger (L1) is built using custom hardware that can operate at 40 MHz and is placed as close to the actual detector as possible to reduce latencies caused by cable length. This level makes simple decisions based on the energy depositions in the calorimeters and of muon track segments in order to limit the latency to as low as 2.5 us. The acceptance rate of this level is chosen to be at most 75kHz. 
 
@@ -23,7 +32,11 @@ Finally, the third level trigger, called Event Filter (EF) operates on the compl
 
 During the 2 year shutdown period starting at the beginning of 2013, a large upgrade of the entire system is planned \citep{hauser2012atlas}. In the DAQ system, the main change will be the merge of the L2 and EF.  
 
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.55]{Images/Evolution.png}
+\caption{ATLAS TDAQ atchitecture evolution during shutdown.}
+\end{figure}
 
 All the applications dealing with event dispatching and other system management and control tasks DFM, SFI, L2RH, EFD will be merged into the HLT SuperVisor (HLTSV) and the DataFlow Control Manager DCM. 
 The L2 Processing Unit (L2PU) and the level 3 processing task (PT) will be merged into the HLTPU. In the new system instead of having L2 operating on chunks of event data and EF on whole events, we will have a series of algorithms that fetch event chunks incrementally as needed.
@@ -53,7 +66,12 @@ In order to avoid overloading the database server during the system start and du
 
 \item[Information Sharing (IS) server \citep{kolosinformation}]  Is a server used to share monitoring information between applications that publish their own operational or event-related data and applications that need to process this information. The IS acts as an in memory key-value store, where keys are strings - the name of the objects - and values are subclasses of a specific ISInfo class. An application can write, update or read the value with a specific name. There is also the option for an application to subscribe to receive notifications when a value is updated. Due to the scale of our system, we run multiple instances of this server, each having its own name.
 
-\includegraphics[scale=0.45]{Images/IS.png}
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.44]{Images/IS.png}
+\caption{IS server interface.}
+\end{figure}
+
 
 The ISInfo class is intended to be a plain data structure with serialization and deserialization functions. They can be either written by the programmer or generated from an XML description.
 

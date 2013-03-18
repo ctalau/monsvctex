@@ -164,7 +164,7 @@
 \keywords    {}
 
 \renewcommand\maketitle{
-  \btypeout{Pagin\u a de titlu}
+  \btypeout{Title page}
   \hypersetup{pdftitle={\@title}}
   \hypersetup{pdfsubject=\subjectname}
   \hypersetup{pdfauthor=\authornames}

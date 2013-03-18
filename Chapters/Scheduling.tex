@@ -74,9 +74,11 @@ In order to deal with the case in which the interval is too short for publishing
 
 An example of scheduling is depicted below, where we have three applications that start the publishing within the first $f=0.75$ part of the interval.
 
-\begin{center}
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.6]{Images/local_sched.png}
-\end{center}
+\caption{Global scheduling example.}
+\end{figure}
 
 Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (smaller than 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
 
@@ -101,7 +103,7 @@ The most popular static algorithm is the Rate Monotonic Scheduling (RMS) \citep{
 
 Among the dynamic algorithms, we mention Earliest Deadline First (EDF) \citep{liu1973scheduling} in which, whenever the processor is idle and some tasks are available, we start the task whose deadline comes first and run it up to completion. This algorithm is optimal in the sense that if a system is schedulable with some algorithm, then it is also schedulable with EDF.
 
-People concentrated on developing criteria to check whether a real-time system is schedulable with these algorithms. For EDF the condition XXX is that the utilization $U < 1$ and the following holds:
+People concentrated on developing criteria to check whether a real-time system is schedulable with these algorithms. For EDF the condition \citep{baruah1990algorithms} is that the utilization $U < 1$ and the following holds:
 
 $$ \forall L > 0.\,  \sum_{i=1}^n \left\lfloor \frac{L+T_i-D_i}{T_i}\right\rfloor C_i \le L $$
 
@@ -111,7 +113,7 @@ $$ \sum_{i=1}^n 1 \cdot C_i \le L \Leftrightarrow 50s \le 30s $$
 
 Note that the utilization in our case is $U=\sum_{i=1}^n\frac{C_i}{T_i}=n\frac C T = \frac 1 6 = 0.166$ which is very low. 
 
-For DMS in order to check the schedulability, we have to determine the worst case response time for every task using the following recursive equations XXX.
+For DMS in order to check the schedulability, we have to determine the worst case response time for every task using the following recursive equations \citep{joseph1986finding}.
 
  $$ \forall i.\, R_i=C_i+\sum_{j=1}^{i-1} \left\lceil \frac{R_i}{T_i} \right\rceil \cdot C_j \Leftrightarrow R_i = i\cdot C$$
  
@@ -158,9 +160,11 @@ In order to describe the approximation operation let’s assume that our configu
  
 Let’s consider the time being divided in 5 sec subperiods. Denote by x the number of offsets from the first group that are chosen in the interval [0s, 5s) and by y the number of those in the interval [5s, 10s). Similarly, denote by a, b, c the number of offsets from the second group in the three 5 seconds subperiods of the interval [0s, 15s). In the figure below we represented the number of slots used to publish histograms in 6 consecutive subperiods of 5 sec:
 
-\begin{center}
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.6]{Images/subperiod.png}
-\end{center}
+\caption{Distribution of the histograms among subperiods.}
+\end{figure}
 
 We have a fixed number of slots per second, so we have a bound on the number of slots that we can use in each of the subperiods. In order to stay within this bound our strategy is to minimize the maximum number of used slots in a subperiod. In our case this reduces to the following optimization problem:
 $$ \text{minimize } \max(x+a, y+b, x+c, y+a, x+b, y+c) \text{ subject to } a+b+c=4 \text{ and } x+y = 4 $$
@@ -177,9 +181,11 @@ This is an over-approximation in the sense that if we can assign offsets for the
 The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
 \input{Code/expand}
 A sketch of a possible algorithm execution is presented in the figure below, where we have 5 histograms with period 2 sec, 4 histograms with period 10 sec. and another 4 histograms with period 15 sec. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
-\begin{center}
+\begin{figure}[ht!]
+\centering
 \includegraphics[scale=0.6]{Images/subperiod_tree.png}
-\end{center}
+\caption{Subperiod tree.}
+\end{figure}
 Now we just need to assign offsets to the root group and they will be pushed up to the histograms in the leafs:
 \begin{verbatim}
 assign(build_tree(groups), offsets)
@@ -274,22 +280,7 @@ A first step is to approximate not only pairs of groups but also multiple groups
 
 In the \verb+build_tree+ function we can then consider the pairs of groups in decreasing order of their common subperiod. In order to implement this function efficiently we use a priority queue:
 
-\begin{verbatim}
-def build_tree(groups):
-  subperiods = priority_queue(lambda (g1, g2): gcd(g1.period, g2.period))
-  for g1, g2 in cross_product(groups, groups):
-    subperiods.add((g1, g2))
-  while len(groups) > 1:
-    g1, g2 = subperiods.popmax()
-    groups -= [g1, g2]
-    g’ = approximate(g1, g2)
-    for g in groups:
-      subperiods.remove((g1, g))
-      subperiods.remove((g2, g))
-      subperiods.add((g’, g))
-    groups += [g’]
-  return groups[0]
-\end{verbatim}
+\input{Code/build_tree}
 
 Since we have mgroups of histograms at the beginning, we end up with $2m-1$ groups in the entire tree. So, the number of pairs inserted in the priority queue is at most $O(m^2)$ since we don’t insert the same pair twice. The number of removals is at most as big, and the number of times the maximum is popped is $O(m)$ since we have at most miterations in the while loop. The of each of these operations is $O(\log m^2+T)$, the second term coming from the  computation. So, the total complexity of the \verb+build_tree+ function is $O(m^2(\log m + \log T))$. 
 
@@ -336,10 +327,19 @@ How to tune parameters.
 How it is better than the previous system.
 
 \subsection*{Simulation}
+Describe the setup.
+- one slot queue length, latency and skew.
+- multi-slot queue length, latency and skew.
+- jitter vs. utilization while simulating the algorithm.
 
 \subsection*{Testbed measurements}
 \subsubsection*{Jitter measurements}
+- Example where my strategy is better than the old one. Hitograms of jitter.
+- Take real histogram sizes and show the jitter distribution.
 \subsubsection*{Traffic shaping}
+- Graphs obtained.
 \subsubsection*{Publishing skew and latency}
+- f, slotsize -> skew or latency
+- no. of nodes, slot size
 
 
