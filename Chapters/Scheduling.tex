@@ -351,13 +351,13 @@ The time taken by this step is dependent on the histogram size, especially on wh
 
 Experimental measurements lead us to the following approximating formula:
 \begin{itemize}
-\item 500 us + \# bins * 0.05 us, if bins $<$ 2000
-\item 1.4 ms + \# bins * 0.33 us, otherwise 
+\item 500 us + \# bins $\times$ 0.05 us, if bins $<$ 2000
+\item 1.4 ms + \# bins $\times$ 0.33 us, otherwise 
 \end{itemize}
 \item[The histogram is sent over the network]
 The time is roughly independent on size, except for very big histograms and is equal to an inter-rack round-trip time = 0.2 ms
 \item[The histogram is stored by the IS server]
-This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.2 ms. We used as a model for the duration of this step: 90 us + size * 0.0066 us.
+This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.2 ms. We used as a model for the duration of this step: 90 us + size $\times$ 0.0066 us.
 \item[Finalizing steps in the sending application]
 Takes 0.1 - 0.2 ms and depends slightly on the compressed size of the histograms.
 \end{description}
@@ -414,13 +414,13 @@ We assumed a publishing interval for every histogram of 90s divided into 6000 sl
 \begin{tabulary}{\textwidth}{|L|L|L|L|L|L|L|L|}
 %\begin{tabular}{|l|l|l|l|l|l|l|l|}
 \hline 
-Assign. & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev of pub. skew (ms) & average latency & stddev of latency \\
+Offset assignment & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev of pub. skew (ms) & average latency & stddev of latency \\
 \hline 
-Hash & 5.72	& 26.0 & 344 & 11.924 & 0.297 & 1.304 & 0.967 \\
+ Hash  & 5.72 & 26.0 & 344 & 11.924 & 0.297 & 1.304 & 0.967 \\
 \hline
-Pairs & 2.40	& 18.63 & 376 & 11.319 & 0.770 & 1.159 & 0.992 \\
+ Pairs & 2.40 & 18.63 & 376 & 11.319 & 0.770 & 1.159 & 0.992 \\
 \hline
-Opt. & 0.28 & 6.57 & 305 & 11.205 &1.699 &1.065 &0.776\\
+ Opt.  & 0.28 & 6.57 & 305 & 11.205 &1.699 &1.065 &0.776\\
 \hline 
 \end{tabulary}
 \caption{Offset assignment evaluation during multiple slots.}
@@ -460,7 +460,7 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.45]{Images/unused_slots.png}
+\includegraphics[scale=0.40]{Images/unused_slots.png}
 \caption{The number of extra slots required by our algorithm as compared to the optimum.}
 \label{fig:unused_slots}
 \end{figure}
@@ -478,7 +478,7 @@ We compared the subperiod algorithm with a simple algorithm that uses one thread
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.6]{Images/jitter_histo.png}
+\includegraphics[scale=0.55]{Images/jitter_histo.png}
 \caption{Histogram of jitter percentages for the thread-based algorithm (above) and subperiod algorithm (below).}
 \label{fig:jitter_histo}
 \end{figure}
