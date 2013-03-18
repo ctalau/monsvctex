@@ -25,13 +25,14 @@ First of all, in order to publish a monitored object, the library needs to know 
 
 With over 5000 monitored objects, we need to keep the configuration file of an application within a manageable size. We leverage the fact that the objects fall into a few semantic categories that share publishing requirements. We define groups of objects that share the same publishing parameters by using regular expressions. 
 
-\begin{figure}[ht!]
+\begin{figure}[ht]
 \centering
 \includegraphics[scale=0.6]{Images/oks_regex.png}
 \caption{The two approaches for associating publishing parameters with monitored objects: explicit (left) and implicit by using regular expressions (right).}
+\label{fig:oks_regex}
 \end{figure}
 
-As presented in the image above, instead of having links from the monitored objects to sets of parameters, we create links from parameters to objects by using configuration rules. A configuration rule is composed of a regular expression and a set of parameters. It is this rules that we store in the configuration file. A nice side-effect of this approach is that if the programmer registers a new object which uses an existing parameter set, she just has to give it a name that matches the regular expression.
+As presented in the figure \ref{fig:oks_regex}, instead of having links from the monitored objects to sets of parameters, we create links from parameters to objects by using configuration rules. A configuration rule is composed of a regular expression and a set of parameters. It is this rules that we store in the configuration file. A nice side-effect of this approach is that if the programmer registers a new object which uses an existing parameter set, she just has to give it a name that matches the regular expression.
 
 One problem related to the object sets specification as regular expressions is that it is not easy to express exceptions from a rule. For example: we want to publish histograms with names matching {\tt “DEBUG/.*”} every 10 seconds, but we have a really big histogram among them that we would like to publish less often. To this end, we chose to add an exclude filter to every configuration rule that specifies the exceptions to that rule.
 
@@ -40,12 +41,13 @@ One problem related to the object sets specification as regular expressions is t
 In order to avoid complicated link time dependencies between packages, we adopted the split responsibility model: the developer of a library registers some objects and the developer of the application is the one who needs to configure their publishing parameters. Since some objects are registered by one developer and configured by another one, a clear convention should be used between the two. 
 Our configuration mechanism allows the developer of the library to provide configuration rules for the objects registered in that library. To this end we created the concept of rule bundle which contains configuration rules and links other rule bundles. With this approach the developer of the main application can just link the rule bundle of the library in the rule bundle of the application. This mechanism handles nicely transitive dependencies by using transitively linked bundles.
 
-The configuration files are a set of interlinked XML files, one per application or library. These files form the configuration database which can be loaded at runtime with the OKS system. The database is an object oriented one, where for example every application is described by a {\tt PublishingApplication} object which has a one to one relation to a rule bundle which is represented by an object of class {\tt ConfigurationRuleBundle}. The complete schema of the configuration database is presented below. 
+The configuration files are a set of interlinked XML files, one per application or library. These files form the configuration database which can be loaded at runtime with the OKS system. The database is an object oriented one, where for example every application is described by a {\tt PublishingApplication} object which has a one to one relation to a rule bundle which is represented by an object of class {\tt ConfigurationRuleBundle}. The complete schema of the configuration database is presented in figure \ref{fig:oks_schema}. 
 
-\begin{figure}[ht!]
+\begin{figure}[ht]
 \centering
 \includegraphics[scale=0.75]{Images/oks_schema.png}
 \caption{Configuration database schema.}
+\label{fig:oks_schema}
 \end{figure}
 
 \subsection*{The number of application instances}

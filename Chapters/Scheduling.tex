@@ -33,7 +33,7 @@ In order to take a snapshot of a histogram across all nodes at some point in tim
 
 \item [Maximize throughput]
 
-We want the published information in the IS server to be as fresh as possible. So we need to publish as many histograms per second as possible allowing the user user to configure smal publishing intervals.
+We want the published information in the IS server to be as fresh as possible. So we need to publish as many histograms per second as possible allowing the user user to configure small publishing intervals.
 
 \item [Efficient incremental reconfiguration]
 
@@ -53,7 +53,7 @@ Although important, this requirement has the same cause as the first one, namely
 
 \section*{Global and local scheduling}
 
-The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application intance in isolation, we call them local requirements. These are the jitter minimization and reconfiguration efficiency. 
+The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation, we call them local requirements. These are the jitter minimization and reconfiguration efficiency. 
 
 As it can be seen from the requirements above, although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other’s performance by creating contention in the monitoring network of the ATLAS TDAQ system. Indeed, requirements like skew and latency minimization and bursty traffic avoidance are global requirements that can be satisfied only if the application instances cooperate.
 
@@ -72,12 +72,13 @@ The strategy that we adopted for this problem is to make each application choose
 
 In order to deal with the case in which the interval is too short for publishing all the histograms, we extend it until we are done publishing everything and reduce the length of the next interval.
 
-An example of scheduling is depicted below, where we have three applications that start the publishing within the first $f=0.75$ part of the interval.
+An example of scheduling is depicted in figure \ref{fig:local_sched}, where we have three applications that start the publishing within the first $f=0.75$ part of the interval.
 
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.6]{Images/local_sched.png}
 \caption{Global scheduling example.}
+\label{fig:local_sched}
 \end{figure}
 
 Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (smaller than 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
@@ -158,12 +159,13 @@ group = {period : histo.period, n : 1, offset : None}
 \end{verbatim}
 In order to describe the approximation operation let’s assume that our configuration include two histogram groups: one having 4 histograms to be published every 10 sec. and another one 4 histograms to be published every 15 sec. So, we need to assign 4 offsets in the range [0s, 10s) and 4 offsets in the range [0s, 15s).
  
-Let’s consider the time being divided in 5 sec subperiods. Denote by x the number of offsets from the first group that are chosen in the interval [0s, 5s) and by y the number of those in the interval [5s, 10s). Similarly, denote by a, b, c the number of offsets from the second group in the three 5 seconds subperiods of the interval [0s, 15s). In the figure below we represented the number of slots used to publish histograms in 6 consecutive subperiods of 5 sec:
+Let’s consider the time being divided in 5 sec subperiods. Denote by x the number of offsets from the first group that are chosen in the interval [0s, 5s) and by y the number of those in the interval [5s, 10s). Similarly, denote by a, b, c the number of offsets from the second group in the three 5 seconds subperiods of the interval [0s, 15s). In the figure \ref{fig:subperiod} we represented the number of slots used to publish histograms in 6 consecutive subperiods of 5 sec:
 
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.6]{Images/subperiod.png}
 \caption{Distribution of the histograms among subperiods.}
+\label{fig:subperiod}
 \end{figure}
 
 We have a fixed number of slots per second, so we have a bound on the number of slots that we can use in each of the subperiods. In order to stay within this bound our strategy is to minimize the maximum number of used slots in a subperiod. In our case this reduces to the following optimization problem:
@@ -180,12 +182,14 @@ This is an over-approximation in the sense that if we can assign offsets for the
 \input{Code/assign}
 The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
 \input{Code/expand}
-A sketch of a possible algorithm execution is presented in the figure below, where we have 5 histograms with period 2 sec, 4 histograms with period 10 sec. and another 4 histograms with period 15 sec. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
+A sketch of a possible algorithm execution is presented in figure \ref{fig:subperiod_tree}, where we have 5 histograms with period 2 sec, 4 histograms with period 10 sec. and another 4 histograms with period 15 sec. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.6]{Images/subperiod_tree.png}
 \caption{Subperiod tree.}
+\label{fig:subperiod_tree}
 \end{figure}
+
 Now we just need to assign offsets to the root group and they will be pushed up to the histograms in the leafs:
 \begin{verbatim}
 assign(build_tree(groups), offsets)
@@ -231,7 +235,7 @@ We can notice that this problem is an instance of the Directed Steiner Tree opti
 
 We will prove that our problem is also NP-hard by reducing from the Bounded Frequency Set Cover problem \citep{gary1979computers, cmulecture}. In fact, since our problem has numeric inputs we will prove it strongly NP-hard \citep{garey1978strong}, that is, it is NP-complete even if the numeric inputs, i.e. the periods, are bounded by a polynomial in the input size.
 
-The Bounded Frequency Set Cover (BFSC) problem for $B \ge 2$ is the following: Given a finite set $X=\{x_1,\ldots,x_q\}$ and a collection of its subsets $C=\{C_1,\ldots, C_n\}$ such that each $x_i$ occurs in at most $B$ subsets, does it contain a subcollection of size kthat covers the set $X$?
+The Bounded Frequency Set Cover (BFSC) problem for $B \ge 2$ is the following: Given a finite set $X=\{x_1,\ldots,x_q\}$ and a collection of its subsets $C=\{C_1,\ldots, C_n\}$ such that each $x_i$ occurs in at most $B$ subsets, does it contain a subcollection of size $k$ that covers the set $X$?
 
 Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover to our problem. Let’s associate with every $C_i$ a prime number $p_i$ and with every $x_i$ a set of histograms with period $Pi=\prod_{x_i\in C_k}p_k$.
 
@@ -265,7 +269,7 @@ We applied the induction hypothesis for the subtrees starting at $p_1$ and $p_2$
 We will prove the two parts of the equivalence between the two problems separately:
 \begin{description}
 \item[Opt. strategy $\Rightarrow$ BFSC] 
-Since our tree has the cost between $k-0.5$ and $k+0.5$ it means that it has at exactly $k$ edges incident to the node 1 because their cost is $k-\sum{j=1}^k \frac 1 {p_j} \geq k-\frac k {2r} \geq k-0.5$ and the cost of the rest of the tree is $ <\frac k {p_1}< \frac r{2r}<0.5$ according to the lemma we just proved. Let $D_1, \ldots, D_k$ be the neighbors of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
+Since our tree has the cost between $k-0.5$ and $k+0.5$ it means that it has at exactly $k$ edges incident to the node 1 because their cost is $k-\sum{j=1}^k \frac 1 {p_j} \geq k-\frac k {2r} \geq k-0.5$ and the cost of the rest of the tree is $ <\frac k {p_1}< \frac r{2r}<0.5$ according to the lemma we just proved. Let $D_1, \ldots, D_k$ be the neighbours of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
 
 \item[BFSC $\Rightarrow$ Opt. strategy] Let’s consider a subcover $\{C_1,\ldots,C_k\}$. The tree in which the root is connected to the nodes $p_i$ which are connected to leafs $P_j$ for which $p_i \vert P_j$ has the cost $c$ which satisfies the relations: $c > \sum_{i=1}^k 1-\frac 1{p_i} > k-\frac k{2r}>k-0.5$ and according to the lemma $c<\sum_{i=1}^k 1-\frac 1{p_i}+0.5<k+0.5$.
 \end{description}\end{proof}
@@ -287,7 +291,7 @@ Since we have mgroups of histograms at the beginning, we end up with $2m-1$ grou
 \subsubsection*{Offset assignment complexity}
 For the complexity analysis of the offset assignment I will use the pull version presented in the previous section. I assume that the offset buffer of the \verb+OffsetSupply+ is built lazily, so its construction and pop operation are $O(1)$. I also assume that in $O(m)$ we merge all nodes with their parents that have the same period.
 
-Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every ditimes. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
+Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every $d_i$ times. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
 
 $$ f(s_i, k) = k + f\left(s_{i-1}, \left\lceil \frac k {d_i} \right\rceil \right)$$
 
@@ -300,7 +304,7 @@ f(s_l,k) &=& k+ \left\lceil \frac k {d_l} \right\rceil + \left\lceil \frac k {d_
          &<& m+2k
 \end{eqnarray*}
 
-So, the complexity of all $n$ pull operations from moffset supplies associated $w$ ith mdistinct nodes is $O(m^2+n)$ and the complexity of an incremental change which adds $k$ histograms with the same period is $O(m+k)$. 
+So, the complexity of all $n$ pull operations from $m$ offset supplies associated with $m$ distinct nodes is $O(m^2+n)$ and the complexity of an incremental change which adds $k$ histograms with the same period is $O(m+k)$. 
 
 \subsection*{Scheduling algorithm}
 The scheduler should return for every time slot the histogram that was assigned to that time slot. In order to speed up the scheduling decisions we split histograms into groups according to their period and sort them by offset inside each group. 
@@ -321,22 +325,166 @@ In order not to stop the publishing for too long while making changes to the his
 This technique allows us to have smooth incremental changes even when the subperiod tree is rebuilt - process that runs in time $O(n+m^2(\log m+\log T))$. The actual complexity of changing the table-based scheduler is $O(m)$ for a complete offset reassignment and $O(1)$ for incremental changes. For the heap-based one, the times are $O(m\log m)$ and $O(m)$ respectively.
 
 \section*{Experimental results}
+
+In order to evaluate different scheduling algorithms and different parameters values, we implemented a simulation tool using SimPy \citep{simpy}. The simulation results were compared the results of a testbed deployment of the system. Using a simulation allowed us to prototype and evaluate faster and also offered us an easier way to measure values that were not accessible in a testbed deployment.
+
 How real experiments differ from simulation.
 How do they scale with the number of nodes.
 How to tune parameters.
 How it is better than the previous system.
 
 \subsection*{Simulation}
-Describe the setup.
-- one slot queue length, latency and skew.
-- multi-slot queue length, latency and skew.
-- jitter vs. utilization while simulating the algorithm.
+The workload used for comparison consists of the histograms published by the Event Filter nodes: 5138 histograms with 438 bins in average and a publishing interval of 1 minute for all of them. At the extreme, there are two histograms with 178.400 and 228.352 bins. The distribution of sizes (number of bins) is given by the figure \ref{fig:histosize}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.6]{Images/histo_distrib.png}
+\caption{Histogram size distribution.}
+\label{fig:histosize}
+\end{figure}
+
+
+The model of the publishing process of a histogram has four steps: 
+\begin{description}
+\item [Preparing the histogram in the CORBA buffer]
+The time taken by this step is dependent on the histogram size, especially on whether compression takes place or not and it is also the longest step.
+
+Experimental measurements lead us to the following approximating formula:
+\begin{itemize}
+\item 500 us + \# bins * 0.05 us, if bins $<$ 2000
+\item 1.4 ms + \# bins * 0.33 us, otherwise 
+\end{itemize}
+\item[The histogram is sent over the network]
+The time is roughly independent on size, except for very big histograms and is equal to an inter-rack round-trip time = 0.2 ms
+\item[The histogram is stored by the IS server]
+This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.2 ms. We used as a model for the duration of this step: 90 us + size * 0.0066 us.
+\item[Finalizing steps in the sending application]
+Takes 0.1 - 0.2 ms and depends slightly on the compressed size of the histograms.
+\end{description}
+
+The latencies were chosen to be consistent with experimental latencies measured using {\tt strace} and measuring the interval between system calls corresponding to messages sent over the network. This approach was chosen because the server was treated as a black-box as it was developed by another working group. 
+
+We simulated 40 nodes with 10 applications each, publishing to an IS server which has 8 threads and is assumed that it run on a machine with enough CPUs to allow the threads to run in parallel. The inbound link of the server has 1Gbps, but it turned out not to be a bottleneck.
+
+\subsubsection*{Global scheduling for one slot}
+
+We simulated 40 nodes with 10 applications each publishing the same histogram within a time slot. We varied the length of the interval from which we choose the starting point randomly. We considered one or two histograms with the size given by the table \ref{tab:histosize} being published in a time slot.
+
+\begin{table}
+\centering
+\begin{tabular}[ht]{ | l | l | l | }
+  \hline                        
+  Size & Duration & Percentage \\
+  \hline                        
+  S & 100us & 91\% \\
+  \hline  
+  M & 200us & 8.3\% \\
+  \hline  
+  L & 400us & 0.6\% \\
+  \hline  
+\end{tabular}
+\caption{Histogram classes used in simulation.}
+\label{tab:histosize}
+\end{table}
+
+
+The maximum length of the IS server queue for each of the cases is presented in the chart \ref{fig:one_slot_sim_qlen}. A similar chart should be used when making the choice of the time slot length and the fraction of it used for the random start. We can learn from the chart that:
+
+\begin{itemize}
+\item small and medium histograms and even pairs of small histograms, with 10ms delay
+\item one or two histograms except pairs containing a large histogram, with 20ms delay
+\item one or two histograms except pairs of two large histograms, with 30ms delay
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.6]{Images/one_slot_sim_qlen.png}
+\caption{Maximum IS queue length vs. initial random delay.}
+\label{fig:one_slot_sim_qlen}
+\end{figure}
+
+
+\subsubsection*{Global scheduling for multiple slots}
+
+We also tried to see the effects of start time randomization during a longer period of time in which some of the slots contain more histograms than they can publish. We compared the publishing skew, the IS queue length and the publishing latency among three slot assignments.  
+
+We assumed a publishing interval for every histogram of 90s divided into 6000 slots of 15 ms each. The first slot assignment is the the hash-based one which assigned up to 6 histograms to the same slot leaving approximately 2500 empty slots. The second assignment assigns two histograms per slot in the first slots and leaves the remaining ones empty. The third assignment is the optimal one that assigns each histogram to its own slot. 
+
+\begin{table}
+\begin{tabulary}{\textwidth}{|L|L|L|L|L|L|L|L|}
+%\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline 
+Assign. & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev of pub. skew (ms) & average latency & stddev of latency \\
+\hline 
+Hash & 5.72	& 26.0 & 344 & 11.924 & 0.297 & 1.304 & 0.967 \\
+\hline
+Pairs & 2.40	& 18.63 & 376 & 11.319 & 0.770 & 1.159 & 0.992 \\
+\hline
+Opt. & 0.28 & 6.57 & 305 & 11.205 &1.699 &1.065 &0.776\\
+\hline 
+\end{tabulary}
+\caption{Offset assignment evaluation during multiple slots.}
+\label{tab:multi_slot_sim}
+\end{table}
+
+The results are summarized in table \ref{tab:multi_slot_sim}. We can see that while the the publishing skew is dictated by the slot length, the IS queue length increases by much both in average and standard deviation once we have multiple histograms per slot. However, the maximum queue length is not improved by much as it is determined by the slots containing one of the 0.1\% histograms that are have the size 10 times the others. The latency is correlated with the queue length and the increase for the hash-based assignment is 25\%.
+
+\subsubsection*{Throughput}
+
+We also evaluated the throughput that can be achieved by the hash-based technique without impacting the other indicators like: publishing skew and latency. In the charts \ref{fig:skew_sim} and \ref{latency_sim} we show the results of publishing the entire set of histograms in 6000 slots spread over a period of 1-3 minutes. Different bars correspond to a different percentage of the slot dedicated to the randomized delay.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{Images/skew_sim.png}
+\caption{Skew vs. interval length and random delay fraction.}
+\label{fig:skew_sim}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{Images/latency_sim.png}
+\caption{Latency vs. interval length and random delay fraction.}
+\label{fig:latency_sim}
+\end{figure}
+
+The histograms would take 25s in they were published in a sequential manner while in the previous scenario we need 90 seconds to publish the histograms in reasonable latency and publishing skew conditions. So, the throughput is 27\%.
+
+
+\subsubsection*{Subperiod algorithm evaluation}
+
+We have seen that finding the optimal best subperiod tree is an NP-hard problem and we also know that the set cover problem which we reduced to ours cannot be approximated better than a logarithmic ratio. Moreover, there might exist offset assignments that are better than the best assignment produced by a subperiod tree. In this subsection we show that the subperiod algorithm produces assignments which are close to optimal for practical cases. 
+
+For evaluation purposes, we count the number of slots per second required by our offset assignment algorithm and compare it to the smallest number of slots required if we could use fractional slots. For example, for two histograms with periods 2 and 3, the number of slots required are $\frac 1 2 + \frac 1 3$. This number is clearly a lower bound on the number of slots required by any possible offset assignment.
+
+In our experiment most of the periods have only 2, 3 and 5 as prime factors (called \emph{nice} periods) but we allow some other periods also. For several combinations of nice and non-nice periods we ran the algorithm on 1000 randomly chosen inputs and we counted the number of extra slots that our algorithm requires as compared to the above mentioned optimum. The results are presented in figure \ref{fig:unused_slots}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.45]{Images/unused_slots.png}
+\caption{The number of extra slots required by our algorithm as compared to the optimum.}
+\label{fig:unused_slots}
+\end{figure}
+
+We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which represent 5\% for 50 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we need only 20\% more slots than the optimum.
 
 \subsection*{Testbed measurements}
 \subsubsection*{Jitter measurements}
 - Example where my strategy is better than the old one. Hitograms of jitter.
 - Take real histogram sizes and show the jitter distribution.
+
 \subsubsection*{Traffic shaping}
+
+As we mentioned we are interested in reducing traffic spikes as they produce memory allocation spikes which cause stop-the-world garbage collector to run in applications written in Java. We run the same setup as before and we registered one subscriber for the IS server. The graphic below shows the number of updates it receives in a time unit with both scheduling algorithms. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{Images/burstiness.png}
+\caption{Traffic burstiness comparison.}
+\end{figure}
+
+One can see that the size of the highest spike is reduced 8 times, with our new algorithm.
+
+
 - Graphs obtained.
 \subsubsection*{Publishing skew and latency}
 - f, slotsize -> skew or latency

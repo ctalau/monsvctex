@@ -114,6 +114,8 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{courier}
+\usepackage{float}
+\usepackage{tabulary}
 % Listinguri de cod
 \usepackage{listings}
 % definitia sintaxei si stilului pentru TBT
