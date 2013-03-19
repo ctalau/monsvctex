@@ -228,32 +228,39 @@ For convenience we call these numbers the cost of an edge and of a tree respecti
 
 Note that this measure is very conservative. First because we assume that the worst case happens for every edge which usually is not the case. Second, because these slots are wasted by our algorithm when compared to a hypothetical assignment that uses $\frac 1 P$ slots every second to publish a histogram with period $P$. Even an optimal schedule that satisfies the deadlines of our system leaves some slots unused compared to this hypothetical schedule. Finally, these slots are not entirely wasted - they can be used when we add new histograms incrementally.
 
-\subsubsection*{NP-completeness of optimal strategy}
+\subsubsection*{NP-hardness of optimal subperiod tree}
 
-Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. Let’s consider the graph with vertices denoted by numbers $1,2,,P=\max_{i=1,\ldots,n}(P_i)$ with edge between the vertices $a, b$ of cost $\frac 1 b -\frac 1 a$ if $b \vert a$; find the minimum-cost tree that contains vertices $P_1,\ldots,P_n$ and $\gcd(P_i)$.
+Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
+
+\begin{problem}[Optimal Subperiod Tree]
+Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
+\end{problem}
 
 We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
 
-We will prove that our problem is also NP-hard by reducing from the Bounded Frequency Set Cover problem \citep{gary1979computers, cmulecture}. In fact, since our problem has numeric inputs we will prove it strongly NP-hard \citep{garey1978strong}, that is, it is NP-complete even if the numeric inputs, i.e. the periods, are bounded by a polynomial in the input size.
+We will prove that our problem is also NP-hard by reducing from the Bounded Frequency Set Cover problem \citep{gary1979computers, cmulecture}. Actually, since our problem has numeric inputs we will prove it strongly NP-hard \citep{garey1978strong}, that is, it is NP-hard even if the numeric inputs, i.e. the periods, are bounded by a polynomial in the input size.
 
-The Bounded Frequency Set Cover (BFSC) problem for $B \ge 2$ is the following: Given a finite set $X=\{x_1,\ldots,x_q\}$ and a collection of its subsets $C=\{C_1,\ldots, C_n\}$ such that each $x_i$ occurs in at most $B$ subsets, does it contain a subcollection of size $k$ that covers the set $X$?
+\begin{problem}[Bounded Frequency Set Cover] Let's consider a finite set $X=\{x_1,\ldots,x_q\}$ and a collection of its subsets $C=\{C_1,\ldots, C_n\}$ such that each $x_i$ occurs in at most $B$ of these subsets, where $B \geq 2$. Find the smallest $k$ such that there exist a subcollection of $C$ of size $k$ that covers the set $X$?
+\end{problem}
 
-Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover to our problem. Let’s associate with every $C_i$ a prime number $p_i$ and with every $x_i$ a set of histograms with period $Pi=\prod_{x_i\in C_k}p_k$.
+Let's first assume without loss of generality that there is no element $x_k$ which belongs to every subset $C_i$. If it does, we can remove them from $X$ and from all subsets and the resulting problem is equivalent.
 
-We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to [25] it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction we just have to prove the following theorem. 
+Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let’s associate with every $C_i$ a prime number $p_i$ and with every $x_i$ a the number $P_i=\prod_{x_i\in C_k}p_k$.
 
-\begin{theorem}
-The optimal tree for this set of histograms with periods $P_i$ has the cost between $k-0.5$ and $k+0.5$ if and only if to the BFSC instance has a subcover of size $k$ for $k \ge  1$.
+We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to \citep{jaroma2005upper} it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction between the corresponding decision problems we prove the following theorem. 
+
+\begin{theorem}\label{theorem}
+There exists a subperiod tree in the given graph which has the cost between $k-0.5$ and $k+0.5$ if and only if the BFSC instance has a subcover of size $k$ for $k \ge  1$.
 \end{theorem}
 
-First we prove an useful lemma which says that the cost of the tree is concentrated in the edges connected to the root node which has period 1.
+First we prove an useful lemma which says that the cost of a closed subtree is small when its root is small. We call a subtree closed if it contains all the descendants of its root that belong to the tree. 
 
-\begin{lemma}
-The cost of a subtree that contains $k$ leafs and whose root is $p$ has the cost at most $\frac{k}{p}$.
+\begin{lemma}\label{lemma1}
+The cost of a closed subtree that contains $k$ leafs and whose root is $p$ has the cost at most $\frac{k}{p}$.
 \end{lemma}
 
 \begin{proof}
-We proceed by induction on the number of nodes. If there is only one node, it is a leaf and the cost of the tree is $0<\frac 1p$. Otherwise, the root has two children with periods $p_1$ and $p_2$ that have $k_1$ and $k_2$ leafs in the corresponding subtree. The cost of the tree is: 
+We proceed by induction on the number of nodes. If there is only one node, it is a leaf and the cost of the tree is $0<\frac 1p$. Otherwise, the root has two children with periods $p_1$ and $p_2$ that have $k_1$ and $k_2$ leafs in the corresponding subtrees. The cost of the tree is: 
 
 \begin{eqnarray*}
 c(p) &=& \left(\frac 1p - \frac 1 {p_1}\right) + \left(\frac 1 p - \frac 1 {p_2}\right)+c(p_1)+c(p_2) \\
@@ -263,18 +270,52 @@ c(p) &=& \left(\frac 1p - \frac 1 {p_1}\right) + \left(\frac 1 p - \frac 1 {p_2}
     &=&\frac kp
 \end{eqnarray*}
 
-We applied the induction hypothesis for the subtrees starting at $p_1$ and $p_2$ which are smaller. 
+We applied the induction hypothesis for the subtrees rooted at $p_1$ and $p_2$ which have fewer nodes. 
 \end{proof}
 
-\begin{proof}[Proof of Theorem]
-We will prove the two parts of the equivalence between the two problems separately:
-\begin{description}
-\item[Opt. strategy $\Rightarrow$ BFSC] 
-Since our tree has the cost between $k-0.5$ and $k+0.5$ it means that it has at exactly $k$ edges incident to the node 1 because their cost is $k-\sum{j=1}^k \frac 1 {p_j} \geq k-\frac k {2r} \geq k-0.5$ and the cost of the rest of the tree is $ <\frac k {p_1}< \frac r{2r}<0.5$ according to the lemma we just proved. Let $D_1, \ldots, D_k$ be the neighbours of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
+\begin{lemma}\label{lemma2}
+If in a subperiod tree with root 1 in which the root has exactly $l \ge 1$ neighbours the cost belongs to the interval $(l-0.5,l+0.5)$.
+\end{lemma}
+\begin{proof}
+The cost of the edges between the root and its neighbours is $c_1$ where $c_1 \le l$ and 
 
-\item[BFSC $\Rightarrow$ Opt. strategy] Let’s consider a subcover $\{C_1,\ldots,C_k\}$. The tree in which the root is connected to the nodes $p_i$ which are connected to leafs $P_j$ for which $p_i \vert P_j$ has the cost $c$ which satisfies the relations: $c > \sum_{i=1}^k 1-\frac 1{p_i} > k-\frac k{2r}>k-0.5$ and according to the lemma $c<\sum_{i=1}^k 1-\frac 1{p_i}+0.5<k+0.5$.
+$$c_1 = \sum_{j=1}^{l} 1-\frac 1 {p_{i_j}}  = l - \sum_{j=1}^l \frac 1 {p_{i_j}} \geq l-\frac l {2r} >l-0.5$$
+
+According to the lemma \ref{lemma1}, the cost of the edges in the rest of the tree is $c_2$ where $c_2 \ge 0$ and 
+$$c_2 \le \sum_{j=1}^l \frac 1 {p_{i_j}} \leq \frac l {p_1} < \frac r {2r} < 0.5$ 
+
+So, the total cost of the tree is between $l-0.5$ and $l+0.5$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem \ref{theorem}]
+The root node of the subperiod tree is the node 1. Otherwise, it means that all the $P_i$ have a common prime divisor (a divisor of the root) which correspond to an element $x_k$ which belongs to all subsets $C_i$. Contradiction.
+
+Since the number of leafs in the subperiod tree is $q$, the root of the tree has at most $q$ neighbours.
+
+We will prove the two parts of the equivalence between the two implications of the theorem separately:
+
+\begin{description}
+\item[($\Rightarrow$)] 
+Let's denote the number of neighbours of the root of the tree by $l$. So, the cost of the tree belongs to $(l-0.5, l+0.5)\cap (k-0.5,k+0.5)$ and the only case in which this set is non-empty is when $l=k$.
+
+Let $D_1, \ldots, D_k$ be the neighbours of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
+
+\item[($\Leftarrow$)] Let $C'=\{C_1,\ldots,C_k\}$ be a subcover of size $k$. Let's consider the tree $T$ with edges 
+$$E = \{(1, p_i) \,|\, i=1,\ldots, k\} \cup \{(p_i, P_j) \,| \,\, p_i | P_j\}$$
+
+Since $C'$ is a subcover it means that $\forall j. \exists i. x_j \in C_i$ which means that $\forall j. \exists i. p_i \vert P_j$, so every $P_j$ is an endpoint of an edge in $E$. So, $T$ is a subperiod tree. According to the lemma \ref{lemma2} the tree has the cost between $k-0.5$ and $k+0.5$.
+
 \end{description}\end{proof}
- 
+
+Now we state the reduction form Bounded Frequency Set Cover to the Optimal Subperiod Tree.
+\begin{theorem}[BFSC to OST reduction]
+The optimal subperiod tree in the given graph has the cost in the interval $(k-0.5, k+0.5)$ if and only if the smallest subcover of the BFSC instance has size $k$.
+\end{theorem}
+
+\begin{proof}
+Apply theorem \ref{theorem}.
+\end{proof}
+
 Following the same lines we can prove that even a strategy that chooses a minimal number of neighbors for the root is NP-hard to find.
 
 \subsubsection*{Heuristic strategy}

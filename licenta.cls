@@ -69,6 +69,7 @@
 \usepackage{amsmath,amsfonts,amssymb,amscd,amsthm,xspace}
 \theoremstyle{plain}
 \newtheorem{example}{Example}[chapter]
+\newtheorem{problem}{Problem}[chapter]
 \newtheorem{theorem}{Theorem}[chapter]
 \newtheorem{lemma}[theorem]{Lemma}
 \theoremstyle{definition}
