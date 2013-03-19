@@ -2,7 +2,7 @@
 \label{Capitolul5}
 
 
-As describeds in chapter \ref{Capitolul2}, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. This concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another one and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
+As described in chapter \ref{Capitolul2}, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. This concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another one and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
 
 \section*{Smart pointers}
 
@@ -83,7 +83,7 @@ And the pseudocode is given below:
 \input{Code/async}
 Note that the async method does not block when trying to acquire {\tt obj\_lock} since it uses the non-blocking {\tt try\_lock} method. 
 
-Every thread that acquires the {\tt obj\_lock} mutex executes all updates that were added to the {\tt update\_queue} before accessing the underlying object of the smart pointer. This way we ensure that after the exclusive access to the object is given to the application, the object is in a serialy consistent state. As an optimization, we also execute all updates before releasing the {\tt obj\_lock}.
+Every thread that acquires the {\tt obj\_lock} mutex executes all updates that were added to the {\tt update\_queue} before accessing the underlying object of the smart pointer. This way we ensure that after the exclusive access to the object is given to the application, the object is in a serially consistent state. As an optimization, we also execute all updates before releasing the {\tt obj\_lock}.
 
 \subsubsection*{Custom mechanisms}
 

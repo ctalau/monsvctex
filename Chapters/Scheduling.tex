@@ -2,15 +2,15 @@
 \label{Capitolul4}
 
 
-In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library on every application instance. We first identify the objectives of the scheduling algorithm, present some solutions and assess them by using both a simulation and a test-bed deployment of the system. 
+In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library by every application instance. We first identify the requirements on the scheduling algorithm, present some solutions and assess them by using both a simulation and a test-bed deployment of the system.
 
 \section*{System overview}
 
-Our monitoring system is composed of 12000 applications which send data to 32 multithreaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF selection applications. Instances of the same application have the same set of registered objects.
+Our monitoring system is composed of approximately 12000 applications which send data to 32 multithreaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
 
-Since applications talking to different IS servers are independent, we chose to model a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba}, the server has 8 threads by default and runs on a machine with 12 CPUs. We also assume that every application sends most of its data to a single IS server in the same rack connected in the same switch with a 1Gbps connection.
+Since applications talking to different IS servers are independent we analyse them separately. So we consider a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba} and the server has 8 threads by default and runs on a machine with 12 CPUs. We also assume that the IS server runs in the same rack with the applications that use it and is connected to the same switch with a 1Gbps connection.
 
-A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 nodes, there are 5087 histograms with 1126 bins in average. The publishing interval is usually configured between 1 second and 10 minutes. Although applications publish also many kinds of objects such as counters or flags, most of the published monitoring information consists of histogram. Since histograms have the biggest influence the performance of the system I will use the name histogram to refer to any kind of such object.
+A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 nodes, there are 5087 histograms with 1126 bins in average. The publishing intervals are usually configured between 1 second and 10 minutes. Although applications publish many other kinds of objects such as counters or flags, most of the published monitoring information consists of histograms. Since histograms have the biggest influence on the performance of the system I will consider only them for the analysis in this chapter.
 
 \section*{Publishing requirements}
 
@@ -19,17 +19,17 @@ A typical example of monitored objects set is the one of the Event Filter nodes 
 
 First of all, we should be able to publish each histogram periodically, with the interval between two consecutive publications approximately equal to the interval configured by the user. We should be able to handle multiple publishing intervals. A number of intervals of the order of 10 is expected.
 
-Let's consider a histogram with publishing interval $I$ and let the time of the $k$-th publication of a histogram be $T_k$; we call $J=\max(\lvert T_k-((k-1) \cdot I+T_1\rvert)$ the jitter of the histogram. We want to have $J < 0.1\cdot I$ for every histogram.
+Let's consider a histogram with publishing interval $I$ and let the time of the $k$-th publication of a histogram be $T_k$; we call $J=\max(\lvert T_k-((k-1) \cdot I+T_1\rvert))$ the jitter of the histogram. We want to have $J < 0.1\cdot I$ for every histogram.
 
 \item[Minimize latency.]
 
-We publish the histograms using a separate thread from that of the main application which does the event filtering. In this thread we call a black-box function that takes care of all the details of sending the histogram to the IS server (buffering, marshaling, etc.). We have to keep the histogram locked while we are calling this function in order to prevent a concurrent access from the thread that is updating the histogram. As the application may block waiting for the histogram to be published instead of doing useful work, we want to minimize the publishing latency.
+We publish the histograms using a separate thread from that of the main application which does the event filtering. In this thread we call a black-box function that takes care of all the details of sending the histogram to the IS server (buffering, marshaling, etc.). We have to keep the histogram locked while we are calling this function in order to prevent a concurrent modification from the thread that is updating the histogram. As the main application thread may block waiting for the histogram to be published instead of doing useful work, we want to minimize the publishing latency.
 
 \item [Minimize publishing skew.]
 
-Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system’s operational state we need to take a snapshot of the histogram from all nodes at some point in time and to aggregate them.
+Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system’s operational state we need to take a snapshot of the histogram instances from all nodes at some point in time and to aggregate them.
 
-In order to take a snapshot of a histogram across all nodes at some point in time, we need to have all nodes publishing their instance of that histogram with minimal skew. The publishing skew of a histogram is defined to be the difference between the moments when the first and the last instance of the histogram is received by the IS server.  
+In order to take a snapshot of histogram instances across all nodes at some point in time, we need to have all nodes publishing their instance of that histogram with minimal skew. The publishing skew of a histogram is defined to be the difference between the moments when the first and the last instance of the histogram is received by the IS server.  
 
 \item [Maximize throughput]
 
@@ -39,13 +39,13 @@ We want the published information in the IS server to be as fresh as possible. S
 
 We want to allow the users to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don’t want the system to stop publishing for a long time in order to apply the new configuration changes. 
 
-We also want that if we change the publishing interval for some histograms, the rest of them should continue to be published according to the same schedule as before.
+We also want that if we change the publishing interval for some histograms, the rest of them should continue to be published according to the existing schedule.
 
 \item [Avoid bursty traffic]
 
 A bursty traffic pattern seen by the IS server impacts the overall system performance in multiple ways. First, it requires big inbound queues both in IS server and in all the upstream applications to which the IS server pushes information. 
 
-Another effect is related to the IS subscriber applications that use garbage collection for memory management. They are known to suffer from periodic freezes \citep{aho2007compilers}, but more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn’t allocate memory at a very high rate which is exactly what bursty traffic causes.
+Another effect is related to the IS subscriber applications that use garbage collection for memory management, for example \citep{sicoe2012persistent}. They are known to suffer from freezes when a stop-the-world garbage collector runs \citep{aho2007compilers}. However, more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn’t allocate memory at a very high rate which is exactly what bursty traffic causes.
 
 Although important, this requirement has the same cause as the first one, namely contention, so we will treat it as a secondary one.
 
@@ -53,13 +53,13 @@ Although important, this requirement has the same cause as the first one, namely
 
 \section*{Global and local scheduling}
 
-The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation, we call them local requirements. These are the jitter minimization and reconfiguration efficiency. 
+The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation; we call them local requirements. These are jitter minimization and reconfiguration efficiency. 
 
-As it can be seen from the requirements above, although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other’s performance by creating contention in the monitoring network of the ATLAS TDAQ system. Indeed, requirements like skew and latency minimization and bursty traffic avoidance are global requirements that can be satisfied only if the application instances cooperate.
+The second class consists of requirements like skew and latency minimization and bursty traffic avoidance which are global requirements that can be satisfied only if the application instances cooperate. Although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other’s performance when creating contention in the monitoring network of the ATLAS TDAQ system. 
 
-If we consider the time as being divided in equal length slots, we can think of local scheduling as assigning which histograms are published in which slot and the global scheduling as when to publish the histograms within a time slot. 
+In order to treat the two classes of requirements more orthogonally, we consider the time as being divided in equal length slots. This way we can think of local scheduling as assigning which histograms are published in which slot and the global scheduling as when to publish the histograms within a time slot.
 
-The slot size choice is not simple since it has many conflicting requirements, but on the positive side it does not depend on the configuration, so it has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
+The slot size choice is not simple since it has conflicting requirements, but on the positive side it does not depend on the library configuration, so it has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
 
 This separation also helps us in presenting to the users a simple model for configuring the publishing intervals. The system reports the number of available slots per second and the users need just to calculate how many slots per second their rules require. The users, however, should not expect 100\% utilization of the slots due to irregularities of the publishing intervals set.
 
@@ -68,9 +68,9 @@ This separation also helps us in presenting to the users a simple model for conf
 For this problem we assume that we every application has the same set of histograms to publish in a particular time slot. The set of histograms is very small, ideally only one histogram, but due to the imperfection of the local scheduling there can be several of them.
 
 We have to satisfy two conflicting requirements, namely publishing skew and latency minimization. In order to minimize publishing skew we should try to make all the applications publish simultaneously. But this practice will create contention in the IS server and the latency will increase. 
-The strategy that we adopted for this problem is to make each application choose the moment of the publishing randomly within the first part of the time slot of length $f\cdot I$, where $f<1$ is a configuration parameter and $I$is the size of the time slot.
+The strategy that we adopted for this problem is to make each application choose the moment of publishing randomly within the first part of the time slot of length $f\cdot I$, where $f<1$ is a configuration parameter and $I$ is the size of the time slot. We call the length of this first part of a time time slot \emph{initial delay bound}.
 
-In order to deal with the case in which the interval is too short for publishing all the histograms, we extend it until we are done publishing everything and reduce the length of the next interval.
+In order to deal with the case in which the time slot is too short for publishing all the histograms, we extend it until we are done publishing everything and reduce the length of the next interval.
 
 An example of scheduling is depicted in figure \ref{fig:local_sched}, where we have three applications that start the publishing within the first $f=0.75$ part of the interval.
 
@@ -81,30 +81,30 @@ An example of scheduling is depicted in figure \ref{fig:local_sched}, where we h
 \label{fig:local_sched}
 \end{figure}
 
-Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (smaller than 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
+Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (of the order of 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
 
 \section*{Real-time formulation of local scheduling}
 
 The local requirements for our scheduling requirements can be viewed as a real-time scheduling problem \citep{liu1973scheduling}, \citep{sha2004real}. In order to make this more apparent, we establish the following mapping of concepts:
 \begin{itemize}
-\item Each of the $n$ histograms is considered a task that generates jobs periodically. 
-\item A job means to publish the histogram to the IS server.
-\item The latency of a publishing a histogram corresponds to the execution time of a job $C_i$.
-\item The publishing interval is the task period $T_i$. 
-\item The maximum jitter of a histogram is the deadline of the corresponding job $D_i=0.1\cdot T_i$.
-\item The IS server has a similar role to the CPU that need to be scheduled among the tasks.
-\item The throughput of our system is the utilization of the corresponding real-time system.
+\item Each \emph{histogram} is considered a {\bf task} that generates jobs periodically. An application instance registers $n \approx 5000$ histograms.
+\item A {\bf job} consists of publishing the \emph{histogram} to the IS server.
+\item The \emph{latency} of a publishing a histogram corresponds to the {\bf execution time} of a job $C_i$. 
+\item The \emph{publishing interval} is the {\bf task period} $T_i$. A typical configuration include $m=5-10$ distinct periods which are integer numbers of seconds and usually less than 10 minutes.
+\item The \emph{maximum jitter} of a histogram is the {\bf deadline} of the corresponding job $D_i=0.1\cdot T_i$.
+\item The \emph{IS server} has a similar role to the {\bf CPU} that need to be scheduled among the tasks.
+\item The \emph{throughput} of our system is the {\bf utilization} $U$ of the corresponding real-time system.
 \end{itemize}
 
 \subsection*{Related work}
 
-In the real-time scheduling literature there are two main classes of algorithms: static ones in which the priority of a task is determined before the system is started and dynamic ones in which the priority of a task can change dynamically. 
+In the real-time scheduling literature there are two main classes of algorithms: static ones in which the priority of a task is determined before the system is started and dynamic ones in which the priority of a task is adjusted dynamically. 
 
-The most popular static algorithm is the Rate Monotonic Scheduling (RMS) \citep{liu1973scheduling} in which the priority of a task is higher for tasks with small periods. The algorithm is preemptive, so when a task with small period becomes available, the ones with larger period are preempted and it starts running. Another variation is Deadline Monotonic Scheduling which gives higher priority to tasks with shorter deadlines. In our case, we cannot preempt a histogram from being published, so this algorithms are not applicable. 
+The most widely used static algorithm is the Rate Monotonic Scheduling (RMS) \citep{liu1973scheduling} in which the priority of a task is higher for tasks with small periods. The algorithm is preemptive, so when a task with small period becomes available, the ones with larger period are preempted and it starts running. Another variation is Deadline Monotonic Scheduling which gives higher priority to tasks with shorter deadlines. In our case, we cannot preempt a histogram that has already started to be published, so this algorithms are not directly applicable. 
 
-Among the dynamic algorithms, we mention Earliest Deadline First (EDF) \citep{liu1973scheduling} in which, whenever the processor is idle and some tasks are available, we start the task whose deadline comes first and run it up to completion. This algorithm is optimal in the sense that if a system is schedulable with some algorithm, then it is also schedulable with EDF.
+Among the dynamic algorithms, we mention Earliest Deadline First (EDF) \citep{liu1973scheduling} in which, whenever the processor is idle and some tasks are available, we start the task whose deadline comes first and run it to completion. This algorithm is optimal in the sense that if a system is schedulable with some algorithm, then it is also schedulable with EDF.
 
-People concentrated on developing criteria to check whether a real-time system is schedulable with these algorithms. For EDF the condition \citep{baruah1990algorithms} is that the utilization $U < 1$ and the following holds:
+People concentrated on developing criteria to check whether a real-time system is schedulable with these algorithms. For EDF the condition given in \citep{baruah1990algorithms} is that the utilization $U < 1$ and the following holds:
 
 $$ \forall L > 0.\,  \sum_{i=1}^n \left\lfloor \frac{L+T_i-D_i}{T_i}\right\rfloor C_i \le L $$
 
@@ -114,16 +114,17 @@ $$ \sum_{i=1}^n 1 \cdot C_i \le L \Leftrightarrow 50s \le 30s $$
 
 Note that the utilization in our case is $U=\sum_{i=1}^n\frac{C_i}{T_i}=n\frac C T = \frac 1 6 = 0.166$ which is very low. 
 
-For DMS in order to check the schedulability, we have to determine the worst case response time for every task using the following recursive equations \citep{joseph1986finding}.
+For DMS in order to check the schedulability, we have to determine the worst case response time for every task using the following set of recursive equations \citep{joseph1986finding}.
 
  $$ \forall i.\, R_i=C_i+\sum_{j=1}^{i-1} \left\lceil \frac{R_i}{T_i} \right\rceil \cdot C_j \Leftrightarrow R_i = i\cdot C$$
  
- So, again, the response time for the last histogram is $R_n=n\cdot C=50s >D_n=30s$. We can notice that since all the histograms have the same period they have the same priority so they are published sequentially. So, in order to satisfy the deadlines with this algorithm we should be able to publish all the histograms in 10\% of the time. Note that having higher priorities for some of the histograms does not improve the situation of the ones with low priority.
+So, again, the response time for the last histogram is $R_n=n\cdot C=50s > D_n=30s$. We can notice that since all the histograms have the same period they have the same priority so they are published sequentially. Hence, in order to satisfy the deadlines with this algorithm we should be able to publish all the histograms in 10\% of the time. Note that having higher priorities for some of the histograms does not improve the situation of the ones with low priority.
 
 \subsection*{Offset-free systems} 
- The common assumption of these algorithms that render them ineffective for our system is that all histograms should start to be published in time slot 0. However, this is not necessary in our case, so, we have more degrees of freedom in choosing the time offset at which the first publication of each histogram occurs. Multiple choice strategies are presented in the literature about offset-free systems \citep{goossens2003scheduling}, \citep{grenier2008pushing}.
+
+The common assumption of these algorithms that render them ineffective for our system is that all histograms should start to be published in time slot 0. However, this is not necessary in our case, so, we have more degrees of freedom in choosing the time offset at which the first publication of each histogram occurs. Multiple choice strategies are presented in the literature about offset-free systems \citep{goossens2003scheduling}, \citep{grenier2008pushing}.
  
-In \citep{goossens2003scheduling} the author proves a number of useful results about offset-free systems and presents two algorithms for assigning offsets to a set of tasks. The first algorithm finds an optimal offset assignment and it has a complexity of $O(n^2 \cdot \frac{\prod_{i=1}^n Ti}{\text{lcm}(T_i)})$ which renders it useless for any practical purpose. The second algorithm is an heuristic one which runs in $O(n^2\cdot \log(\max_{i=1\ldots n}(T_i)))$ and has space complexity $O(n^2)$. The algorithm works by considering pairs of tasks in decreasing order of greatest common divisor of their periods and trying to assign offsets such that the jobs of these two tasks are as distant as possible. The limitation of this algorithm is that it looks only at one other task offset before making the choice of the offset.
+In \citep{goossens2003scheduling} the author proves a number of useful results about offset-free systems and presents two algorithms for assigning offsets to a set of tasks. The first algorithm finds an optimal offset assignment and it has a running time of $O(n^2 \cdot \frac{\prod_{i=1}^n Ti}{\text{lcm}(T_i)})$ which renders it useful only for theoretical purposes. The second algorithm is an heuristic one which runs in $O(n^2\cdot \log(\max_{i=1\ldots n}(T_i)))$ and has space complexity $O(n^2)$. The algorithm works by considering pairs of tasks in decreasing order of greatest common divisor of their periods and trying to assign offsets such that the jobs of these two tasks are as distant as possible. The limitation of this algorithm is that it looks exactly at one other task offset before choosing the offset for a task.
 
 In the context of scheduling messages in CAN networks, Grenier et al. \citep{grenier2008pushing} propose another heuristic algorithm which runs in $O(n\cdot \max_{i=1 \ldots n}(T_i))$ and has better experimental results than the previous one. The algorithm tries to assign offsets such that the first job of every task is as far as possible from other jobs. It does this by considering tasks in the increasing order of their periods and assigns the offset such that the first job of task is as far as possible from every job of a task that was assigned so far. The drawback of this approach is that the algorithm does not look at the subsequent jobs of a task and it creates collisions (two jobs scheduled for the same time) even for simple scenarios.
 
@@ -133,21 +134,21 @@ Once the offsets have been chosen, we still have to design a scheduling algorith
 
 A simple offset assignment algorithm chooses the offsets by hashing the names of the histograms and taking the value modulo their period. In order to have histograms with different names published with small skew one can configure an identical \emph{hashing name} which, if present, is used instead of the histogram name to determine the time slot 
 
-This strategy ensures that every application will assign the same offset to a histogram even if they have different histogram sets. However, this situation can only occur when we change the configuration at runtime and only for brief periods. Another positive aspect is that the reconfiguration can be done in $O(1)$ time: we just assign offsets to the changed histograms and keep the existing ones unchanged.
+This strategy ensures that every application will assign the same offset to a histogram even if they have different histogram sets to be published. However, this situation can only occur when we change the configuration at runtime and only for brief periods. Another positive aspect is that the reconfiguration can be done in $O(1)$ time: we just assign offsets to the changed histograms and keep the existing ones unchanged.
 
-The problem of this algorithm is that even for a perfect hashing function the expected maximum number of histograms assigned to a single slot is $O(\frac{\log n}{\log \log n})$ \citep{mitzenmacher1996power}. They will overload the IS server, will overflow to the next time slots and increase the publishing skew. On the other hand, the expected number of empty slots is newhich gives us a throughput of 63\% of the maximum.
+The problem of this algorithm is that even for a perfect hashing function the expected maximum number of histograms assigned to a single slot is $O(\frac{\log n}{\log \log n})$ \citep{mitzenmacher1996power}. They will overload the IS server, will overflow to the next time slots and increase the publishing skew. On the other hand, the expected number of empty slots is $\frac n e$ which gives us a throughput of 63\% of the maximum.
 
 \section*{Subperiod offset assignment algorithm}
 
 In this section we present a heuristic algorithm that leverages the particularities of our system to assign offsets for histogram with no jitter, no collisions and high throughput. 
 
-In our configuration files, all the periods are expressed in seconds which means that the greatest common divisors among periods are large - equal to the number of slots per second which is 30-50. Moreover, large subsets of histograms have periods which are multiple of 5 or 10 seconds. We will also take advantage of the fact that we have only a few (5-10) distinct periods in order to achieve better time complexities for offset assignment.
+In our configuration files, all the periods are expressed in seconds which means that the greatest common divisors among periods are large - equal to the number of slots per second which is 30-100. Moreover, large subsets of histograms have periods which are multiple of 5 or 10 seconds. We will also take advantage of the fact that we have only a few (5-10) distinct periods in order to achieve better time complexities for offset assignment.
 
-\subsection*{Terminology}
+\subsection*{Conventions}
 
 It is proved in \citep{goossens2003scheduling} that we can choose the offset for a histogram to be less than its period without loss of generality. 
 
-In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ means the slots $\{k+n\cdot P | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we explicitly mention it: offset $k$ modulo $P$.
+In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ represent the slots $\{k+n\cdot P | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we explicitly mention it: offset $k$ modulo $P$.
 
 \subsection*{Intuition and pseudocode}
 
@@ -157,7 +158,7 @@ At the beginning every histogram will form its own group:
 \begin{verbatim}
 group = {period : histo.period, n : 1, offset : None}
 \end{verbatim}
-In order to describe the approximation operation let’s assume that our configuration include two histogram groups: one having 4 histograms to be published every 10 sec. and another one 4 histograms to be published every 15 sec. So, we need to assign 4 offsets in the range [0s, 10s) and 4 offsets in the range [0s, 15s).
+In order to describe the approximation operation let’s take an example configuration which includes two histogram groups: one having 4 histograms to be published every 10 sec. and another one 4 histograms to be published every 15 sec. So, we need to assign 4 offsets in the range [0s, 10s) and 4 offsets in the range [0s, 15s).
  
 Let’s consider the time being divided in 5 sec subperiods. Denote by x the number of offsets from the first group that are chosen in the interval [0s, 5s) and by y the number of those in the interval [5s, 10s). Similarly, denote by a, b, c the number of offsets from the second group in the three 5 seconds subperiods of the interval [0s, 15s). In the figure \ref{fig:subperiod} we represented the number of slots used to publish histograms in 6 consecutive subperiods of 5 sec:
 
@@ -168,7 +169,7 @@ Let’s consider the time being divided in 5 sec subperiods. Denote by x the num
 \label{fig:subperiod}
 \end{figure}
 
-We have a fixed number of slots per second, so we have a bound on the number of slots that we can use in each of the subperiods. In order to stay within this bound our strategy is to minimize the maximum number of used slots in a subperiod. In our case this reduces to the following optimization problem:
+We have a fixed number of slots per second, so we have a bound on the number of slots that we can use in each of the subperiods. In order to stay within this bound our strategy is to minimize the maximum number of slots used in a subperiod. In our case this reduces to the following optimization problem:
 $$ \text{minimize } \max(x+a, y+b, x+c, y+a, x+b, y+c) \text{ subject to } a+b+c=4 \text{ and } x+y = 4 $$
 One can easily prove that:
 $$ \max(x+a, y+b, x+c, y+a, x+b, y+c) = \max(x, y, z) = \max(a, b, c)$$
@@ -176,32 +177,32 @@ So, we only need to minimize the maximum number of slots used in a subperiod for
 
 In general the following function computes the approximation of two groups:
 \input{Code/approximate}
-The \verb+sons+ store the groups that it approximates together with their maximum number of slots per subperiod.
+The \verb+sons+ field stores the groups that it approximates together with their maximum number of slots per subperiod.
 
-This is an over-approximation in the sense that if we can assign offsets for the resulting group, then we can also assign offsets for the initial groups. Let’s assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
+This is an over-approximation in the sense that if we can assign offsets (without collisions) for the resulting group, then we can also assign offsets for the initial groups. Let’s assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
 \input{Code/assign}
 The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
 \input{Code/expand}
 A sketch of a possible algorithm execution is presented in figure \ref{fig:subperiod_tree}, where we have 5 histograms with period 2 sec, 4 histograms with period 10 sec. and another 4 histograms with period 15 sec. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
 \begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.6]{Images/subperiod_tree.png}
+\includegraphics[scale=0.7]{Images/subperiod_tree.png}
 \caption{Subperiod tree.}
 \label{fig:subperiod_tree}
 \end{figure}
 
-Now we just need to assign offsets to the root group and they will be pushed up to the histograms in the leafs:
+Now we just need to assign offsets to the root group and they will be pushed towards the leafs:
 \begin{verbatim}
-assign(build_tree(groups), offsets)
+assign(build_tree(groups), root_offsets)
 \end{verbatim}
 
 \subsection*{Incremental version}
 
-In the algorithm presented above we assign a set of offsets to the root group of the tree and it takes care of pushing subsets of it to its child nodes, which recursively push subsets of them up the tree until they reach the leafs where they are assigned to histograms. We leave unused offsets along the way. For example, in order to assign 4 offsets to the group with period 15 sec we need to allocate 2 slots modulo 5 sec. from the parent node that actually which actually mean 6 offsets modulo 15 sec leaving us with 2 unused offset modulo 15 sec.
+In the algorithm presented above we assign a set of offsets to the root group of the tree which takes care of pushing subsets of it to its children nodes, which recursively push subsets of them up the tree until they reach the leafs where they are assigned to histograms. A node may not be able to push all its offsets to the children, thus leaving unused offsets along the way. For example, in order to assign 4 offsets to the group with period 15 sec we need to allocate 2 slots modulo 5 sec. from the parent node that actually which actually mean 6 offsets modulo 15 sec leaving us with 2 unused offset modulo 15 sec.
 
-When a new histogram is added, it is attached to the tree as a leaf. Next, we should locate some unused offsets in the tree and try to push them towards the node corresponding to that histogram. However, it is simpler to use a pull model in which the node corresponding to the newly added histogram is pulling an unused offset from its parent. If the parent has no unused offsets, it tries to pull one from its parent and so on, until the root is reached. At this point algorithm fails if there are no unused offsets.
+When a new histogram is added, it is attached to the tree as a leaf. Next, we should locate some unused offsets in the tree and try to push them towards the newly added node. However, it is simpler to use a pull model in which the node corresponding to the newly added histogram is pulling an unused offset from its parent. If the parent has no unused offsets, it tries to pull some from its parent and so on, until the root is reached. At this point algorithm fails if there are no unused offsets.
 
-We associate an OffsetSupply to each of the groups to hold its unused offsets. Initially all the supplies are empty except from the root whose buffer is pre-filled with all the offsets modulo its period. When a node pulls an offset from its parent supply, it converts it to multiple offsets modulo its period.
+We associate an {\tt OffsetSupply} to each of the nodes to hold its unused offsets. Initially all the supplies are empty except from the root whose buffer is pre-filled with all the offsets modulo its period. When a node pulls an offset from its parent supply, it converts it to multiple offsets modulo its period.
 \input{Code/offsetsupply}
 The algorithm for adding a histogram is the following:
 \input{Code/addhisto}
@@ -209,12 +210,12 @@ If this incremental addition of a histogram to the tree with pull-based offset a
 
 \subsection*{Complexity analysis}
 
-In this section we will discuss the tradeoff between the complexity of the strategy to choose the next pair of groups to approximate and the quality of the resulting schedule.
+In this section we will discuss the trade-off between the complexity of the strategy to choose the next pair of groups to approximate and the quality of the resulting offset assignment.
 
 Let’s first introduce a quality measure for a subperiods tree built by our algorithm. 
 
 \begin{definition}
-Definition. For a node with period $P$ whose parent node has period $P_1$ we define the maximum number of offsets modulo 1 sec. wasted along the edge between the two nodes to be $c(P_1,P)=\frac{1}{P_1}-\frac 1 P$.
+For a node with period $P$ whose parent node has period $P_1$ we define the maximum number of offsets modulo 1 sec. wasted along the edge between the two nodes to be $c(P_1,P)=\frac{1}{P_1}-\frac 1 P$.
 \end{definition}
 
 This maximum is achieved if the child pulled a slot from its parent, so it reserves $\frac P {P_1}$ slots modulo $P$, and delivered only one slot to its children. This means $\frac P {P_1}-1$ wasted slots every $P$ seconds, which is $\frac 1 {P_1}- \frac 1 P$ wasted slots per second. 
@@ -225,7 +226,7 @@ The total maximum number of unused slots for a tree is $c(T)=\sum_{e\in T}c(e)$.
 
 For convenience we call these numbers the cost of an edge and of a tree respectively. A strategy is better than another one if it produces trees with smaller cost. 
 
-Note that this measure is very conservative. First because we assume that the worst case happens for every edge which usually is not the case. Second, because that these slots are wasted by our algorithm when compared to a perfect schedule that uses $\frac 1 P $ slots for a histogram with period $P$. Even an optimal schedule that satisfies the deadlines of our system wastes some slots compared to this perfect schedule. Finally, these slots are not entirely wasted - they can be used when we add new histograms incrementally.
+Note that this measure is very conservative. First because we assume that the worst case happens for every edge which usually is not the case. Second, because these slots are wasted by our algorithm when compared to a hypothetical assignment that uses $\frac 1 P$ slots every second to publish a histogram with period $P$. Even an optimal schedule that satisfies the deadlines of our system leaves some slots unused compared to this hypothetical schedule. Finally, these slots are not entirely wasted - they can be used when we add new histograms incrementally.
 
 \subsubsection*{NP-completeness of optimal strategy}
 
@@ -278,20 +279,21 @@ Following the same lines we can prove that even a strategy that chooses a minima
 
 \subsubsection*{Heuristic strategy}
 
-In this section I will present a heuristic strategy to compute a near optimal subperiods tree with reasonable complexity. 
+In this section we will present a heuristic strategy to compute a near optimal subperiods tree for practical cases with reasonable complexity. 
 
-A first step is to approximate not only pairs of groups but also multiple groups with the same period. It is easy to see that all k histograms with period Pcan be approximated (exactly) by a group of khistograms and period P. Before building the tree we can create these groups in $O(n)$ leaving us with only mnodes to be processed by the \verb+build_tree+ function. 
+A first step is to approximate not only pairs of groups but also multiple groups with the same period. It is easy to see that all k histograms with period $P$ can be approximated (exactly) by a group of $k$ histograms with period $P$. Before building the tree we can create these groups in $O(n)$ leaving us with only $m$ nodes to be processed by the \verb+build_tree+ function. 
 
-In the \verb+build_tree+ function we can then consider the pairs of groups in decreasing order of their common subperiod. In order to implement this function efficiently we use a priority queue:
+In the \verb+build_tree+ function we consider the pairs of groups in decreasing order of their common subperiod. In order to implement this function efficiently we use a priority queue:
 
 \input{Code/build_tree}
 
-Since we have mgroups of histograms at the beginning, we end up with $2m-1$ groups in the entire tree. So, the number of pairs inserted in the priority queue is at most $O(m^2)$ since we don’t insert the same pair twice. The number of removals is at most as big, and the number of times the maximum is popped is $O(m)$ since we have at most miterations in the while loop. The of each of these operations is $O(\log m^2+T)$, the second term coming from the  computation. So, the total complexity of the \verb+build_tree+ function is $O(m^2(\log m + \log T))$. 
+Since we have $m$ groups of histograms at the beginning, we end up with $2m-1$ groups in the entire tree. So, the number of pairs inserted in the priority queue is at most $O(m^2)$ since we don’t insert the same pair twice. The number of removals is at most as big, and the number of times the maximum is popped is $O(m)$ since we have at most $m$ iterations in the while loop. The complexity of each of these operations is $O(\log m^2+\log T)$, the second term coming from the $\gcd$ computation. So, the total complexity of the \verb+build_tree+ function is $O(m^2(\log m + \log T))$. 
 
 \subsubsection*{Offset assignment complexity}
-For the complexity analysis of the offset assignment I will use the pull version presented in the previous section. I assume that the offset buffer of the \verb+OffsetSupply+ is built lazily, so its construction and pop operation are $O(1)$. I also assume that in $O(m)$ we merge all nodes with their parents that have the same period.
 
-Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every $d_i$ times. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
+For the complexity analysis of the offset assignment we will use the pull version presented in the previous section. We assume that the offset buffer of the \verb+OffsetSupply+ is built lazily, so its construction and pop operation are $O(1)$. I also assume that in $O(m)$ we merge all nodes with their parents that have the same period.
+
+Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every $d_i$-th time. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
 
 $$ f(s_i, k) = k + f\left(s_{i-1}, \left\lceil \frac k {d_i} \right\rceil \right)$$
 
@@ -307,22 +309,24 @@ f(s_l,k) &=& k+ \left\lceil \frac k {d_l} \right\rceil + \left\lceil \frac k {d_
 So, the complexity of all $n$ pull operations from $m$ offset supplies associated with $m$ distinct nodes is $O(m^2+n)$ and the complexity of an incremental change which adds $k$ histograms with the same period is $O(m+k)$. 
 
 \subsection*{Scheduling algorithm}
-The scheduler should return for every time slot the histogram that was assigned to that time slot. In order to speed up the scheduling decisions we split histograms into groups according to their period and sort them by offset inside each group. 
+
+We use an EDF scheduler which in our case has to return the histogram that needs to be published in the next time slot. In order to speed up the scheduling decisions we split histograms into groups according to their period and sort them by offset inside each group. 
 
 \subsubsection*{Heap-based scheduler}
-One possible implementation of the scheduler is to use a min-heap to hold the next histogram to be published from each group, ordered by the time of publishing. After a histogram is popped from the heap, the next one for that group is added. This approach has a complexity $O(\log m)$ per scheduling decision which is low enough for our purpose. The space complexity is $O(m)$.
+
+One possible implementation of the scheduler is to use a min-heap to hold the next histogram to be published from each group, ordered by the earliest deadline. After a histogram is popped from the heap, the next one for that group is added. This approach has a complexity $O(\log m)$ per scheduling decision which is low enough for our purpose. The space complexity is $O(m)$.
 
 \subsubsection*{Table-based scheduler}
 
-We can implement the scheduler with only $O(1)$ time complexity per scheduling decision at the price of higher space complexity. The common approach is to precompute the schedule for a time duration equal to the least common multiple of the periods. Since we do not have collisions, we can improve over this approach by storing only a small window of the future schedule as a circular buffer. The schedule decision consists of removing and returning the histogram at the beginning of the buffer and adding the next histogram from the same group at its corresponding position.
+We can implement the scheduler with only $O(1)$ time complexity per scheduling decision at the price of higher space complexity. The classic approach is to precompute the schedule for a time duration equal to the least common multiple of the periods. Since we do not have collisions, we can improve over this approach by storing only a small window of the future schedule as a circular buffer. The schedule decision consists of removing and returning the histogram at the beginning of the buffer and adding the next histogram from the same group at its corresponding position.
  
-The buffer size is equal to the greatest interval between two offsets of histograms having the same period. This is $O\left(\frac {m \cdot T}  n\right)$ in expected value and $O(T)$ in the worst case, where $T=\max_{i=1,\ldots,n}(T_i)$.
+The buffer size is equal to the greatest interval between two offsets of histograms having the same period. This is  $O\left(\max\left(\frac {T_i}  {n_i}\right)\right)$, where $n_i$ is the number of histograms in the $i$-th group, so it is at least $O(\max_{i=1,\ldots,n}(T_i))$.
 
 \subsubsection*{Incremental schedule changes}
 
-In order not to stop the publishing for too long while making changes to the histogram configuration, we can continue publishing according to the old schedule until the new offsets are all assigned in another thread using the previously described algorithm. Only when we know all the offsets, we stop the scheduler and commit the changes.
+While making changes to the histogram configuration, the system continues to publish the histograms with the old schedule. Meanwhile, we assign the new offsets in another thread using the previously described algorithm. Only when the new offset assignment is computed, we briefly stop the scheduler to make the changes.
 
-This technique allows us to have smooth incremental changes even when the subperiod tree is rebuilt - process that runs in time $O(n+m^2(\log m+\log T))$. The actual complexity of changing the table-based scheduler is $O(m)$ for a complete offset reassignment and $O(1)$ for incremental changes. For the heap-based one, the times are $O(m\log m)$ and $O(m)$ respectively.
+This technique allows us to have smooth incremental changes even when the subperiod tree is rebuilt - process that runs in time $O(n+m^2(\log m+\log T))$. The actual complexity of changing the table-based scheduler is $O(m)$ for a complete offset reassignment and $O(1)$ for incremental changes. For the heap-based one, the times are $O(m\log m)$ and $O(\log m)$ respectively.
 
 \section*{Experimental results}
 
