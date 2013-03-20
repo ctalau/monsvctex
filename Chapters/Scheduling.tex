@@ -398,7 +398,7 @@ Experimental measurements lead us to the following approximating formula:
 \item[The histogram is sent over the network]
 The time is roughly independent on size, except for very big histograms and is equal to an inter-rack round-trip time = 0.2 ms
 \item[The histogram is stored by the IS server]
-This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.2 ms. We used as a model for the duration of this step: 90 us + size $\times$ 0.0066 us.
+This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.4 ms. We used as a model for the duration of this step: 90 us + size $\times$ 0.0066 us.
 \item[Finalizing steps in the sending application]
 Takes 0.1 - 0.2 ms and depends slightly on the compressed size of the histograms.
 \end{description}
@@ -415,7 +415,7 @@ In the setup described above, we varied the initial delay bound and observed the
 \centering
 \begin{tabular}[ht]{ | l | l | l | }
   \hline                        
-  Size & Duration & Percentage \\
+  Size & IS processing & Percentage \\
   \hline                        
   S & 100us & 91\% \\
   \hline  
@@ -548,6 +548,22 @@ We compared the subperiod algorithm with a simple algorithm that uses one thread
 \end{figure}
 
 It can be noticed that the jitter is considerably smaller with our algorithm and that the thread-based algorithm actually does not satisfy the requirement to have jitter less than 10 percent.
+
+\subsubsection*{Global scheduling}
+
+We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. We ran this experiment with only one histogram for each of the three size classes. 
+
+On the latency graph we can see again a threshold after which the decrease in latency becomes considerably smaller. For example, we can see in the figure \ref{fig:one_slot_tbed_latency} that in the case of a large histogram it is 25 ms. However, the threshold is bigger than in the simulation due to other secondary sources of contention besides IS server threads that were not modelled. Among these sources we can mention various networking equipments and memory bandwidth in the IS server.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.4]{Images/one_slot_tbed_latency.png}
+\caption{Latency vs. Initial delay bound measured on the testbed.}
+\label{fig:one_slot_tbed_latency}
+\end{figure}
+
+
+
 
 \subsubsection*{Traffic shaping}
 
