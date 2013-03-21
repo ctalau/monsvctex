@@ -549,6 +549,28 @@ We compared the subperiod algorithm with a simple algorithm that uses one thread
 
 It can be noticed that the jitter is considerably smaller with our algorithm and that the thread-based algorithm actually does not satisfy the requirement to have jitter less than 10 percent.
 
+\subsubsection*{Traffic shaping}
+
+As we mentioned, we are interested in making traffic less bursty as it produces memory allocation spikes which cause stop-the-world garbage collector to run in applications written in Java. 
+
+We ran an experiment with the same setup as before, we registered one subscriber for the IS server and we compared the pattern of the updates received by that subscriber for both scheduling algorithms. In figure \ref{fig:burstiness} we present the number of updates in each interval of 20ms over a 20s period. In figure \ref{fig:burstiness_hires} we show the number of updates per millisecond during a 200ms period. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.6]{Images/burstiness.png}
+\caption{Traffic burstiness comparison (low granularity).}
+\label{fig:burstiness}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.6]{Images/burstiness_hires.png}
+\caption{Traffic burstiness comparison (high granularity).}
+\label{fig:burstiness_hires}
+\end{figure}
+
+One can see that the size of the highest spike is reduced significantly with the subperiod offset assignment algorithm.
+
 \subsubsection*{Global scheduling}
 
 We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. We ran this experiment with only one histogram for each of the three size classes. 
@@ -564,18 +586,6 @@ On the latency graph we can see again a threshold after which the decrease in la
 
 
 
-
-\subsubsection*{Traffic shaping}
-
-As we mentioned we are interested in reducing traffic spikes as they produce memory allocation spikes which cause stop-the-world garbage collector to run in applications written in Java. We run the same setup as before and we registered one subscriber for the IS server. The graphic below shows the number of updates it receives in a time unit with both scheduling algorithms. 
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.6]{Images/burstiness.png}
-\caption{Traffic burstiness comparison.}
-\end{figure}
-
-One can see that the size of the highest spike is reduced 8 times with the subperiod offset assignment algorithm.
 
 \subsubsection*{Publishing skew and latency}
 
