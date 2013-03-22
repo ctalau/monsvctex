@@ -80,6 +80,7 @@
 \setlength{\captionmargin}{20pt}
 %\newcommand{\fref}[1]{Figura~\ref{#1}}
 %\newcommand{\sref}[1]{sect.~\ref{#1}}
+\usepackage{subcaption}
 
 %\renewcommand{\chaptername}{Capitolul}
 %\renewcommand{\contentsname}{Cuprins}

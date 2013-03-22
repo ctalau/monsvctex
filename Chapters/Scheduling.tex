@@ -369,6 +369,12 @@ While making changes to the histogram configuration, the system continues to pub
 
 This technique allows us to have smooth incremental changes even when the subperiod tree is rebuilt - process that runs in time $O(n+m^2(\log m+\log T))$. The actual complexity of changing the table-based scheduler is $O(m)$ for a complete offset reassignment and $O(1)$ for incremental changes. For the heap-based one, the times are $O(m\log m)$ and $O(\log m)$ respectively.
 
+
+
+
+
+
+
 \section*{Experimental results}
 
 In order to evaluate the scheduling algorithm and different parameters values, we implemented an event-based simulation tool using SimPy \citep{simpy}. The simulation results were compared with the results of a testbed deployment of the system. Using a simulation allowed us to prototype and evaluate faster and also offered us an easier way to measure values such as server queue length that were not accessible in a testbed deployment.
@@ -388,7 +394,7 @@ The workload used for comparison consists of the histograms published by the Eve
 The model of the publishing process of a histogram has four steps: 
 \begin{description}
 \item [Preparing the histogram in the CORBA buffer]
-The time taken by this step is dependent on the histogram size. If the histogram is over 2000 bins, a compression algorithm is applied. This is also the longest of the four steps.
+The time taken by this step is dependent on the histogram's number of bins. If the histogram is over 2000 bins, a compression algorithm is applied. This is also the longest of the four steps.
 
 Experimental measurements lead us to the following approximating formula:
 \begin{itemize}
@@ -396,7 +402,7 @@ Experimental measurements lead us to the following approximating formula:
 \item 1.4 ms + \# bins $\times$ 0.33 us, otherwise 
 \end{itemize}
 \item[The histogram is sent over the network]
-The time is roughly independent on size, except for very big histograms and is equal to an inter-rack round-trip time = 0.2 ms
+The time is roughly independent of the number of bins, except for very big histograms and is equal to an intra-rack round-trip time = 0.2 ms
 \item[The histogram is stored by the IS server]
 This step depends slightly on the compressed size of the histograms and takes 0.1 - 0.4 ms. We used as a model for the duration of this step: 90 us + size $\times$ 0.0066 us.
 \item[Finalizing steps in the sending application]
@@ -409,7 +415,7 @@ We simulated 40 nodes with 10 applications each, publishing to an IS server whic
 
 \subsubsection*{Global scheduling for one slot}
 
-In the setup described above, we varied the initial delay bound and observed the the effect on the IS queue length, latency and publishing skew. Our workload consists of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. 
+In the setup described above, we varied the initial delay bound and observed the the effect on the IS queue length, latency and publishing skew. Our workload consists of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. In the table we provided the amount of time required for an IS server thread to process the histogram and the percentage of histograms with similar size in our sample.
 
 \begin{table}
 \centering
@@ -451,22 +457,21 @@ In the setup described above, we varied the initial delay bound and observed the
 
 The results are plotted in figures \ref{fig:one_slot_sim_qlen}, \ref{fig:one_slot_sim_latency} and \ref{fig:one_slot_sim_skew}. These graphs make apparent the inverse relation between publishing skew and latency, both of which we want to minimize. 
 
-It can be noticed that the IS queue length and the publishing latency decrease significantly with the initial delay bound since we remove their root cause - contention - by randomization. The decrease becomes less steep when the initial delay bound becomes greater than the total time needed to publish all the histograms sequentially. For example, 400 large histograms need $\frac {400 \text{ apps}\cdot 400 \text{us}} {8 \text{ threads}} = 20\text{ms}$ to be published sequentially and this is exactly where the decrease stops in the graph.
+It can be noticed that the IS queue length and the publishing latency decrease significantly with the initial delay bound since we remove their root cause - contention - by randomization. The decrease becomes less steep when the initial delay bound becomes greater than the total time needed to publish all the histograms sequentially. The threshold is equal to the time required to publish all the histograms sequentially by the IS server. For example, 400 large histograms need $\frac {400 \text{ apps}\cdot 400 \text{us}} {8 \text{ threads}} = 20\text{ms}$ and this is exactly where the decrease stops in the graph.
 
 On the other hand, once the initial delay bound is greater than this threshold, the publishing skew becomes equal to the initial delay bound, so it increases in a controlled manner.
 
-In conclusion if the initial delay bound is greater than the threshold, the publishing skew will increase slightly and if it is smaller, the latency will increase more abruptly. 
+In conclusion depending on the relative position of the initial delay bound with respect to the threshold we trade-off publishing skew versus latency. Since our system is more sensitive to latency issues, we will prefer choosing it slightly larger.
 
 \subsubsection*{Global scheduling for multiple slots}
 
-We made another experiment to see how the global scheduling algorithm behaves over longer periods. We analyse how the algorithm handles the case in which some of the slots are too short for the histograms assigned to them.
+The second experiment aims to study how the global scheduling algorithm behaves over longer periods. We analyse how the algorithm handles the case in which some of the slots are too short for the histograms assigned to them.
 
 To this end we chose a slot size of 15ms and we examined three different assignments of the $\approx 5000$ histogram to $6000$ slots. The first slot assignment is the the hash-based one which assigned up to 6 histograms to the same slot leaving approximately 2500 empty slots. The second assignment assigns two histograms per slot in the first slots and leaves the remaining ones empty. The third assignment is an optimal one that assigns each histogram to its own slot. 
 
 
 \begin{table}
 \begin{tabulary}{\textwidth}{|L|L|L|L|L|L|L|L|}
-%\begin{tabular}{|l|l|l|l|l|l|l|l|}
 \hline 
 Offset assignment & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev of pub. skew (ms) & average latency & stddev of latency \\
 \hline 
@@ -510,29 +515,49 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 \label{fig:unused_slots}
 \end{figure}
 
-We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which represent 5\% for 50 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we need only 20\% more slots than the lower bound.
+We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which is not significant for 100 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we need only 20\% more slots than the lower bound.
 
-\subsubsection*{Throughput}
+\subsubsection*{Throughput, latency and publishing skew}
 
-In this section we evaluated the throughput that can be achieved when using the proposed scheduling strategy: subperiod algorithm for local scheduling and randomization based global scheduling. We tried to vary the slot size and the initial delay bound in order to achieve good throughput and small publishing skew and latency. 
+In the next experiment we evaluated the throughput that can be achieved when using the proposed scheduling strategy: subperiod algorithm for local scheduling and randomization based global scheduling. We tried to vary the slot size and the initial delay bound in order to achieve good throughput and small publishing skew and latency. 
 
-In the charts \ref{fig:skew_sim} and \ref{fig:latency_sim} we show the results of publishing the entire set of histograms in 6000 slots. We tried the slot sizes 10, 15, 20 and 33 milliseconds and the initial delay bound to be 50, 66, 75 and 80\% of the slot size. 
-
-\begin{figure}[ht]
-\centering
-\includegraphics[scale=0.5]{Images/skew_sim.png}
-\caption{Skew vs. interval length and random delay fraction.}
-\label{fig:skew_sim}
-\end{figure}
+In the plot \ref{fig:skew_lat_sim} we show the results of publishing the entire set of $\approx 5000$ histograms in $6000$ slots. The initial delay bound is shown as the fraction of the slot size, the rest of the values are expressed in milliseconds. In order to have similar value ranges, the latency is multiplied by 10.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{Images/latency_sim.png}
-\caption{Latency vs. interval length and random delay fraction.}
-\label{fig:latency_sim}
+\includegraphics[scale=0.7]{Images/skew_lat_sim.png}
+\caption{Skew and latency vs. interval length and intial delay bound.}
+\label{fig:skew_lat_sim}
 \end{figure}
 
-{\Large \bf COMMENT SOMETHING: The histograms would take 25s in they were published in a sequential manner while in the previous scenario we need 90 seconds to publish the histograms in reasonable latency and publishing skew conditions. So, the throughput is 27\%.}
+From the graph \ref{fig:skew_lat_sim} we can see that both the initial delay bound fraction and slot size have inverse effects in latency and publishing skew. However, slot size has the additional effect of reducing throughput. We can also notice that as we approach the IS server throughput, both latency and publishing skew spike.
+
+In order to achieve the maximum throughput we published all histograms sequentially at the beginning of each publishing cycle. We compared in table \ref{tab:throughput_values} the latency, publishing skew and throughput obtained in this manner with some of the corresponding values obtained with our algorithm. Actually, we used the total time required to publish all the histograms which is the inverse of the throughput.
+
+\begin{table}
+\centering
+\begin{tabulary}{\textwidth}{|L|L|L|L|L|}
+\hline 
+\multicolumn{2}{|c|}{Description} &  Latency (ms) & Pub. skew (ms) & Total time (sec)\\
+\hline 
+\multicolumn{2}{|c|}{Sequential}  & 4.93 & 25.8 &  25.5 \\
+\hline
+Slot: 5ms& f: 0.5   & 4.1 & 13.68   &  30   \\
+\hline
+Slot: 7.5ms& f: 0.5 & 1.97 & 5.09    & 45 \\
+\hline
+Slot: 7.5ms& f: 0.66 & 1.55 & 5.98    & 45 \\
+\hline
+Slot: 10ms& f: 0.66  & 1.28 & 6.75    & 60 \\
+\hline 
+\end{tabulary}
+\caption{Offset assignment evaluation during multiple slots.}
+\label{tab:throughput_values}
+\end{table}
+
+We can notice that with our algorithm we can obtain 55\% of the maximum throughput with considerably less latency and publishing skew (31\% and 23\% respectively).
+
+
 
 
 
@@ -541,7 +566,7 @@ In this section we present the results obtained running the system on a testbed 
 
 \subsubsection*{Jitter measurements}
 
-In order to evaluate the jitter created by our algorithm, we created an workload consisting of 300 histograms with 1000 bins and periods 2, 4, 6, 8, 10 and 12. We started 10 applications on one node to match the number of applications per node in the real system and we ran the system for 4 minutes. The IS server was set to use two threads to serve the requests.
+In order to evaluate the jitter created by our algorithm, we created an workload consisting of 300 histograms with 1000 bins divided in six groups with periods 2, 4, 6, 8, 10 and 12. We started 10 applications on one node to match the number of applications per node in the real system and we ran the system for 4 minutes. The IS server was set to use two threads to serve the requests.
 
 We compared the subperiod algorithm with a simple algorithm that uses one thread per period that wakes up at the beginning of every publishing cycle and publishes all the histograms sequentially. Our algorithm was configured to use 100 slots per second and an initial delay bound of of 75\% of the time slot. Figure \ref{fig:jitter_histo} shows the histograms of jitter percentage in both cases.
 
@@ -560,41 +585,38 @@ As we mentioned, we are interested in making traffic less bursty as it produces 
 
 We ran an experiment with the same setup as before, we registered one subscriber for the IS server and we compared the pattern of the updates received by that subscriber for both scheduling algorithms. In figure \ref{fig:burstiness} we present the number of updates in each interval of 20ms over a 20s period. In figure \ref{fig:burstiness_hires} we show the number of updates per millisecond during a 200ms period. 
 
-\begin{figure}[ht]
+\begin{figure}
 \centering
-\includegraphics[scale=0.6]{Images/burstiness.png}
+\begin{subfigure}[ht]{0.45\textwidth}
+\centering
+\includegraphics[width=\textwidth]{Images/burstiness.png}
 \caption{Traffic burstiness comparison (low granularity).}
 \label{fig:burstiness}
-\end{figure}
-
-\begin{figure}[ht]
+\end{subfigure}
+~
+\begin{subfigure}[ht]{0.45\textwidth}
 \centering
-\includegraphics[scale=0.6]{Images/burstiness_hires.png}
+\includegraphics[width=\textwidth]{Images/burstiness_hires.png}
 \caption{Traffic burstiness comparison (high granularity).}
 \label{fig:burstiness_hires}
+\end{subfigure}
 \end{figure}
 
 One can see that the size of the highest spike is reduced significantly with the subperiod offset assignment algorithm.
 
 \subsubsection*{Global scheduling}
 
-We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. We ran this experiment with only one histogram for each of the three size classes. 
+We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. The size of the histogram was chosen We ran this experiment with only one histogram for each of the three size classes. 
 
-On the latency graph we can see again a threshold after which the decrease in latency becomes considerably smaller. For example, we can see in the figure \ref{fig:one_slot_tbed_latency} that in the case of a large histogram it is 25 ms. However, the threshold is bigger than in the simulation due to other secondary sources of contention besides IS server threads that were not modelled. Among these sources we can mention various networking equipments and memory bandwidth in the IS server.
+On the latency graph we can see again a threshold after which the decrease in latency becomes considerably smaller. For example, we can see in the figure \ref{fig:one_slot_tbed} that in the case of a large histogram it is 25 ms. However, the threshold is bigger than in the simulation due to other secondary sources of contention besides IS server threads that were not modelled. Among these sources we can mention various networking equipments and memory bandwidth in the IS server.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.4]{Images/one_slot_tbed_latency.png}
-\caption{Latency vs. Initial delay bound measured on the testbed.}
-\label{fig:one_slot_tbed_latency}
+\includegraphics[scale=0.6]{Images/one_slot_tbed.png}
+\caption{Latency and publishing skew vs. Initial delay bound measured on the testbed during one slot.}
+\label{fig:one_slot_tbed}
 \end{figure}
 
-
-
-
-\subsubsection*{Publishing skew and latency}
-
-- f, slotsize -> skew or latency
-- no. of nodes, slot size
+\subsubsection*{Throughput, latency and publishing skew}
 
 
