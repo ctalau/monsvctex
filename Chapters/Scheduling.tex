@@ -606,9 +606,9 @@ One can see that the size of the highest spike is reduced significantly with the
 
 \subsubsection*{Global scheduling}
 
-We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. The size of the histogram was chosen We ran this experiment with only one histogram for each of the three size classes. 
+We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. The size of the histogram was chosen according to the three size classes identified in table \ref{tab:histosize}. 
 
-On the latency graph we can see again a threshold after which the decrease in latency becomes considerably smaller. For example, we can see in the figure \ref{fig:one_slot_tbed} that in the case of a large histogram it is 25 ms. However, the threshold is bigger than in the simulation due to other secondary sources of contention besides IS server threads that were not modelled. Among these sources we can mention various networking equipments and memory bandwidth in the IS server.
+We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as figures \ref{fig:one_slot_sim_latency} and \ref{fig:one_slot_sim_skew}. The only difference is the case of the large histogram when the IS server experiences bigger latencies under heavy load.
 
 \begin{figure}[ht]
 \centering
