@@ -1,7 +1,7 @@
 \chapter{Introduction} % Titlul capotilului
 \label{Capitolul1}
 
-\section*{System Overview}
+\section{ATLAS Overview}
 The LHC (Large Hadron Collider) is a 27km circumference synchrotron that accelerates two counter rotating particle beams. The beams are collided at four interaction points for a contiguous period of 10-20 hours. The ATLAS detector (A Toroidal LHC ApparatuS) \citep{aad2008atlas}, designed for studying particles produced by proton-proton interactions and heavy ion collisions surrounds one of the interaction points. 
 
 The image below presents a section of the detector which has a layered structure with the interaction point in the center of the detector. The different layers are specialized in measuring different properties of the particles as detailed in \citep{aad2008atlas}. 
@@ -13,7 +13,7 @@ The image below presents a section of the detector which has a layered structure
 \end{figure}
 
 
-\section*{Event selection}
+\subsection*{Event selection}
 The two counter-rotating beams consist of trains of particle bunches. The distance between two consecutive particle bunches is around 25 ns and with the bunch crossing duration less than 1 ns. So bunch collision events happen with a frequency of 40MHz, each one consisting of 25 particle collisions in average. The data collected about these collisions has to be sent to the CERN persistent storage \citep{baud2003castor} for offline analysis. The amount of data collected for a single collision event is 1.5MB in average, which would mean a throughput of 60TB/s which is far more than what can be stored at a reasonable cost. Moreover, the number of events that are interesting for the offline analysis is only a small fraction of the total number of events. Hence, the events are filtered before being persisted using a three level data acquisition system (DAQ). 
 
 \begin{figure}[ht!]
@@ -28,7 +28,7 @@ After being accepted by the L1, event data is stored in the ROBs (ReadOut Buffer
 
 Finally, the third level trigger, called Event Filter (EF) operates on the complete event data, at an input rate given by L2 of 3.5kHz. It has a configurable menu of more complicated selection algorithms and has a total latency of about 1 seconds and an acceptance rate of several hundred hertz which is within the mass storage limitations. The installation consists of 600 nodes running 6500 instances of the applications.
 
-\subsection*{Evolution}
+\subsection*{ATLAS Evolution}
 
 During the 2 year shutdown period starting at the beginning of 2013, a large upgrade of the entire system is planned \citep{hauser2012atlas}. In the DAQ system, the main change will be the merge of the L2 and EF.  
 
@@ -43,7 +43,7 @@ The L2 Processing Unit (L2PU) and the level 3 processing task (PT) will be merge
 
 The main advantages of merging the two layers are better resource allocation, better load balancing and a simpler and more flexible system. However, assessing the benefits of this change needs validation in production mode with intensive operational monitoring.
 
-\section*{Monitoring in ATLAS}
+\section{Monitoring in ATLAS}
 
 The ATLAS monitoring system \citep{collaboration2003atlas} is composed of information publishing libraries, information sharing services, monitoring facilities (e.g. that aggregate or persist monitoring information) and graphical displays.
 
@@ -83,7 +83,7 @@ The ISInfo class is intended to be a plain data structure with serialization and
 
 \end{description}
 
-\section*{Thesis structure}
+\section{Thesis structure}
 
 The rest of the thesis report begins with a presentation of the project goal, namely the design and implementation of the {\tt monsvc} library. Then we describe the solutions for the challenges related to the \emph{configuration} of the library. In the next section, we present the algorithm used to \emph{schedule} the flow of monitoring information in the TDAQ network. Finally, we discuss some solutions for the \emph{synchronization} between the library which publishes the monitoring information and the application that updates it. The thesis ends with conclusions and possible future improvements.
 

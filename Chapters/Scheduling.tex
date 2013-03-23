@@ -1,10 +1,11 @@
 \chapter{Scheduling} % Titlul capotilului
 \label{Capitolul4}
 
+\section{Introduction}
 
 In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library by every application instance. We first identify the requirements on the scheduling algorithm, present some solutions and assess them by using both a simulation and a test-bed deployment of the system.
 
-\section*{System overview}
+\section{Monitoring system}
 
 Our monitoring system is composed of approximately 12000 applications which send data to 32 multi-threaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
 
@@ -12,7 +13,7 @@ Since applications talking to different IS servers are independent we analyse th
 
 A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 nodes, there are 5087 histograms with 1126 bins in average. The publishing intervals are usually configured between 1 second and 10 minutes. Although applications publish many other kinds of objects such as counters or flags, most of the published monitoring information consists of histograms. Since histograms have the biggest influence on the performance of the system I will consider only them for the analysis in this chapter.
 
-\section*{Publishing requirements}
+\section{Requirements}
 
 \begin{description}
 \item[Minimize jitter.]
@@ -51,7 +52,7 @@ Although important, this requirement has the same cause as the first one, namely
 
 \end{description}
 
-\section*{Global and local scheduling}
+\section{Global and local scheduling}
 
 The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation; we call them local requirements. These are jitter minimization and reconfiguration efficiency. 
 
@@ -63,7 +64,7 @@ The slot size choice is not simple since it has conflicting requirements, but on
 
 This separation also helps us in presenting to the users a simple model for configuring the publishing intervals. The system reports the number of available slots per second and the users need just to calculate how many slots per second their rules require. The users, however, should not expect 100\% utilization of the slots due to irregularities of the publishing intervals set.
 
-\section*{Global scheduling}
+\section{Global scheduling}
 
 For this problem we assume that we every application has the same set of histograms to publish in a particular time slot. The set of histograms is very small, ideally only one histogram, but due to the imperfection of the local scheduling there can be several of them.
 
@@ -83,7 +84,7 @@ An example of scheduling is depicted in figure \ref{fig:local_sched}, where we h
 
 Since we have no communication between applications our solution has a very low overhead and is fault tolerant. It is also robust with respect to the clock skew as long as it is small enough (of the order of 1ms). Another advantage is that by tuning the $f$ parameter we can trade-off between skew and latency. 
 
-\section*{Real-time formulation of local scheduling}
+\section{Real-time formulation of local scheduling}
 
 The local requirements for our scheduling requirements can be viewed as a real-time scheduling problem \citep{liu1973scheduling}, \citep{sha2004real}. In order to make this more apparent, we establish the following mapping of concepts:
 \begin{itemize}
@@ -120,7 +121,7 @@ For DMS in order to check the schedulability, we have to determine the worst cas
  
 So, again, the response time for the last histogram is $R_n=n\cdot C=50s > D_n=30s$. We can notice that since all the histograms have the same period they have the same priority so they are published sequentially. Hence, in order to satisfy the deadlines with this algorithm we should be able to publish all the histograms in 10\% of the time. Note that having higher priorities for some of the histograms does not improve the situation of the ones with low priority.
 
-\subsection*{Offset-free systems} 
+\subsubsection*{Offset-free systems} 
 
 The common assumption of these algorithms that render them ineffective for our system is that all histograms should start to be published in time slot 0. However, this is not necessary in our case, so, we have more degrees of freedom in choosing the time offset at which the first publication of each histogram occurs. Multiple choice strategies are presented in the literature about offset-free systems \citep{goossens2003scheduling}, \citep{grenier2008pushing}.
  
@@ -130,7 +131,7 @@ In the context of scheduling messages in CAN networks, Grenier et al. \citep{gre
 
 Once the offsets have been chosen, we still have to design a scheduling algorithm. For offset-free systems, the DMS algorithm is no longer optimal among static algorithms but an optimal priority assignment can be found with $O(n^2)$ time complexity \citep{audsley2001priority}. On the other hand, among dynamic algorithms EDF is still optimal. 
 
-\section*{Hash based offset assignment}
+\section{Hash based offset assignment}
 
 A simple offset assignment algorithm chooses the offsets by hashing the names of the histograms and taking the value modulo their period. In order to have histograms with different names published with small skew one can configure an identical \emph{hashing name} which, if present, is used instead of the histogram name to determine the time slot 
 
@@ -138,19 +139,19 @@ This strategy ensures that every application will assign the same offset to a hi
 
 The problem of this algorithm is that even for a perfect hashing function the expected maximum number of histograms assigned to a single slot is $O(\frac{\log n}{\log \log n})$ \citep{mitzenmacher1996power}. They will overload the IS server, will overflow to the next time slots and increase the publishing skew. On the other hand, the expected number of empty slots is $\frac n e$ which gives us a throughput of 63\% of the maximum.
 
-\section*{Subperiod offset assignment algorithm}
+\section{Subperiod offset assignment algorithm}
 
 In this section we present a heuristic algorithm that leverages the particularities of our system to assign offsets for histogram with no jitter, no collisions and high throughput. 
 
 In our configuration files, all the periods are expressed in seconds which means that the greatest common divisors among periods are large - equal to the number of slots per second which is 30-100. Moreover, large subsets of histograms have periods which are multiple of 5 or 10 seconds. We will also take advantage of the fact that we have only a few (5-10) distinct periods in order to achieve better time complexities for offset assignment.
 
-\subsection*{Conventions}
+\subsection{Conventions}
 
 It is proved in \citep{goossens2003scheduling} that we can choose the offset for a histogram to be less than its period without loss of generality. 
 
 In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ represent the slots $\{k+n\cdot P | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we explicitly mention it: offset $k$ modulo $P$.
 
-\subsection*{Intuition and pseudocode}
+\subsection{Intuition and pseudocode}
 
 The algorithm operates in two steps. First it repeatedly approximates unions of histogram groups with different periods with one group having a smaller period until we are left with only one group. Then we start with this group and assign offsets recursively to groups that it approximates until we get to assign offsets to all histograms.
 
@@ -179,7 +180,7 @@ In general the following function computes the approximation of two groups:
 \input{Code/approximate}
 The \verb+sons+ field stores the groups that it approximates together with their maximum number of slots per subperiod.
 
-This is an over-approximation in the sense that if we can assign offsets (without collisions) for the resulting group, then we can also assign offsets for the initial groups. Let's assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
+This is an over-approximation in the sense that if we can assign offsets (without collisions) for the resulting group, then we can also assign offsets for the initial groups. Let’s assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
 \input{Code/assign}
 The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
 \input{Code/expand}
@@ -196,7 +197,7 @@ Now we just need to assign offsets to the root group and they will be pushed tow
 assign(build_tree(groups), root_offsets)
 \end{verbatim}
 
-\subsection*{Incremental version}
+\subsection{Incremental version}
 
 In the algorithm presented above we assign a set of offsets to the root group of the tree which takes care of pushing subsets of it to its children nodes, which recursively push subsets of them up the tree until they reach the leafs where they are assigned to histograms. A node may not be able to push all its offsets to the children, thus leaving unused offsets along the way. For example, in order to assign 4 offsets to the group with period 15 sec we need to allocate 2 slots modulo 5 sec. from the parent node that actually which actually mean 6 offsets modulo 15 sec leaving us with 2 unused offset modulo 15 sec.
 
@@ -208,7 +209,7 @@ The algorithm for adding a histogram is the following:
 \input{Code/addhisto}
 If this incremental addition of a histogram to the tree with pull-based offset assignment succeeds, the previously assigned offsets are preserved. However, this incremental changes to may determine a sub-optimal tree structure. So, if the algorithm fails, as a last resort, we rebuild the tree from scratch and possibly change all previously assigned offsets.
 
-\subsection*{Complexity analysis}
+\subsection{Complexity analysis}
 
 In this section we will discuss the trade-off between the complexity of the strategy to choose the next pair of groups to approximate and the quality of the resulting offset assignment.
 
@@ -233,7 +234,7 @@ Note that this measure is very conservative. First because we assume that the wo
 Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
 
 \begin{problem}[Optimal Subperiod Tree]
-Let's consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
+Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
 \end{problem}
 
 We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
@@ -245,7 +246,7 @@ We will prove that our problem is also NP-hard by reducing from the Bounded Freq
 
 Let's first assume without loss of generality that there is no element $x_k$ which belongs to every subset $C_i$. If it does, we can remove them from $X$ and from all subsets and the resulting problem is equivalent.
 
-Now, let's present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let's associate with every $C_i$ a prime number $p_i$ and with every $x_i$ the number $P_i=\prod_{x_i\in C_k}p_k$.
+Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let's associate with every $C_i$ a prime number $p_i$ and with every $x_i$ the number $P_i=\prod_{x_i\in C_k}p_k$.
 
 We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to \citep{jaroma2005upper} it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction between the corresponding decision problems we prove the following theorem. 
 
@@ -349,7 +350,7 @@ f(s_l,k) &=& k+ \left\lceil \frac k {d_l} \right\rceil + \left\lceil \frac k {d_
 
 So, the complexity of all $n$ pull operations from $m$ offset supplies associated with $m$ distinct nodes is $O(m^2+n)$ and the complexity of an incremental change which adds $k$ histograms with the same period is $O(m+k)$. 
 
-\subsection*{Scheduling algorithm}
+\subsection{Scheduling algorithm}
 
 We use an EDF scheduler which in our case has to return the histogram that needs to be published in the next time slot. In order to speed up the scheduling decisions we split histograms into groups according to their period and sort them by offset inside each group. 
 
@@ -374,12 +375,11 @@ This technique allows us to have smooth incremental changes even when the subper
 
 
 
-
-\section*{Experimental results}
+\section{Experimental results}
 
 In order to evaluate the scheduling algorithm and different parameter values, we implemented an event-based simulation tool using SimPy \citep{simpy}. The simulation results were compared with the results of a testbed deployment of the system. Using a simulation allowed us to prototype and evaluate faster and also offered us an easier way to measure values such as server queue length that were not accessible in a testbed deployment.
 
-\subsection*{Simulation}
+\subsection{Simulation}
 
 The workload used for comparison consists of the histograms published by the Event Filter nodes: 5138 histograms with 438 bins in average and a publishing interval of 1 minute for all of them. At the extreme, there are two histograms with 178.400 and 228.352 bins. The distribution of sizes (number of bins) is given by the figure \ref{fig:histosize}.
 
@@ -482,7 +482,7 @@ Offset assignment & average queue length & stddev queue length & max. queue leng
  Opt.  & 0.28 & 6.57 & 305 & 11.205 &1.699 &1.065 &0.776\\
 \hline 
 \end{tabulary}
-\caption{Offset assignment evaluation during multiple slots.}
+\caption{Offset assignment evaluation during a multi-slot period.}
 \label{tab:multi_slot_sim}
 \end{table}
 
@@ -511,7 +511,7 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.40]{Images/unused_slots.png}
-\caption{The number of extra slots required by our algorithm as compared to the optimum.}
+\caption{The number of unused slots by the subperiod algorithm. }
 \label{fig:unused_slots}
 \end{figure}
 
@@ -551,7 +551,7 @@ Slot: 7.5ms& f: 0.66 & 1.55 & 5.98    & 45 \\
 Slot: 10ms& f: 0.66  & 1.28 & 6.75    & 60 \\
 \hline 
 \end{tabulary}
-\caption{Offset assignment evaluation during multiple slots.}
+\caption{Scheduling parameters tuning.}
 \label{tab:throughput_values}
 \end{table}
 
@@ -561,7 +561,7 @@ We can notice that with our algorithm we can obtain 55\% of the maximum throughp
 
 
 
-\subsection*{Testbed measurements}
+\subsection{Testbed measurements}
 In this section we present the results obtained running the system on a testbed consisting of nodes with two 6 cores CPUs with hyper-threading enabled. The IS server is run on a separate machine from those running publishing applications.
 
 \subsubsection*{Jitter measurements}
@@ -573,7 +573,7 @@ We compared the subperiod algorithm with a simple algorithm that uses one thread
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.55]{Images/jitter_histo.png}
-\caption{Histogram of jitter percentages for the thread-based algorithm (above) and subperiod algorithm (below).}
+\caption[Jitter histograms.]{Jitter histograms for the thread-based algorithm (above) and subperiod algorithm (below).}
 \label{fig:jitter_histo}
 \end{figure}
 
@@ -590,16 +590,18 @@ We ran an experiment with the same setup as before, we registered one subscriber
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{Images/burstiness.png}
-\caption{Traffic shape comparison (20ms bins).}
+\caption{Traffic burstiness comparison (low granularity).}
 \label{fig:burstiness}
 \end{subfigure}
 ~
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{Images/burstiness_hires.png}
-\caption{Traffic shape comparison during a high-load period (1ms bins).}
+\caption{Traffic burstiness comparison during a high-load period.}
 \label{fig:burstiness_hires}
 \end{subfigure}
+\label{fig:burstiness_both}
+\caption{Traffic burstiness.}
 \end{figure}
 
 One can see that both the subperiod algorithm and randomization contribute to reduce the size of the traffic spikes. 
@@ -613,7 +615,7 @@ We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as f
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.6]{Images/one_slot_tbed.png}
-\caption{Latency and publishing skew vs. Initial delay bound measured on the testbed during one slot.}
+\caption{Latency and publishing skew vs. initial delay bound (testbed).}
 \label{fig:one_slot_tbed}
 \end{figure}
 

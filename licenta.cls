@@ -235,17 +235,17 @@
     \addcontentsline{toc}{chapter}{#1}
 }
 
-\renewcommand\tableofcontents{
-\btypeout{Table of Contents}
-    \begin{spacing}{1}{
-        \setlength{\parskip}{1pt}
-        \chapter*{\contentsname
-            \@mkboth{
-               \contentsname}{\contentsname}}
-        \@starttoc{toc}
-       \clearpage
-    }\end{spacing}
-}
+%\renewcommand\tableofcontents{
+%\btypeout{Table of Contents}
+%    \begin{spacing}{1}{
+%        \setlength{\parskip}{1pt}
+%        \chapter*{\contentsname
+%            \@mkboth{
+%               \contentsname}{\contentsname}}
+%        \@starttoc{toc}
+%       \clearpage
+%    }\end{spacing}
+%}
 
 % Modul de afisare al bibliografiei
 \renewcommand\backmatter{

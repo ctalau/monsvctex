@@ -1,15 +1,17 @@
 \chapter{Configuration} % Titlul capotilului
 \label{Capitolul3}
 
+\section{Introduction}
+
 The applications in the TDAQ system register up to several thousands of objects that represent information to be monitored. Different objects need to be published in different ways: for example with different publishing frequency and or to different Information Sharing (IS) servers \citep{kolosinformation} or even written to a file. As an example, the histogram of accepted event data size needs to be published every second to an IS server called “DF”. For another example, the number of failed checksums for the event data read from the detector should be written to a file called "L1.root" at the end of the running period. We aim to provide a way for the user to specify these parameters in an expressive, succinct and easy to use way. This process is called the \emph{configuration} of the library.
 
-\section*{Functionality}
+\section{Requirements}
 
 The library allows the user to specify one or multiple \emph{publishing targets}. The publishing targets currently include IS servers, OH servers, files in ROOT \citep{brun1997root} format and standard output. For each target, the user can specify some \emph{publishing parameters}, for example, the name of the IS server and the publishing interval for an IS publishing target.
 
 Another important functionality is to be able to modify the configuration at runtime. For example, if an operator notices some abnormal conditions in the running of the system, she may enable some debug monitoring information to be published in order to identify and fix the problem. 
 
-\section*{Challenges}
+\section{Contributions}
 
 As with other parts of the library, the main challenge of the configuration is the scale of the system. We discuss below how each dimension of scaling impacts the design of the library.
 
@@ -24,7 +26,7 @@ With over 5000 monitored objects, we need to keep the configuration file of an a
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.6]{Images/oks_regex.png}
-\caption{The two approaches for associating publishing parameters with monitored objects: explicit (left) and implicit by using regular expressions (right).}
+\caption[Publishing parameters association.]{The two approaches for associating publishing parameters with monitored objects: explicit (left) and implicit by using regular expressions (right).}
 \label{fig:oks_regex}
 \end{figure}
 
