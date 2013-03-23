@@ -6,7 +6,7 @@ In this section we discuss the scheduling problem which consists of choosing the
 
 \section*{System overview}
 
-Our monitoring system is composed of approximately 12000 applications which send data to 32 multithreaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
+Our monitoring system is composed of approximately 12000 applications which send data to 32 multi-threaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
 
 Since applications talking to different IS servers are independent we analyse them separately. So we consider a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba} and the server has 8 threads by default and runs on a machine with 12 CPUs. We also assume that the IS server runs in the same rack with the applications that use it and is connected to the same switch with a 1Gbps connection.
 
@@ -27,7 +27,7 @@ We publish the histograms using a separate thread from that of the main applicat
 
 \item [Minimize publishing skew.]
 
-Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system’s operational state we need to take a snapshot of the histogram instances from all nodes at some point in time and to aggregate them.
+Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system's operational state we need to take a snapshot of the histogram instances from all nodes at some point in time and to aggregate them.
 
 In order to take a snapshot of histogram instances across all nodes at some point in time, we need to have all nodes publishing their instance of that histogram with minimal skew. The publishing skew of a histogram is defined to be the difference between the moments when the first and the last instance of the histogram is received by the IS server.  
 
@@ -37,7 +37,7 @@ We want the published information in the IS server to be as fresh as possible. S
 
 \item [Efficient incremental reconfiguration]
 
-We want to allow the users to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don’t want the system to stop publishing for a long time in order to apply the new configuration changes. 
+We want to allow the users to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don't want the system to stop publishing for a long time in order to apply the new configuration changes. 
 
 We also want that if we change the publishing interval for some histograms, the rest of them should continue to be published according to the existing schedule.
 
@@ -45,7 +45,7 @@ We also want that if we change the publishing interval for some histograms, the 
 
 A bursty traffic pattern seen by the IS server impacts the overall system performance in multiple ways. First, it requires big inbound queues in IS server, networking devices and in all the upstream applications to which the IS server pushes information. 
 
-Another effect is related to the IS subscriber applications that use garbage collection for memory management, for example \citep{sicoe2012persistent}. They are known to suffer from freezes when a stop-the-world garbage collector runs \citep{aho2007compilers}. However, more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn’t allocate memory at a very high rate which is exactly what bursty traffic causes.
+Another effect is related to the IS subscriber applications that use garbage collection for memory management, for example \citep{sicoe2012persistent}. They are known to suffer from freezes when a stop-the-world garbage collector runs \citep{aho2007compilers}. However, more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn't allocate memory at a very high rate which is exactly what bursty traffic causes.
 
 Although important, this requirement has the same cause as the first one, namely contention, so we will treat it as a secondary one.
 
@@ -245,7 +245,7 @@ We will prove that our problem is also NP-hard by reducing from the Bounded Freq
 
 Let's first assume without loss of generality that there is no element $x_k$ which belongs to every subset $C_i$. If it does, we can remove them from $X$ and from all subsets and the resulting problem is equivalent.
 
-Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let’s associate with every $C_i$ a prime number $p_i$ and with every $x_i$ a the number $P_i=\prod_{x_i\in C_k}p_k$.
+Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let's associate with every $C_i$ a prime number $p_i$ and with every $x_i$ the number $P_i=\prod_{x_i\in C_k}p_k$.
 
 We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to \citep{jaroma2005upper} it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction between the corresponding decision problems we prove the following theorem. 
 
@@ -334,7 +334,7 @@ Since we have $m$ groups of histograms at the beginning, we end up with $2m-1$ g
 
 For the complexity analysis of the offset assignment we will use the pull version presented in the previous section. We assume that the offset buffer of the \verb+OffsetSupply+ is built lazily, so its construction and pop operation are $O(1)$. I also assume that in $O(m)$ we merge all nodes with their parents that have the same period.
 
-Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let’s denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every $d_i$-th time. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
+Let’s estimate the cost of making $k$ pull operations from the offset supply $s$. Let's denote its ancestors by $s_i,i=1,\ldots,l$ and let the period of $s_i=d_1\cdot\ldots\cdot d_i$ where $d_1=1, d_i \geq 2$. It is easy to see that the pull operations from the offset supply $s_i$ will have to call the pull method of $s_{i-1}$ every $d_i$-th time. We can easily the following recurrence for the cost of $k$ pull operations on the node $s_i$.
 
 $$ f(s_i, k) = k + f\left(s_{i-1}, \left\lceil \frac k {d_i} \right\rceil \right)$$
 
@@ -415,7 +415,7 @@ We simulated 40 nodes with 10 applications each, publishing to an IS server whic
 
 \subsubsection*{Global scheduling for one slot}
 
-In the setup described above, we varied the initial delay bound and observed the the effect on the IS queue length, latency and publishing skew. Our workload consists of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. In the table we provided the amount of time required for an IS server thread to process the histogram and the percentage of histograms with similar size in our sample.
+In the setup described above, we varied the initial delay bound and observed the effect on the IS queue length, latency and publishing skew. Our workload consists of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. In the table we provided the amount of time required for an IS server thread to process the histogram and the percentage of histograms with similar size in our sample.
 
 \begin{table}
 \centering
@@ -467,7 +467,7 @@ In conclusion depending on the relative position of the initial delay bound with
 
 The second experiment aims to study how the global scheduling algorithm behaves over longer periods. We analyse how the algorithm handles the case in which some of the slots are too short for the histograms assigned to them.
 
-To this end we chose a slot size of 15ms and we examined three different assignments of the $\approx 5000$ histogram to $6000$ slots. The first slot assignment is the the hash-based one which assigned up to 6 histograms to the same slot leaving approximately 2500 empty slots. The second assignment assigns two histograms per slot in the first slots and leaves the remaining ones empty. The third assignment is an optimal one that assigns each histogram to its own slot. 
+To this end we chose a slot size of 15ms and we examined three different assignments of the $\approx 5000$ histogram to $6000$ slots. The first slot assignment is the hash-based one which assigned up to 6 histograms to the same slot leaving approximately 2500 empty slots. The second assignment assigns two histograms per slot in the first slots and leaves the remaining ones empty. The third assignment is an optimal one that assigns each histogram to its own slot. 
 
 
 \begin{table}
@@ -526,7 +526,7 @@ In the plot \ref{fig:skew_lat_sim} we show the results of publishing the entire 
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.7]{Images/skew_lat_sim.png}
-\caption{Skew and latency vs. interval length and intial delay bound.}
+\caption{Skew and latency vs. interval length and initial delay bound.}
 \label{fig:skew_lat_sim}
 \end{figure}
 
@@ -562,7 +562,7 @@ We can notice that with our algorithm we can obtain 55\% of the maximum throughp
 
 
 \subsection*{Testbed measurements}
-In this section we present the results obtained running the system on a testbed consisting of nodes with two 6 cores CPUs with hyperthreading enabled. The IS server is run on a separate machine from those running publishing applications.
+In this section we present the results obtained running the system on a testbed consisting of nodes with two 6 cores CPUs with hyper-threading enabled. The IS server is run on a separate machine from those running publishing applications.
 
 \subsubsection*{Jitter measurements}
 
