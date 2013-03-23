@@ -179,7 +179,7 @@ In general the following function computes the approximation of two groups:
 \input{Code/approximate}
 The \verb+sons+ field stores the groups that it approximates together with their maximum number of slots per subperiod.
 
-This is an over-approximation in the sense that if we can assign offsets (without collisions) for the resulting group, then we can also assign offsets for the initial groups. Let’s assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
+This is an over-approximation in the sense that if we can assign offsets (without collisions) for the resulting group, then we can also assign offsets for the initial groups. Let's assume we have assigned offsets $\{o_1,o_2,o_3,o_4\}$ to the four histograms in the synthetic group. We can allocate offsets $\{o_1, o_2\}$ modulo 5 sec for the first group and offsets $\{o_3, o_4\}$ modulo 5 sec. Note that these offsets are the same with $\{o_1, o_2, o_1 + 5, o_2 + 5\}$ modulo 10 sec and $\{o_3, o_4, o_3 + 5, o_4 + 5, o_3 + 10, o_4 + 10\}$ modulo 15 sec. These two offset sets can now be recursively assigned to the 4 histograms in each of the groups. The general algorithm is presented in pseudocode below:
 \input{Code/assign}
 The next function converts the offset list from offsets modulo subperiod to offsets modulo \verb+period+:
 \input{Code/expand}
@@ -233,7 +233,7 @@ Note that this measure is very conservative. First because we assume that the wo
 Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
 
 \begin{problem}[Optimal Subperiod Tree]
-Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
+Let's consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
 \end{problem}
 
 We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
@@ -245,7 +245,7 @@ We will prove that our problem is also NP-hard by reducing from the Bounded Freq
 
 Let's first assume without loss of generality that there is no element $x_k$ which belongs to every subset $C_i$. If it does, we can remove them from $X$ and from all subsets and the resulting problem is equivalent.
 
-Now, let’s present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let's associate with every $C_i$ a prime number $p_i$ and with every $x_i$ the number $P_i=\prod_{x_i\in C_k}p_k$.
+Now, let's present the polynomial time reduction from the Bounded Frequency Set Cover problem to Optimal Subperiod Tree problem. Let's associate with every $C_i$ a prime number $p_i$ and with every $x_i$ the number $P_i=\prod_{x_i\in C_k}p_k$.
 
 We can choose $p_i$ to be the $2\cdot r+i$-th prime number, so according to \citep{jaroma2005upper} it will satisfy $2\cdot r <p_i<2\cdot 3r \ln 3r$ where $r=\max(n, q)$ and we will be able to bound the periods by a polynomial in the input size, for example $P_i=O(r^{B+1})$. In order to establish the reduction between the corresponding decision problems we prove the following theorem. 
 
@@ -377,7 +377,7 @@ This technique allows us to have smooth incremental changes even when the subper
 
 \section*{Experimental results}
 
-In order to evaluate the scheduling algorithm and different parameters values, we implemented an event-based simulation tool using SimPy \citep{simpy}. The simulation results were compared with the results of a testbed deployment of the system. Using a simulation allowed us to prototype and evaluate faster and also offered us an easier way to measure values such as server queue length that were not accessible in a testbed deployment.
+In order to evaluate the scheduling algorithm and different parameter values, we implemented an event-based simulation tool using SimPy \citep{simpy}. The simulation results were compared with the results of a testbed deployment of the system. Using a simulation allowed us to prototype and evaluate faster and also offered us an easier way to measure values such as server queue length that were not accessible in a testbed deployment.
 
 \subsection*{Simulation}
 
@@ -415,7 +415,9 @@ We simulated 40 nodes with 10 applications each, publishing to an IS server whic
 
 \subsubsection*{Global scheduling for one slot}
 
-In the setup described above, we varied the initial delay bound and observed the effect on the IS queue length, latency and publishing skew. Our workload consists of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. In the table we provided the amount of time required for an IS server thread to process the histogram and the percentage of histograms with similar size in our sample.
+In the first experiment we varied the initial delay bound and observed the effect on the maximum IS server request queue length, latency and publishing skew. 
+
+We used the setup described above and a workload consisting of one or two histograms with the size given by the table \ref{tab:histosize} published in a single time slot. In the table we provided the amount of time required for an IS server thread to process the histogram and the percentage of histograms with similar size in our sample. 
 
 \begin{table}
 \centering
@@ -455,13 +457,11 @@ In the setup described above, we varied the initial delay bound and observed the
 \label{fig:one_slot_sim_skew}
 \end{figure}
 
-The results are plotted in figures \ref{fig:one_slot_sim_qlen}, \ref{fig:one_slot_sim_latency} and \ref{fig:one_slot_sim_skew}. These graphs make apparent the inverse relation between publishing skew and latency, both of which we want to minimize. 
+The results plotted in figures \ref{fig:one_slot_sim_qlen}, \ref{fig:one_slot_sim_latency} and \ref{fig:one_slot_sim_skew} make apparent the inverse relation between publishing skew on one hand and IS queue length and latency on the other hand, both of which we want to minimize. 
 
-It can be noticed that the IS queue length and the publishing latency decrease significantly with the initial delay bound since we remove their root cause - contention - by randomization. The decrease becomes less steep when the initial delay bound becomes greater than the total time needed to publish all the histograms sequentially. The threshold is equal to the time required to publish all the histograms sequentially by the IS server. For example, 400 large histograms need $\frac {400 \text{ apps}\cdot 400 \text{us}} {8 \text{ threads}} = 20\text{ms}$ and this is exactly where the decrease stops in the graph.
+Indeed, the IS queue length and the publishing latency decrease significantly with the initial delay bound since we remove their root cause, contention, by randomization. The decrease becomes less steep when the initial delay bound becomes greater than the total time needed to publish all the histograms sequentially. The threshold is equal to the time required to publish all the histograms sequentially by the IS server. For example, 400 large histograms need $\frac {400 \text{ apps}\cdot 400 \text{us}} {8 \text{ threads}} = 20\text{ms}$ and this is exactly where the decrease stops in the graph.
 
-On the other hand, once the initial delay bound is greater than this threshold, the publishing skew becomes equal to the initial delay bound, so it increases in a controlled manner.
-
-In conclusion depending on the relative position of the initial delay bound with respect to the threshold we trade-off publishing skew versus latency. Since our system is more sensitive to latency issues, we will prefer choosing it slightly larger.
+On the other hand, once the initial delay bound is greater than this threshold, the publishing skew becomes roughly equal to the initial delay bound, so it increases in a controlled manner.
 
 \subsubsection*{Global scheduling for multiple slots}
 
@@ -473,7 +473,7 @@ To this end we chose a slot size of 15ms and we examined three different assignm
 \begin{table}
 \begin{tabulary}{\textwidth}{|L|L|L|L|L|L|L|L|}
 \hline 
-Offset assignment & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev of pub. skew (ms) & average latency & stddev of latency \\
+Offset assignment & average queue length & stddev queue length & max. queue length & avg. pub. skew (ms) & stddev pub. skew (ms) & avg. latency (ms) & stddev latency (ms) \\
 \hline 
  Hash  & 5.72 & 26.0 & 344 & 11.924 & 0.297 & 1.304 & 0.967 \\
 \hline
@@ -515,11 +515,11 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 \label{fig:unused_slots}
 \end{figure}
 
-We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which is not significant for 100 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we need only 20\% more slots than the lower bound.
+We can notice that for the expected case with 5-10 nice periods we need only 2.5 more slots than the optimum which is negligible compared to 50-100 slots per second. Even in the extreme case of 10-20 nice periods and 5-10 non-nice we waste at most 20\% of the slots.
 
 \subsubsection*{Throughput, latency and publishing skew}
 
-In the next experiment we evaluated the throughput that can be achieved when using the proposed scheduling strategy: subperiod algorithm for local scheduling and randomization based global scheduling. We tried to vary the slot size and the initial delay bound in order to achieve good throughput and small publishing skew and latency. 
+In the next experiment we evaluated the throughput that can be achieved when using the proposed scheduling strategy: subperiod algorithm for local scheduling and randomization based global scheduling. We tried to vary the slot size and the initial delay bound in order to analyze throughput, maximum publishing skew and maximum latency. 
 
 In the plot \ref{fig:skew_lat_sim} we show the results of publishing the entire set of $\approx 5000$ histograms in $6000$ slots. The initial delay bound is shown as the fraction of the slot size, the rest of the values are expressed in milliseconds. In order to have similar value ranges, the latency is multiplied by 10.
 
@@ -532,7 +532,7 @@ In the plot \ref{fig:skew_lat_sim} we show the results of publishing the entire 
 
 From the graph \ref{fig:skew_lat_sim} we can see that both the initial delay bound fraction and slot size have inverse effects in latency and publishing skew. However, slot size has the additional effect of reducing throughput. We can also notice that as we approach the IS server throughput, both latency and publishing skew spike.
 
-In order to achieve the maximum throughput we published all histograms sequentially at the beginning of each publishing cycle. We compared in table \ref{tab:throughput_values} the latency, publishing skew and throughput obtained in this manner with some of the corresponding values obtained with our algorithm. Actually, we used the total time required to publish all the histograms which is the inverse of the throughput.
+In order to achieve the maximum throughput we published all histograms sequentially at the beginning of each publishing cycle. We compared in table \ref{tab:throughput_values} the latency, publishing skew and throughput obtained in this manner with some of the corresponding values obtained with our algorithm. We used the total time required to publish all the histograms which is proportional to the inverse of the throughput.
 
 \begin{table}
 \centering
@@ -583,26 +583,26 @@ It can be noticed that the jitter is considerably smaller with our algorithm and
 
 As we mentioned, we are interested in making traffic less bursty as it produces memory allocation spikes which cause stop-the-world garbage collector to run in applications written in Java. 
 
-We ran an experiment with the same setup as before, we registered one subscriber for the IS server and we compared the pattern of the updates received by that subscriber for both scheduling algorithms. In figure \ref{fig:burstiness} we present the number of updates in each interval of 20ms over a 20s period. In figure \ref{fig:burstiness_hires} we show the number of updates per millisecond during a 200ms period. 
+We ran an experiment with the same setup as before, we registered one subscriber for the IS server and we compared the pattern of the updates received by that subscriber for both scheduling algorithms. In figures \ref{fig:burstiness} an \ref{fig:burstiness_hires} we present the number of updates in the time unit for a resolution of 20ms and 1ms respectively. 
 
 \begin{figure}
 \centering
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{Images/burstiness.png}
-\caption{Traffic burstiness comparison (low granularity).}
+\caption{Traffic shape comparison (20ms bins).}
 \label{fig:burstiness}
 \end{subfigure}
 ~
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{Images/burstiness_hires.png}
-\caption{Traffic burstiness comparison (high granularity).}
+\caption{Traffic shape comparison during a high-load period (1ms bins).}
 \label{fig:burstiness_hires}
 \end{subfigure}
 \end{figure}
 
-One can see that the size of the highest spike is reduced significantly with the subperiod offset assignment algorithm.
+One can see that both the subperiod algorithm and randomization contribute to reduce the size of the traffic spikes. 
 
 \subsubsection*{Global scheduling}
 
