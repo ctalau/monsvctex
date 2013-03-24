@@ -3,7 +3,7 @@
 
 \section{Introduction}
 
-As described in chapter \ref{Capitolul2}, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. This concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another one and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
+As described in chapter \ref{Capitolul2}, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. Since some of the monitored objects are not thread-safe, for example ROOT histograms, this concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another one and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
 
 \section{Smart pointers}
 
