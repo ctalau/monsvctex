@@ -234,7 +234,7 @@ Note that this measure is very conservative. First because we assume that the wo
 Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
 
 \begin{problem}[Optimal Subperiod Tree]
-Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that has leafs $P_1,\ldots,P_n$ and root $\gcd(P_i)$.
+Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that contains the nodes $P_1,\ldots,P_n$ and has $\gcd(P_i)$ as root.
 \end{problem}
 
 We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
@@ -291,7 +291,7 @@ So, the total cost of the tree is between $l-0.5$ and $l+0.5$.
 \begin{proof}[Proof of Theorem \ref{theorem}]
 The root node of the subperiod tree is the node 1. Otherwise, it means that all the $P_i$ have a common prime divisor (a divisor of the root) which correspond to an element $x_k$ which belongs to all subsets $C_i$. Contradiction.
 
-Since the number of leafs in the subperiod tree is $q$, the root of the tree has at most $q$ neighbours.
+Since all the leafs of the tree are among the numbers $P_i$, they are at most $q$, so the root of the tree has at most $q$ neighbours.
 
 We will prove the two parts of the equivalence between the two implications of the theorem separately:
 
@@ -299,7 +299,7 @@ We will prove the two parts of the equivalence between the two implications of t
 \item[($\Rightarrow$)] 
 Let's denote the number of neighbours of the root of the tree by $l$. So, the cost of the tree belongs to $(l-0.5, l+0.5)\cap (k-0.5,k+0.5)$ and the only case in which this set is non-empty is when $l=k$.
 
-Let $D_1, \ldots, D_k$ be the neighbours of the root. For each of them, the leafs in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
+Let $D_1, \ldots, D_k$ be the neighbours of the root. For each of them, the nodes in its subtree are divisible with $D_i$, so they are divisible with one of its prime divisors $p_{i_j}$, so they are contained in $C_{i_j}$. Hence, the subcollection $C_{i_j},j=1,\ldots,k$ is a subcover of size k.
 
 \item[($\Leftarrow$)] Let $C'=\{C_1,\ldots,C_k\}$ be a subcover of size $k$. Let's consider the tree $T$ with edges 
 $$E = \{(1, p_i) \,|\, i=1,\ldots, k\} \cup \{(p_i, P_j) \,| \,\, p_i | P_j\}$$
@@ -619,7 +619,13 @@ We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as f
 \label{fig:one_slot_tbed}
 \end{figure}
 
-\subsubsection*{Throughput, latency and publishing skew}
+\subsubsection*{End to end test}
+
+Finally we made an end to end test with the workload used in production by the ATLAS experiment. We used the $\approx 5000$ histogram mentioned before, the configuration rules included 8 debug histograms with a publishing interval of 10 seconds, and 5130 histograms with an interval of 120 seconds. 
+
+The number of histograms that we need to publish per second is $\frac {5130}{120} + {8}{10} = 43.55$, so we configured 50 slots per second. The initial delay bound was chosen to be 75\% of the slot duration. We also ran experiments with 60 and 75 slots per second to analyze how the system behaves if more histograms will be added in the future.
+
+
 
 
 
