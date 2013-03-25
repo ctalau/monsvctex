@@ -40,7 +40,7 @@ In order to avoid complicated link time dependencies between packages, we adopte
 
 Our configuration mechanism allows the library developer to provide configuration rules for the objects registered by its library. To this end we created the concept of rule bundle which contains configuration rules and links other rule bundles. With this approach the developer of the main application can just link the rule bundle of the library from the rule bundle of the application. This mechanism handles nicely transitive dependencies by using transitively linked bundles.
 
-The configuration files are a set of interlinked XML files, one per application or library. These files form the configuration database which can be loaded at runtime by using the OKS system. The database is an object oriented one, where for example every application is described by a {\tt PublishingApplication} object which has a one to one relation to a rule bundle which is represented by an object of class {\tt ConfigurationRuleBundle}. The complete schema of the configuration database is presented in figure \ref{fig:oks_schema}. 
+The configuration files are a set of interlinked XML files, one per application or library. These files form the configuration database which can be loaded at run time by using the OKS system. The database is an object oriented one, where for example every application is described by a {\tt PublishingApplication} object which has a one to one relation to a rule bundle which is represented by an object of class {\tt ConfigurationRuleBundle}. The complete schema of the configuration database is presented in figure \ref{fig:oks_schema}. 
 
 \begin{figure}[ht]
 \centering

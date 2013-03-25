@@ -213,7 +213,7 @@ If this incremental addition of a histogram to the tree with pull-based offset a
 
 In this section we will discuss the trade-off between the complexity of the strategy to choose the next pair of groups to approximate and the quality of the resulting offset assignment.
 
-Let’s first introduce a quality measure for a subperiods tree built by our algorithm. 
+Let's first introduce a quality measure for a subperiods tree built by our algorithm. 
 
 \begin{definition}
 For a node with period $P$ whose parent node has period $P_1$ we define the maximum number of offsets modulo 1 sec. wasted along the edge between the two nodes to be $c(P_1,P)=\frac{1}{P_1}-\frac 1 P$.
@@ -234,7 +234,7 @@ Note that this measure is very conservative. First because we assume that the wo
 Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
 
 \begin{problem}[Optimal Subperiod Tree]
-Let’s consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that contains the nodes $P_1,\ldots,P_n$ and has $\gcd(P_i)$ as root.
+Let's consider the graph with vertices denoted by numbers $1,2,\ldots ,P$ where $P=\max_{i=1,\ldots,n}(P_i)$ with an edge between vertex $b$ and vertex $a$ of cost $\frac 1 b -\frac 1 a$ iff $b \vert a$. Find the minimum-cost \emph{subperiod tree}, that is, the minimum-cost tree that contains the nodes $P_1,\ldots,P_n$ and has $\gcd(P_i)$ as root.
 \end{problem}
 
 We can notice that this problem is an instance of the Directed Steiner Tree optimization problem which is NP-hard and the with standard complexity assumptions there exists no approximation algorithm with a ratio better than $\frac {\ln (n)} 4$ \citep{zelikovsky1997series, ming2006fasterdsp}.
@@ -608,7 +608,7 @@ One can see that both the subperiod algorithm and randomization contribute to re
 
 \subsubsection*{Global scheduling}
 
-We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. The size of the histogram was chosen according to the three size classes identified in table \ref{tab:histosize}. 
+We repeated the simulation experiment for the global scheduling in the testbed. The setup was similar: 400 applications running on 40 nodes that publish one histogram in a time slot. The size of the histogram was chosen according to the three size classes identified in table \ref{tab:histosize}, more exactly 200, 768 and 1248 bins. 
 
 We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as figures \ref{fig:one_slot_sim_latency} and \ref{fig:one_slot_sim_skew}. The only difference is the case of the large histogram when the IS server experiences bigger latencies under heavy load.
 
@@ -623,9 +623,27 @@ We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as f
 
 Finally we made an end to end test with the workload used in production by the ATLAS experiment. We used the $\approx 5000$ histogram mentioned before, the configuration rules included 8 debug histograms with a publishing interval of 10 seconds, and 5130 histograms with an interval of 120 seconds. 
 
-The number of histograms that we need to publish per second is $\frac {5130}{120} + {8}{10} = 43.55$, so we configured 50 slots per second. The initial delay bound was chosen to be 75\% of the slot duration. We also ran experiments with 60 and 75 slots per second to analyze how the system behaves if more histograms will be added in the future.
+The number of histograms that we need to publish per second is $\frac {5130}{120} + {8}{10} = 43.55$, so we configured 60 slots per second because in a real scenario more histograms may be added at runtime. The initial delay bound was chosen to be 75\% of the slot size.
 
+As we have seen in figure \ref{fig:one_slot_tbed}, our simulation model is not very accurate for large histograms. To this end we chose to see the effect of the large histograms in our sample. We repeated the experiment several times excluding the histograms with the number of bins greater than 1K, 2K, 8K, 16K and finally with all the histograms. 
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{Images/e2e_histograms.png}
+\caption[Publishing skew and latency distribution.]{Publishing skew and latency distribution (logarithmic scale).}
+\label{fig:e2e_histograms}
+\end{figure}
+
+In figure \ref{fig:e2e_histograms} we present the distribution of publishing skew and latency values for all the histograms. We can see that large histograms increase the tail of the distribution, but don't influence very much the latency and publishing skew of the other histograms.
+
+In figure \ref{fig:small_vs_all} we compared the average latency and publishing skew of the entire set of histograms with the corresponding averages of the set of histograms with less than 1000 bins (which are 90\% of the total number of histograms). We observe that even the latter averages increase as we increase the workload because the newly added histograms overflow their time slot leaving less time for the existing histograms, hence creating contention. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{Images/small_vs_all.png}
+\caption{Publishing skew and latency average.}
+\label{fig:small_vs_all}
+\end{figure}
 
 
 
