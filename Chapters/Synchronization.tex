@@ -3,39 +3,40 @@
 
 \section{Introduction}
 
-As described in chapter \ref{Capitolul2}, the applications that use our library are take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. Since some of the monitored objects are not thread-safe, for example ROOT histograms, this concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another one and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
+As described in chapter \ref{Capitolul2}, the applications that use our library take care of updating the monitored objects with the current operational values while in a separate thread the {\tt monsvc} library samples these objects and sends them to an IS server. Since some of the monitored objects are not thread-safe, for example ROOT histograms, this concurrent access pattern creates problems which include issues regarding visibility of updates of one thread in another and accessing data structures in inconsistent state. Therefore, we need to synchronize the access to the monitored objects between application and library threads.
 
-\section{Smart pointers}
+\section{Synchronizing smart pointers}
 
-We use smart pointers in order to implement the synchronization between the application and the library while requiring only minimal and incremental changes to the existing codebase. For every object registered with the library we return a smart pointer that is used by both library and application as a proxy for accessing the registered object. 
+We use smart pointers in order to implement the synchronization between the application and the library in a way that requires only minimal and incremental changes to the existing codebase. For every object registered with the library we return a smart pointer that is used by both library and application as a proxy for accessing the registered object. 
 
-The smart pointers offer a simple interface to the application developer. They have two functions called lock and unlock which ensure exclusive access to the underlying object. Moreover, we use an interesting C++ feature \citep{andrei2001modern} that allows us to overload the dereference operator to lock the smart pointer just before any method call or field access and unlock it afterwards.
+The smart pointers offer the application developer a simple interface. They have two functions called lock and unlock which ensure exclusive access to the underlying object. Moreover, we use an interesting C++ feature \citep{andrei2001modern} that allows us to overload the dereference operator to lock the smart pointer just before any method call or field access and unlock it afterwards.
 
-Due to the nice syntactical similarities between smart pointers and raw pointers we can easily port the code to use the former. It usually requires just changing the type of the declaration of the pointer. For example, the following function can be ported just by changing the type of the parameter:
+Due to the nice syntactical similarities between raw pointers and smart pointers we can easily port the code to use the latter. This usually requires just changing the type of the declaration of the pointer. For example, the following function can be ported just by changing the type of the parameter:
 \input{Code/dow1}
 to obtain the following form:
 \input{Code/dow2}
 As explained above, the smart pointer takes care of the synchronization with the library on every function call and field access.
 
-There is an exception to the previous case in which the pointer should be passed to a legacy function which we cannot change. For example:
+There is an exception to the previous case when the pointer should be passed to a legacy function which we cannot change. For example:
 \input{Code/dow3}
 in which case we replace it with:
 \input{Code/dow4}
-Note that in this case even the change was very small, there is a trade-off between lock granularity and the amount of code that needs to be changed. For example, if we had ten calls to legacy functions and each of them was fast, we could as well lock around the \verb+do_work+ to save the refactoring work.
+
+Note that there is a trade-off between lock granularity and the amount of code that needs to be changed. For example, if the \verb+do_work+ function contained ten calls to legacy functions we could have changed only its callers. With this approach, however, we hold the lock for the duration of all ten calls.
 
 \section{Synchronization policies}
 
-In the previous section we referred to locking and unlocking the smart pointer without giving details about how this is implemented. In this section we will present different implementations among which the application developer can choose when registering an object.
+In the previous section we referred to locking and unlocking the smart pointer without giving details about how this is implemented. In this section we will present different implementations among which the application developer can choose when registering an object with the {\tt monsvc} library.
 
 \subsection{No synchronization}
 
-The information that is stored in the IS server is represented as objects with the base class ISInfo. Some of these objects are generated from XML description. We implemented a script which can generate a thread-safe version of the object which uses atomic integers for the fields. 
+The information stored in the IS server is represented as objects with the base class ISInfo. Some of these objects are generated from an XML description. We implemented a script which can generate a thread-safe version of the object which uses atomic integers for the fields. 
 
 In cases where this level of thread-safety is sufficient, a developer can avoid the overhead of locking by using a smart-pointer that provides no synchronization.
 
-\subsection{Mutex}
+\subsection{Mutual exclusion}
 
-The simplest synchronization policy is to acquire mutex when accessing the object. The disadvantage of this policy is that the library has to lock the object while it sent over the network to the IS server. This is because the publishing to the IS server uses a legacy function similar with the example we have given before.
+The simplest synchronization policy is to acquire \verb+mutex+ when accessing the object. The disadvantage of this policy is that the library has to lock the object while it sent over the network to the IS server. This is because the publishing to the IS server uses a legacy function similar with the example we have given before.
 
 \subsection{Copy before publish}
 
@@ -47,9 +48,9 @@ This policy is the opposite of copy-on-write but we prefer it since in our case 
 
 An important observation which we can leverage is that in our use cases, the application that updates an object with the current operational values does not need to wait for the update to be applied. All we are interested in is serial consistency of the operations on that object. 
 
-With the asynchronous updates policy, we still use a mutex to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. Our updates usually increment a counter or a histogram bin, hence they can be represented very compactly making this strategy lightweight in terms of space usage. It also avoid blocking the main application threads while sending the monitored objects over the network.
+With the asynchronous updates policy, we still use a \verb+mutex+ to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. This way it avoids blocking the main application threads while sending the monitored objects over the network. Our updates usually increment a counter or a histogram bin, hence they can be represented using a pointer to the method and a few parameters making this strategy lightweight in terms of space usage. 
 
-The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provides asynchronous updates to any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
+The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provide asynchronous updates for any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
 \input{Code/async_ptr}
 
 This method takes a pointer to a member function and its arguments and calls it asynchronously. It requires to change the method calls of the from \verb+h->observe(42)+ to use the following form: \verb+h.async(Histo::observe, 42);+.

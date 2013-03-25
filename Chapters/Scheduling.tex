@@ -229,7 +229,7 @@ For convenience we call these numbers the cost of an edge and of a tree respecti
 
 Note that this measure is very conservative. First because we assume that the worst case happens for every edge which usually is not the case. Second, because these slots are wasted by our algorithm when compared to a hypothetical assignment that uses $\frac 1 P$ slots every second to publish a histogram with period $P$. Even an optimal schedule that satisfies the deadlines of our system leaves some slots unused compared to this hypothetical schedule. Finally, these slots are not entirely wasted - they can be used when we add new histograms incrementally.
 
-\subsubsection*{NP-hardness of optimal subperiod tree}
+\subsubsection*{NP-hardness of finding optimal subperiod tree}
 
 Equipped with these definitions, the problem of building an optimal tree for $n$ histogram groups with periods $P_1, P_2, \ldots,P_n$ can be formulated as follows. 
 
@@ -319,7 +319,7 @@ Apply theorem \ref{theorem}.
 
 Following the same lines we can prove that even a strategy that chooses a minimal number of neighbors for the root is NP-hard to find.
 
-\subsubsection*{Heuristic strategy}
+\subsubsection*{Complexity analysis of a heuristic strategy}
 
 In this section we will present a heuristic strategy to compute a near optimal subperiods tree for practical cases with reasonable complexity. 
 

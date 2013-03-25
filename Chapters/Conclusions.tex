@@ -2,7 +2,7 @@
 \label{Capitolul6}
 
 
-In this section I will summarize my contribution and I will mention some areas of further improvement.
+In this section I will summarize my contributions and I will mention some areas of possible improvement.
 
 \section{Contributions summary}
 
@@ -12,7 +12,7 @@ I designed an expressive, easy to use and scalable configuration interface for t
 
 In order to improve the publishing latency, the publishing skew among multiple applications and the throughput of the system, I applied real-time scheduling techniques. I designed the subperiod algorithm to assign offsets for the first publication of each histogram in order to minimize jitter and contention while preserving a high throughput. I provided a theoretical analysis of the algorithm as well as simulation and testbed experiments.
 
-Finally, I improve the synchronization between the library and the main application to support new policies for reducing the time for which the main application has is blocked.
+Finally, I improved the synchronization between the library and the main application to support new policies for reducing the time for which the main application has is blocked.
 
 
 \section{Areas of possible improvement}
@@ -21,4 +21,4 @@ In order to better support dynamic reconfiguration, we could implement a protoco
 
 Although we showed that the subperiod algorithm works well in practice we did not prove a lower bound for the approximation ratio. In general it cannot be better that $\ln n$, but we think the ratio is smaller if the periods are nice, i.e. have only 2, 3 and 5 as prime factors.
 
-One can also try to extend the offset-assignment algorithm to be able to assign multiple slots to bigger histogram while maintaining a high throughput.
+One can also try to extend the offset-assignment algorithm to be able to assign multiple consecutive slots to bigger histogram while maintaining a high throughput. 
