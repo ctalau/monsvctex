@@ -3,11 +3,11 @@
 
 \section{Introduction}
 
-The applications in the ATLAS TDAQ system register up to several thousands of objects that represent information to be monitored. Different objects need to be published in different ways: for example with different publishing frequency and or to different Information Sharing (IS) servers \citep{kolosinformation} or even need to be written to a file. As an example, the number of failed checksums of the event data read from the detector needs to be published every 10 seconds to an IS server called "L1". For another example, the histogram of accepted event data size should be written to a file called "DF.root" at the end of the running period. We aim to provide a way for the user to specify these parameters in an expressive, succinct and easy to use way. This process is called the \emph{configuration} of the library.
+The applications in the ATLAS TDAQ system register up to several thousands of objects that represent information to be monitored. Different objects need to be published in different ways: for example with different publishing frequency and or to different Information Sharing (IS) servers or even need to be written to a file. As an example, the number of failed checksums of the event data read from the detector needs to be published every 10 seconds to an IS server called "L1". For another example, the histogram of accepted event data size should be written to a file called "DF.root" at the end of the running period. We aim to provide a way for the user to specify these parameters in an expressive, succinct and easy to use way. This process is called the \emph{configuration} of the library.
 
 \section{Requirements}
 
-The library allows the user to specify one or multiple \emph{publishing targets}. The publishing targets currently include IS servers, OH servers, files in ROOT \citep{brun1997root} format and standard output. For each target, the user can specify some \emph{publishing parameters}, for example, the name of the IS server and the publishing interval for an IS publishing target.
+The library allows the user to specify one or multiple \emph{publishing targets}. The publishing targets currently include IS servers, OH servers, files in ROOT format and standard output. For each target, the user can specify some \emph{publishing parameters}, for example, the name of the IS server and the publishing interval for an IS publishing target.
 
 Another important functionality is to be able to modify the configuration at runtime. For example, if an operator notices some abnormal conditions in the running of the system, she may enable some debug monitoring information to be published in order to identify and fix the problem. 
 

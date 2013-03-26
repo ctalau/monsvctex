@@ -4,7 +4,7 @@
 \section{ATLAS Overview}
 The LHC (Large Hadron Collider) is a 27km circumference synchrotron that accelerates two counter rotating particle beams. The beams are collided at four interaction points for a contiguous period of 10-20 hours. The ATLAS detector (A Toroidal LHC ApparatuS) \citep{aad2008atlas}, designed for studying particles produced by proton-proton interactions and heavy ion collisions surrounds one of the interaction points. 
 
-The image below presents a section of the detector which has a layered structure with the interaction point in the center of the detector. The different layers are specialized in measuring different properties of the particles as detailed in \citep{aad2008atlas}. 
+The image below presents a section of the detector which has a layered structure with the interaction point in the center. The different layers are specialized in measuring different properties of the particles as detailed in \citep{aad2008atlas}. 
 
 \begin{figure}[ht!]
 \centering
@@ -24,13 +24,13 @@ The two counter-rotating beams consist of trains of particle bunches. The distan
 
 The first level trigger (L1) is built using custom hardware that can operate at 40 MHz and is placed as close to the actual detector as possible to reduce latencies caused by cable length. This level makes simple decisions based on the energy depositions in the calorimeters and of muon track segments in order to limit the latency to as low as 2.5 us. The acceptance rate of this level is chosen to be at most 75kHz. 
 
-After being accepted by the L1, event data is stored in the ROBs (ReadOut Buffers) while it is processed by the second level trigger (L2) which is part of the HLT (High Level Trigger). The L2 reads only some parts of the data associated with an event (Regions of Interest or ROI) as hinted by the L1. The data used by the L2 system is in average 50KB per event and the latency of the order of tens of milliseconds. The L2 selection software is composed of more than 6000 instances of a software application running on 800 nodes, each of them handling one event at a time. 
+After being accepted by the L1, event data is stored in the ROBs (ReadOut Buffers) while it is processed by the second level trigger (L2) which is part of the HLT (High Level Trigger). The L2 reads only some parts of the data associated with an event (Regions of Interest or ROI) as hinted by the L1. The data used by the L2 system is in average 50kB per event and the latency of the order of tens of milliseconds. The L2 selection software is composed of more than 6000 instances of a software application running on 800 nodes, each of them handling one event at a time. 
 
 Finally, the third level trigger, called Event Filter (EF) operates on the complete event data, at an input rate given by L2 of 3.5kHz. It has a configurable menu of more complicated selection algorithms and has a total latency of about 1 seconds and an acceptance rate of several hundred hertz which is within the mass storage limitations. The installation consists of 600 nodes running 6500 instances of the applications.
 
 \subsection*{ATLAS Evolution}
 
-During the 2 year shutdown period starting at the beginning of 2013, a large upgrade of the entire system is planned \citep{hauser2012atlas}. In the DAQ system, the main change will be the merge of the L2 and EF.  
+During the 2 year shutdown period starting at the beginning of 2013, a large upgrade of the entire system is planned \citep{hauser2012atlas}. In the DAQ system, the main change will be the merging of the L2 and EF.  
 
 \begin{figure}[ht!]
 \centering
@@ -51,10 +51,10 @@ There are two types of monitoring: operational monitoring which deals with opera
 
 \subsection*{Components and services}
 
-There are a number of components and services that play together in the monitoring system. We will present below the ones that have are the most relevant for operational monitoring starting from the lowest level ones up.
+There are a number of components and services that play together in the monitoring system. We will present below the ones that are the most relevant for operational monitoring starting from the lowest level ones up.
 
 \begin{description}
-\item[Inter-Process Communication (IPC) library \citep{corso2007data}] Is responsible for all the communication between applications in the ATLAS Trigger and Data AcQuisition (TDAQ)  system. It provides a much simpler interface to the underlying CORBA implementation including a simple API for the OMG Naming Service and a transparent cache for the remote object references.
+\item[Inter-Process Communication (IPC) library \citep{corso2007data}] Is responsible for all the communication between applications in the ATLAS Trigger and Data AcQuisition (TDAQ) system. It provides a much simpler interface to the underlying CORBA \citep{vinoski1997corba} implementation including a simple API for the OMG Naming Service and a transparent cache for the remote object references.
 
 \item[Object Kernel Support (OKS) database \citep{jones1998oks}\citep{alexandrov2001atlas}] Is an object-oriented database used for storing static configuration parameters for hardware and software components of the system, for example command line parameters and the node where to run a specific application. The data is loaded from XML data files and is validated against an user provided schema. 
 
@@ -64,16 +64,17 @@ In order to avoid overloading the database server during the system start and du
 
 \item[The ROOT framework \citep{brun1997root}] is an Object Oriented framework that contains among others an efficient file-based persistence mechanism, a C++ interpreter, reflection support, advanced statistical analysis instruments (multi dimensional histograms, fitting, minimization) and visualization tools. Most of the monitoring information in the system consists of such histograms.
 
-\item[Information Sharing (IS) server \citep{kolosinformation}]  Is a server used to share monitoring information between applications that publish their own operational or event-related data and applications that need to process this information. The IS acts as an in memory key-value store, where keys are strings - the name of the objects - and values are subclasses of the ISInfo class. An application can read, write or update the information with a specific name. There is also the option for an application to subscribe to receive notifications when a value is updated. Due to the scale of our system, we run multiple instances of this server, each having its own name.
+\item[Information Sharing (IS) server \citep{kolosinformation}]  Is a server used to share monitoring information between applications that publish their own operational or event-related data and applications that need to process this information. The IS acts as an in memory key-value store, where keys are strings - the name of the objects - and values are subclasses of the ISInfo class. An application can read, write or update the information with a specific name. There is also the option for an application to subscribe to receive notifications when a value is updated \ref{fig:IS_overview}. Due to the scale of our system, we run multiple instances of this server, each having its own name.
 
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.44]{Images/IS.png}
 \caption{IS server interface.}
+\label{fig:IS_overview}
 \end{figure}
 
 
-The ISInfo class is intended to be a plain data structure with serialization and deserialization functions. They can be either written by the programmer or generated from an XML description.
+The ISInfo class represents a plain data structure with serialization and deserialization functions. They can be either written by the programmer or generated from an XML description.
 
 \item[The Online Histogramming (OH) service \citep{kolosoh}] is a library which offers an interface to the IS server that allows one to store and retrieve ROOT histograms by transparently encoding them as ISInfo objects.
 

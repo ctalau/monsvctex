@@ -48,7 +48,7 @@ This policy is the opposite of copy-on-write but we prefer it since in our case 
 
 An important observation which we can leverage is that in our use cases, the application that updates an object with the current operational values does not need to wait for the update to be applied. All we are interested in is serial consistency of the operations on that object. 
 
-With the asynchronous updates policy, we still use a \verb+mutex+ to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. This way it avoids blocking the main application threads while sending the monitored objects over the network. Our updates usually increment a counter or a histogram bin, hence they can be represented using a pointer to the method and a few parameters making this strategy lightweight in terms of space usage. 
+With the asynchronous update policy, we still use a \verb+mutex+ to ensure exclusive access to the underlying object. The only difference is that when the application tries to update a locked object it just enqueues the update to be applied at a later time. This way it avoids blocking the main application threads while sending the monitored objects over the network. Our updates usually increment a counter or a histogram bin, hence they can be represented using a pointer to the method and a few parameters making this strategy lightweight in terms of space usage. 
 
 The interface of the smart pointer that implements this strategy leverages the C++11 variable argument templates to provide asynchronous updates for any type of monitored object. The declaration of the method responsible with asynchronous updates is the following:
 \input{Code/async_ptr}
@@ -59,7 +59,7 @@ Another positive point of this implementation is that we can rewrite only some o
 
 \subsubsection*{Intuition}
 
-The figure \ref{fig:sync_ptr} represents the operation of the locking strategy while the figure \ref{fig:async_ptr} corresponds to the asynchronous updates strategy. One can see that in the second case, the application thread is not disturbed by the monitoring thread which is publishing the object that it is trying to update.
+The figure \ref{fig:sync_ptr} represents the operation of the locking strategy while the figure \ref{fig:async_ptr} corresponds to the asynchronous update strategy. One can see that in the second case, the application thread is not disturbed by the monitoring thread which is publishing the object that it is trying to update.
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.6]{Images/async_before.png}
@@ -70,7 +70,7 @@ The figure \ref{fig:sync_ptr} represents the operation of the locking strategy w
 \begin{figure}[ht!]
 \centering
 \includegraphics[scale=0.6]{Images/async_after.png}
-\caption{Asynchronous updates strategy}
+\caption{Asynchronous update strategy}
 \label{fig:async_ptr}
 \end{figure}
 
