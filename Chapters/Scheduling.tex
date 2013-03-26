@@ -3,22 +3,22 @@
 
 \section{Introduction}
 
-In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library by every application instance. We first identify the requirements on the scheduling algorithm, present some solutions and assess them by using both a simulation and a test-bed deployment of the system.
+In this section we discuss the scheduling problem which consists of choosing the publishing time for every object registered with our library by every application instance. We first identify the requirements for the scheduling algorithm, propose a solution and assess them by using both a simulation and a test-bed deployment of the system.
 
 \section{Monitoring system}
 
-Our monitoring system is composed of approximately 12000 applications which send data to 32 multi-threaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
+Our monitoring system is composed of approximately 12000 application instances which send data to 32 multi-threaded IS servers.  All these applications are instances of 15 binaries, most of them being L2 and EF applications. Instances of the same application have the same set of registered objects.
 
-Since applications talking to different IS servers are independent we analyse them separately. So we consider a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba} and the server has 8 threads by default and runs on a machine with 12 CPUs. We also assume that the IS server runs in the same rack with the applications that use it and is connected to the same switch with a 1Gbps connection.
+Since applications talking to different IS servers are independent we analyse them separately. So we consider a system with a single IS server and 400 applications that run on 40 nodes. The communication is done using CORBA \citep{vinoski1997corba} and the server has 8 threads by default and runs on a machine with 2 six-core CPUs with hyperthreading enabled. The IS server runs in the same rack with the applications that use it and is connected to the same switch with a 1Gbps connection.
 
-A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 nodes, there are 5087 histograms with 1126 bins in average. The publishing intervals are usually configured between 1 second and 10 minutes. Although applications publish many other kinds of objects such as counters or flags, most of the published monitoring information consists of histograms. Since histograms have the biggest influence on the performance of the system I will consider only them for the analysis in this chapter.
+A typical example of monitored objects set is the one of the Event Filter nodes which monitor 5138 histograms with an average of 438 bins per histogram. For L2 applications, there are 5087 histograms with 1126 bins in average. The publishing intervals are usually configured between 1 second and 10 minutes. Although applications publish many other kinds of objects such as counters or flags, most of the published monitoring information consists of histograms. Since histograms have the biggest influence on the performance of the system I will consider only them for the analysis in this chapter.
 
 \section{Requirements}
 
 \begin{description}
 \item[Minimize jitter.]
 
-First of all, we should be able to publish each histogram periodically, with the interval between two consecutive publications approximately equal to the interval configured by the user. We should be able to handle multiple publishing intervals. A number of intervals of the order of 10 is expected.
+We should be able to publish each histogram periodically, with the interval between two consecutive publications approximately equal to the interval configured by the user. We should be able to handle multiple publishing intervals. A number of intervals of the order of 10 is expected.
 
 Let's consider a histogram with publishing interval $I$ and let the time of the $k$-th publication of a histogram be $T_k$; we call $J=\max(\lvert T_k-((k-1) \cdot I+T_1\rvert))$ the jitter of the histogram. We want to have $J < 0.1\cdot I$ for every histogram.
 
@@ -28,7 +28,7 @@ We publish the histograms using a separate thread from that of the main applicat
 
 \item [Minimize publishing skew.]
 
-Collision event data is distributed to all the applications, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system's operational state we need to take a snapshot of the histogram instances from all nodes at some point in time and to aggregate them.
+Collision event data is distributed among all the application instances, each maintaining its own histograms about the processed events. These histograms are evolving in time and in order to have an overview about the system's operational state we need to take a snapshot of the histogram instances from all nodes at some point in time and to aggregate them.
 
 In order to take a snapshot of histogram instances across all nodes at some point in time, we need to have all nodes publishing their instance of that histogram with minimal skew. The publishing skew of a histogram is defined to be the difference between the moments when the first and the last instance of the histogram is received by the IS server.  
 
@@ -38,15 +38,15 @@ We want the published information in the IS server to be as fresh as possible. S
 
 \item [Efficient incremental reconfiguration]
 
-We want to allow the users to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don't want the system to stop publishing for a long time in order to apply the new configuration changes. 
+We want to allow the human operators to reconfigure the system at runtime, which means that our schedule should incorporate the new changes on the fly. We want to implement this feature as efficient as possible which means we don't want the system to stop publishing for a long time in order to apply the new configuration changes. 
 
-We also want that if we change the publishing interval for some histograms, the rest of them should continue to be published according to the existing schedule.
+We also want the histograms whose parameter did not change to continue to be published according to the existing schedule.
 
 \item [Avoid bursty traffic]
 
 A bursty traffic pattern seen by the IS server impacts the overall system performance in multiple ways. First, it requires big inbound queues in IS server, networking devices and in all the upstream applications to which the IS server pushes information. 
 
-Another effect is related to the IS subscriber applications that use garbage collection for memory management, for example \citep{sicoe2012persistent}. They are known to suffer from freezes when a stop-the-world garbage collector runs \citep{aho2007compilers}. However, more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn't allocate memory at a very high rate which is exactly what bursty traffic causes.
+Another effect is related to the IS subscriber applications that use garbage collection for memory management, for example PBEAST \citep{sicoe2012persistent}. They are known to suffer from freezes when a stop-the-world garbage collector runs \citep{aho2007compilers}. However, more recent garbage collection algorithms \citep{printezis2005garbage} are designed to work in parallel with the application as long as it doesn't allocate memory at a very high rate which is exactly what bursty traffic causes.
 
 Although important, this requirement has the same cause as the first one, namely contention, so we will treat it as a secondary one.
 
@@ -54,13 +54,13 @@ Although important, this requirement has the same cause as the first one, namely
 
 \section{Global and local scheduling}
 
-The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation; we call them local requirements. These are jitter minimization and reconfiguration efficiency. 
+The previously identified requirements can be split into two classes. The first class consists of the requirements that can be satisfied by each application instance in isolation; we call them local requirements. This class include jitter minimization and reconfiguration efficiency. 
 
 The second class consists of requirements like skew and latency minimization and bursty traffic avoidance which are global requirements that can be satisfied only if the application instances cooperate. Although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other’s performance when creating contention in the monitoring network of the ATLAS TDAQ system. 
 
 In order to treat the two classes of requirements more orthogonally, we consider the time as being divided in equal length slots. This way we can think of local scheduling as assigning which histograms are published in which slot and the global scheduling as when to publish the histograms within a time slot.
 
-The slot size choice is not simple since it has conflicting requirements, but on the positive side it does not depend on the library configuration, so it has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
+The slot size choice is not simple since it has conflicting requirements, but on the positive side it does not depend on the configuration. It has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
 
 This separation also helps us in presenting to the users a simple model for configuring the publishing intervals. The system reports the number of available slots per second and the users need just to calculate how many slots per second their rules require. The users, however, should not expect 100\% utilization of the slots due to irregularities of the publishing intervals set.
 
@@ -93,13 +93,13 @@ The local requirements for our scheduling requirements can be viewed as a real-t
 \item The \emph{latency} of a publishing a histogram corresponds to the {\bf execution time} of a job $C_i$. 
 \item The \emph{publishing interval} is the {\bf task period} $T_i$. A typical configuration include $m=5-10$ distinct periods which are integer numbers of seconds and usually less than 10 minutes.
 \item The \emph{maximum jitter} of a histogram is the {\bf deadline} of the corresponding job $D_i=0.1\cdot T_i$.
-\item The \emph{IS server} has a similar role to the {\bf CPU} that need to be scheduled among the tasks.
+\item The \emph{IS server} has a similar role to the {\bf CPU} that needs to be scheduled among the tasks.
 \item The \emph{throughput} of our system is the {\bf utilization} $U$ of the corresponding real-time system.
 \end{itemize}
 
 \subsection*{Related work}
 
-In the real-time scheduling literature there are two main classes of algorithms: static ones in which the priority of a task is determined before the system is started and dynamic ones in which the priority of a task is adjusted dynamically. 
+In the real-time scheduling literature there are two main classes of algorithms: static ones in which the priority of a task is determined before the system is started and dynamic ones in which the priority of a task is adjusted at runtime. 
 
 The most widely used static algorithm is the Rate Monotonic Scheduling (RMS) \citep{liu1973scheduling} in which the priority of a task is higher for tasks with small periods. The algorithm is preemptive, so when a task with small period becomes available, the ones with larger period are preempted and it starts running. Another variation is Deadline Monotonic Scheduling which gives higher priority to tasks with shorter deadlines. In our case, we cannot preempt a histogram that has already started to be published, so this algorithms are not directly applicable. 
 
@@ -127,7 +127,7 @@ The common assumption of these algorithms that render them ineffective for our s
  
 In \citep{goossens2003scheduling} the author proves a number of useful results about offset-free systems and presents two algorithms for assigning offsets to a set of tasks. The first algorithm finds an optimal offset assignment and it has a running time of $O(n^2 \cdot \frac{\prod_{i=1}^n Ti}{\text{lcm}(T_i)})$ which renders it useful only for theoretical purposes. The second algorithm is an heuristic one which runs in $O(n^2\cdot \log(\max_{i=1\ldots n}(T_i)))$ and has space complexity $O(n^2)$. The algorithm works by considering pairs of tasks in decreasing order of greatest common divisor of their periods and trying to assign offsets such that the jobs of these two tasks are as distant as possible. The limitation of this algorithm is that it looks exactly at one other task offset before choosing the offset for a task.
 
-In the context of scheduling messages in CAN networks, Grenier et al. \citep{grenier2008pushing} propose another heuristic algorithm which runs in $O(n\cdot \max_{i=1 \ldots n}(T_i))$ and has better experimental results than the previous one. The algorithm tries to assign offsets such that the first job of every task is as far as possible from other jobs. It does this by considering tasks in the increasing order of their periods and assigns the offset such that the first job of task is as far as possible from every job of a task that was assigned so far. The drawback of this approach is that the algorithm does not look at the subsequent jobs of a task and it creates collisions (two jobs scheduled for the same time) even for simple scenarios.
+In the context of scheduling messages in CAN networks, Grenier et al. \citep{grenier2008pushing} propose another heuristic algorithm which runs in $O(n\cdot \max_{i=1 \ldots n}(T_i))$ and has better experimental results than the previous one. The algorithm tries to assign offsets such that the first job of every task is as far as possible from other jobs. It does this by considering tasks in the increasing order of their periods and assigns the offset such that the first job of task is as far as possible from every job of a task that was processed so far. The drawback of this approach is that the algorithm does not look at the subsequent jobs of a task and it creates collisions (two jobs scheduled for the same time) even for simple scenarios.
 
 Once the offsets have been chosen, we still have to design a scheduling algorithm. For offset-free systems, the DMS algorithm is no longer optimal among static algorithms but an optimal priority assignment can be found with $O(n^2)$ time complexity \citep{audsley2001priority}. On the other hand, among dynamic algorithms EDF is still optimal. 
 
@@ -149,7 +149,7 @@ In our configuration files, all the periods are expressed in seconds which means
 
 It is proved in \citep{goossens2003scheduling} that we can choose the offset for a histogram to be less than its period without loss of generality. 
 
-In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ represent the slots $\{k+n\cdot P | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we explicitly mention it: offset $k$ modulo $P$.
+In the context of a single histogram, its offset determines a set of slots. For example, an offset $k$ for a histogram with period (i.e. publishing interval) $P$ represent the slots $\{(k+n\cdot P, k+(n+1)\cdot P) | n \geq 0\}$. Note that in the definition, the period was implicitly defined by the histogram. If the period cannot be derived from the context, we will explicitly mention it: offset $k$ modulo $P$.
 
 \subsection{Intuition and pseudocode}
 
