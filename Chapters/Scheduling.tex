@@ -623,7 +623,7 @@ We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as f
 \label{fig:one_slot_tbed}
 \end{figure}
 
-\subsubsection*{End to end test}
+\subsubsection*{The effect of very large histograms} 
 
 Finally we made an end to end test with the workload used in production by the ATLAS experiment. We used the $\approx 5000$ histogram mentioned before, the configuration rules included 8 debug histograms with a publishing interval of 10 seconds, and 5130 histograms with an interval of 120 seconds.
 
@@ -631,7 +631,7 @@ The number of histograms that we need to publish per second is $\frac {5130}{120
 
 As we have seen in figure \ref{fig:one_slot_tbed}, our simulation model is not very accurate for large histograms. To this end we chose to see the effect of the large histograms in our sample. We repeated the experiment several times excluding the histograms with the number of bins greater than 1K, 2K, 8K, 16K and finally with all the histograms. 
 
-\begin{figure}[ht]
+\begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{Images/e2e_histograms.png}
 \caption[Publishing skew and latency distribution.]{Publishing skew and latency distribution (logarithmic scale).}
