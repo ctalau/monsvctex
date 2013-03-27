@@ -58,7 +58,7 @@ The previously identified requirements can be split into two classes. The first 
 
 The second class consists of requirements like skew and latency minimization and bursty traffic avoidance which are global requirements that can be satisfied only if the application instances cooperate. Although the instances of applications that use the monsvc library do not communicate explicitly, they affect each other's performance when creating contention in the monitoring network of the ATLAS TDAQ system. 
 
-In order to treat the two classes of requirements more orthogonally, we consider the time as being divided in equal length slots. This way we can think of local scheduling as assigning which histograms are published in which slot and the global scheduling as when to publish the histograms within a time slot.
+In order to treat the two classes of requirements more orthogonally, we consider the time as being divided in equal length slots. This way we can think of \emph{local scheduling} as assigning which histograms are published in which slot and the \emph{global scheduling} as deciding when to publish the histograms within a time slot.
 
 The slot size choice is not simple since it has conflicting requirements, but on the positive side it does not depend on the configuration. It has to be changed only when there are big changes in infrastructure (hardware and network) or when the distribution of histograms sizes changes fundamentally.
 

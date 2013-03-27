@@ -19,6 +19,6 @@ The programmer needs to register the monitored objects (via the {\tt MonitoringS
 \caption{{\tt monsvc} library usage example workflow.}
 \end{figure}
 
-The separation of registration and publishing also makes the life of third party library developers easier since their only job is to register the objects they want to be monitored while the main application is concerned with configuring and starting the publishing. For example, a network transport library will register information about the amount of trasferred data. This information will then be publsihed together with the main application data.
+The separation of registration and publishing allows libraries to register objects while the main application is concerned with configuring and starting the publishing. For example, a network transport library will register information about the amount of trasferred data. This information will then be publsihed together with the main application data.
 
 This usage pattern allows us to  create a lightweight version of the monsvc library with no transitive linking dependencies which contains only the registration functionality and which can be used by other libraries. The main application has to use the normal version which depends on a number of other packages like IPC, ROOT, IS, etc.

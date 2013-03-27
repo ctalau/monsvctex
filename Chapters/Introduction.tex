@@ -54,9 +54,9 @@ There are two types of monitoring: operational monitoring which deals with opera
 There are a number of components and services that play together in the monitoring system. We will present below the ones that are the most relevant for operational monitoring starting from the lowest level ones up.
 
 \begin{description}
-\item[Inter-Process Communication (IPC) library \citep{corso2007data}] Is responsible for all the communication between applications in the ATLAS Trigger and Data AcQuisition (TDAQ) system. It provides a much simpler interface to the underlying CORBA \citep{vinoski1997corba} implementation including a simple API for the OMG Naming Service and a transparent cache for the remote object references.
+\item[Inter-Process Communication (IPC) library \citep{corso2007data}] is responsible for all the communication between applications in the ATLAS Trigger and Data AcQuisition (TDAQ) system. It provides a much simpler interface to the underlying CORBA \citep{vinoski1997corba} implementation including a simple API for the OMG Naming Service and a transparent cache for the remote object references.
 
-\item[Object Kernel Support (OKS) database \citep{jones1998oks}\citep{alexandrov2001atlas}] Is an object-oriented database used for storing static configuration parameters for hardware and software components of the system, for example command line parameters and the node where to run a specific application. The data is loaded from XML data files and is validated against an user provided schema. 
+\item[Object Kernel Support (OKS) database \citep{jones1998oks}\citep{alexandrov2001atlas}] is an object-oriented database used for storing static configuration parameters for hardware and software components of the system, for example command line parameters and the node where to run a specific application. The data is loaded from XML data files and is validated against an user provided schema. 
 
 In order to avoid overloading the database server during the system start and due to the static nature of the data, a system of caching proxies is used. This and the fact that the database does not have advanced query support enables it to meet the performance requirements of a real-time system.
 
@@ -64,7 +64,11 @@ In order to avoid overloading the database server during the system start and du
 
 \item[The ROOT framework \citep{brun1997root}] is an Object Oriented framework that contains among others an efficient file-based persistence mechanism, a C++ interpreter, reflection support, advanced statistical analysis instruments (multi dimensional histograms, fitting, minimization) and visualization tools. Most of the monitoring information in the system consists of such histograms.
 
-\item[Information Sharing (IS) server \citep{kolosinformation}]  Is a server used to share monitoring information between applications that publish their own operational or event-related data and applications that need to process this information. The IS acts as an in memory key-value store, where keys are strings - the name of the objects - and values are subclasses of the ISInfo class. An application can read, write or update the information with a specific name. There is also the option for an application to subscribe to receive notifications when a value is updated \ref{fig:IS_overview}. Due to the scale of our system, we run multiple instances of this server, each having its own name.
+\item[Information Sharing (IS) server \citep{kolosinformation}]  is used to share monitoring information between applications that publish their own operational or event-related data and applications that need to process that information. 
+
+The IS server acts as an in memory key-value store where keys are strings - the name of the objects - and values are objects with ISInfo base class. They are plain data structures with serialization and deserialization functions that can be either written by the programmer or generated from an XML description.
+
+An application can read, write or update the information with a specific name or subscribe to receive notifications when the value is updated \ref{fig:IS_overview}. The server also provides an API to send command strings to the publishing applications. Due to the scale of our system, we run multiple instances of this server, each having its own name.
 
 \begin{figure}[ht!]
 \centering
@@ -73,14 +77,11 @@ In order to avoid overloading the database server during the system start and du
 \label{fig:IS_overview}
 \end{figure}
 
-
-The ISInfo class represents a plain data structure with serialization and deserialization functions. They can be either written by the programmer or generated from an XML description.
-
 \item[The Online Histogramming (OH) service \citep{kolosoh}] is a library which offers an interface to the IS server that allows one to store and retrieve ROOT histograms by transparently encoding them as ISInfo objects.
 
-\item[The Gatherer \citep{renkel2010gatherer}] Is an application which aggregates monitoring information coming from different applications. For example, many applications track event data size distribution using histograms. The gatherer periodically reads all these histograms from the IS server, adds them and writes them back to the IS server. The aggregation is usually done in multiple stages, once per rack, and once globally across different IS servers. 
+\item[The Gatherer \citep{renkel2010gatherer}] as an application which aggregates monitoring information coming from different applications. For example, many applications track event data size distribution using histograms. The gatherer periodically reads all these histograms from the IS server, adds them and writes them back to the IS server. The aggregation is usually done in multiple stages, once per rack, and once globally across different IS servers. 
 
-\item[Persistent Back-End for the AtlaS Tdaq (PBEAST) \citep{sicoe2012persistent}]: A Java application that persists operational monitoring data while storing the most recent data (1 month) in a queryable format. It subscribes to most of the IS servers and stores the updates in a Cassandra database.
+\item[Persistent Back-End for the AtlaS Tdaq (PBEAST) \citep{sicoe2012persistent}] is a Java application that persists operational monitoring data while storing the most recent data (1 month) in a queryable format. It subscribes to most of the IS servers and stores the updates in a Cassandra database.
 
 \end{description}
 

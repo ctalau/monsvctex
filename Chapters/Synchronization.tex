@@ -17,12 +17,12 @@ to obtain the following form:
 \input{Code/dow2}
 As explained above, the smart pointer takes care of the synchronization with the library on every function call and field access.
 
-There is an exception to the previous case when the pointer should be passed to a legacy function which we cannot change. For example:
+There is an exception to the previous case when the pointer should be passed to a legacy function which is hard change. For example:
 \input{Code/dow3}
 in which case we replace it with:
 \input{Code/dow4}
 
-Note that there is a trade-off between lock granularity and the amount of code that needs to be changed. For example, if the \verb+do_work+ function contained ten calls to legacy functions we could have changed only its callers. With this approach, however, we hold the lock for the duration of all ten calls.
+Note that there is a trade-off between lock granularity and the amount of code that needs to be changed. For example, if the fact that we are holding the lock during the entire execution of \verb+do_legacy_work+ turns out to be a performance problem, we can still change the body of the legacy function to hold the lock only while the histogram is updated.
 
 \section{Synchronization policies}
 
