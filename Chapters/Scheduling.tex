@@ -119,7 +119,9 @@ For DMS in order to check the schedulability, we have to determine the worst cas
 
  $$ \forall i.\, R_i=C_i+\sum_{j=1}^{i-1} \left\lceil \frac{R_i}{T_i} \right\rceil \cdot C_j \Leftrightarrow R_i = i\cdot C$$
  
-So, again, the response time for the last histogram is $R_n=n\cdot C=50s > D_n=30s$. We can notice that since all the histograms have the same period they have the same priority so they are published sequentially. Hence, in order to satisfy the deadlines with this algorithm we should be able to publish all the histograms in 10\% of the time. Note that having higher priorities for some of the histograms does not improve the situation of the ones with low priority.
+So, again, the response time for the last histogram is $R_n=n\cdot C=50s > D_n=30s$. 
+
+To give some intuition about why the previous approach fails, let's consider two histogram sets $H_1$ and $H_2$ with periods $T_1 < T_2$. At time 0 the histograms in the second set will be published after those in the first set as their deadline comes later. However, at time $T_2$ the second group of histograms is published with no delay. So, the jitter between the first two publications of the second group is equal to $\sum_{i\in H_1} C_i$ - the amount of time needed to publish the histograms in the first group. This jitter can easily be greater than $0.1 \cdot T_2$. 
 
 \subsubsection*{Offset-free systems} 
 
