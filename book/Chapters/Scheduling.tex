@@ -77,7 +77,7 @@ An example of scheduling is depicted in figure \ref{fig:local_sched}, where we h
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.6]{Images/local_sched.png}
+\includegraphics[scale=0.6]{../Images/local_sched.png}
 \caption{Global scheduling example.}
 \label{fig:local_sched}
 \end{figure}
@@ -167,7 +167,7 @@ Let's consider the time being divided in 5 sec subperiods. Denote by x the numbe
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.6]{Images/subperiod.png}
+\includegraphics[scale=0.6]{../Images/subperiod.png}
 \caption{Distribution of the histograms among subperiods.}
 \label{fig:subperiod}
 \end{figure}
@@ -192,7 +192,7 @@ The algorithm works by repeatedly choosing two histogram groups and replacing th
 A sketch of a possible algorithm execution is presented in figure \ref{fig:subperiod_tree}, where we have 5 histograms with period 2s, 4 histograms with period 10s and another 4 histograms with period 15s. The blue rectangles represent the initial histograms and the purple ones represent approximating groups. The strategy of choosing the next pair of groups to approximate determines the shape of the tree.
 \begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.7]{Images/subperiod_tree.png}
+\includegraphics[scale=0.7]{../Images/subperiod_tree.png}
 \caption{Subperiod tree.}
 \label{fig:subperiod_tree}
 \end{figure}
@@ -390,7 +390,7 @@ The workload used for comparison consists of the histograms published by the Eve
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.6]{Images/histo_distrib.png}
+\includegraphics[scale=0.6]{../Images/histo_distrib.png}
 \caption{Histogram size distribution.}
 \label{fig:histosize}
 \end{figure}
@@ -443,21 +443,21 @@ We used the setup described above and a workload consisting of one or two histog
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{Images/one_slot_sim_qlen.png}
+\includegraphics[scale=0.5]{../Images/one_slot_sim_qlen.png}
 \caption{Maximum IS queue length vs. initial delay bound.}
 \label{fig:one_slot_sim_qlen}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{Images/one_slot_sim_latency.png}
+\includegraphics[scale=0.5]{../Images/one_slot_sim_latency.png}
 \caption{Publishing latency vs. initial delay bound.}
 \label{fig:one_slot_sim_latency}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{Images/one_slot_sim_skew.png}
+\includegraphics[scale=0.5]{../Images/one_slot_sim_skew.png}
 \caption{Publishing skew vs. initial delay bound.}
 \label{fig:one_slot_sim_skew}
 \end{figure}
@@ -514,7 +514,7 @@ In our experiment most of the periods have only 2, 3 and 5 as prime factors (cal
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.40]{Images/unused_slots.png}
+\includegraphics[scale=0.40]{../Images/unused_slots.png}
 \caption{The number of unused slots by the subperiod algorithm. }
 \label{fig:unused_slots}
 \end{figure}
@@ -529,7 +529,7 @@ In the plot \ref{fig:skew_lat_sim} we show the results of publishing the entire 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.7]{Images/skew_lat_sim.png}
+\includegraphics[scale=0.7]{../Images/skew_lat_sim.png}
 \caption{Skew and latency vs. interval length and initial delay bound.}
 \label{fig:skew_lat_sim}
 \end{figure}
@@ -576,7 +576,7 @@ We compared the subperiod algorithm with a simple algorithm that uses one thread
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.55]{Images/jitter_histo.png}
+\includegraphics[scale=0.55]{../Images/jitter_histo.png}
 \caption[Jitter histograms.]{Jitter histograms for the thread-based algorithm (above) and subperiod algorithm (below).}
 \label{fig:jitter_histo}
 \end{figure}
@@ -593,14 +593,14 @@ We ran an experiment with the same setup as before, we registered one subscriber
 \centering
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
-\includegraphics[width=\textwidth]{Images/burstiness.png}
+\includegraphics[width=\textwidth]{../Images/burstiness.png}
 \caption{Traffic burstiness comparison (low granularity).}
 \label{fig:burstiness}
 \end{subfigure}
 ~
 \begin{subfigure}[ht]{0.45\textwidth}
 \centering
-\includegraphics[width=\textwidth]{Images/burstiness_hires.png}
+\includegraphics[width=\textwidth]{../Images/burstiness_hires.png}
 \caption{Traffic \hyphenation{bur-sti-ness} comparison during a high-load period.}
 \label{fig:burstiness_hires}
 \end{subfigure}
@@ -618,7 +618,7 @@ We can see that the figure \ref{fig:one_slot_tbed} follows the same pattern as f
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.6]{Images/one_slot_tbed.png}
+\includegraphics[scale=0.6]{../Images/one_slot_tbed.png}
 \caption{Latency and publishing skew vs. initial delay bound (test bed).}
 \label{fig:one_slot_tbed}
 \end{figure}
@@ -633,7 +633,7 @@ As we have seen in figure \ref{fig:one_slot_tbed}, our simulation model is not v
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{Images/e2e_histograms.png}
+\includegraphics[width=\textwidth]{../Images/e2e_histograms.png}
 \caption[Publishing skew and latency distribution.]{Publishing skew and latency distribution (logarithmic scale).}
 \label{fig:e2e_histograms}
 \end{figure}
@@ -644,7 +644,7 @@ In figure \ref{fig:small_vs_all} we compared the average latency and publishing 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.5]{Images/small_vs_all.png}
+\includegraphics[scale=0.5]{../Images/small_vs_all.png}
 \caption{Publishing skew and latency average.}
 \label{fig:small_vs_all}
 \end{figure}

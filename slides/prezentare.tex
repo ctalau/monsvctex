@@ -1,0 +1,214 @@
+\documentclass[]{prezentare}
+\graphicspath{{Imagini/}}
+
+\title  {Operational monitoring of ATLAS TDAQ system}
+
+\author [Cristian T\u al\u au]
+        {\texorpdfstring
+            {{\bf Autor:} Cristian T\u al\u au \\ 
+            {\bf Supervisors:} Prof. Roger Hersch, Dr. Wainer Vandelli}
+            {Cristian Talau}  
+      }
+\institute {\texorpdfstring
+                {Universitatea "Politehnica" Bucure\c sti}
+                {Universitatea "Politehnica" Bucuresti}
+           }
+\titlegraphic {}
+
+% Marcouri
+\newcommand\nat{\textbf{Nat}}
+\newcommand\tlist{\textbf{List}}
+\newcommand\sfrec{\text{$System\ F^{rec}\ $}}
+\newcommand\sfhat{\text{$System\ F$\^{}}}
+\newcommand\sysf{\text{$System\ F$}}
+
+\newcommand\vdrec{\vdash_\text{$SysF^{rec}\ $}}
+\newcommand\vdhat{\vdash_\text{$SysF$\^{}}}
+\newcommand\vdtm{\vdash_\text{$SF$\^{}mon}}
+
+\newcommand\kwd[1]{\textcolor[rgb]{0.54,0.21,0.22}{\textbf{#1}}}
+\newcommand\typ[1]{\textcolor[rgb]{0.00,0.59,0.00}{\textit{#1}}}
+
+\newcommand\av[3]{\visible<#1>{\alert<#2>{\text{\tiny #3}}}}
+
+\begin{document}
+
+    \begin{frame}
+        \titlepage
+    \end{frame}
+
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+        \frametitle{Problema verific\u arii statice}
+        \begin{block}<+->{Instan\c t\u a - Terminarea programelor}
+            \begin{itemize}
+            \item Solu\c tie corect\u a dar incomplet\u a
+            \item \^ In cadrul analizei de tip
+            \item \sfrec = \sysf + \textbf{case} + \textbf{letrec}
+            \end{itemize}
+        \end{block}
+
+        \begin{exampleblock}<+-> {Caracteristici}
+            Tipuri \alert<2>{polimorfice}, \alert<3>{recursive}, \alert<4>{de ordin \^ inalt}
+            $$\alert<3>{Tree}\ \alert<2>{X} = lf : \alert<3>{Tree}\ \alert<2>{X} \,|\, nd : \alert<4>{(Nat \to \alert<3>{Tree}\ \alert<2>{X})} \to \alert<2>{X} \to \alert<3>{Tree}\ \alert<2>{X}$$
+        \end{exampleblock}
+
+    \end{frame}
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+        \frametitle{Ideea \sfhat}
+
+        \begin{block}<1->{Constr\^ angere letrec}
+        \begin{itemize}
+        \item Apelurile recursive se fac cu argumente mai mici
+        \item Rela\c tia de ordine $\Leftrightarrow$ Rela\c tia de subtip
+        \end{itemize}
+
+        \end{block}
+        \frametitle{Tipuri inductive cu dimensiune}
+        \begin{exampleblock}<2->{\visible<3->{\sfhat} \visible<2>{\sfrec} }
+                \vskip -0.6cm
+                \begin{align*}
+                    \textbf{Datatype}\ Nat &= z : Nat^{\visible<3->{\alert{\widehat{\imath}}}} \,|\,
+                                              s : Nat^{\visible<3->{\alert{\imath}}} \to Nat^{\visible<3->{\alert{\widehat{\imath}}}} \\
+                    \textbf{Datatype}\ List &= nil : List^{\visible<3->{\alert{\widehat{\imath}}}} \,|\, cons : Nat^{\visible<3->{\alert{\infty}}} \to List^{\visible<3->{\alert{\imath}}} \to List^{\visible<3->{\alert{\widehat{\imath}}}}
+                \end{align*}
+        \end{exampleblock}
+        \begin{exampleblock}<2->{Diagrama}
+        \end{exampleblock}
+
+    \end{frame}
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+        \frametitle{Expresivitate}
+        \begin{block}<1->{Propriet\u ati - \sfhat}
+            \begin{itemize}
+                \item Compatibilitate \sfrec
+                \item Normalizare puternic\u a \visible<2->{\alert<2>{$\Longrightarrow$ Incompletitudine Turing}}
+            \end{itemize}
+        \end{block}
+        \begin{block}<3->{Tipuri monadice - \sfhat-mon}
+            \begin{itemize}
+                \item Dou\u a categorii de tipuri incompatibile ca $\sqsubseteq$: \textbf{ID} , \textbf{NT}
+                \item \textbf{ID} - toate expresiile \sfhat
+                \item \textbf{NT} - expresii \sfrec (slab/ne)-normalizabile 
+            \end{itemize}
+        \end{block}
+
+
+    \end{frame}
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+        \frametitle{Cum construim expresii NT?}
+
+        \begin{exampleblock}
+        {\visible<1-3>{unit}
+         {\visible<4>{letrec - $Nat_{nt}^{\imath} \sqsubseteq Nat_{nt}^{\jmath}$}
+          \visible<5->{bind}
+         }
+        }
+        
+        \end{exampleblock}
+
+        \begin{exampleblock}{Diagram\u a}
+        \end{exampleblock}
+    \end{frame}
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+        \frametitle{Tipuri monadice - propriet\u a\c ti}
+        \begin{block}{Propriet\u ati}
+        \begin{itemize}
+        \item {\bf Siguran\c t\u a}:
+            \begin{itemize}
+                \item \textit{(Conservare)} Dac\u a $e:\tau \to e':\tau'$, atunci.
+                    \begin{itemize}
+                        \item $\tau \in \textbf{ID} \Rightarrow \tau = \tau'$
+                        \item $\tau \in \textbf{NT} \Rightarrow |\tau| = |\tau'|$.
+                    \end{itemize}
+                \item \textit{(Progres)} Evaluarea unei expresii se termin\u a cu o valoare.
+            \end{itemize}
+        \item {\bf Normalizare puternic\u a}
+            \begin{itemize}
+                \item Pentru tipuri din \textbf{ID}.
+            \end{itemize}
+        \item {\bf Completitudine Turing}
+            \begin{itemize}
+                \item Orice func\c tie $\mu$-recursiv\u a poate fi tipat\u a \^ in \textbf{NT}
+            \end{itemize}
+        \item {\bf Compatibilitate} cu \sfrec
+        \end{itemize}
+        \end{block}
+    \end{frame}
+%-----------------------------------------------------------------------------------
+
+    \begin{frame}
+        \frametitle{TBT (Type Based Termination) }
+        \begin{block}<+->{Sintax\u a $\approx$ ML}
+                \vskip -0.6cm
+            \begin{align*}
+                \texttt{\kwd{Inductive} \typ{Bool} }& \texttt{= t : \typ{Bool} | f : \typ{Bool}} \\
+                \lambda x : Nat . e                 &\mapsto                \texttt{\kwd{fn} \typ{<Nat>} x \kwd{=>} e} \\
+                e \ e'                              &\mapsto               \texttt{e' e} \\
+                (\lambda x : Nat . e )\ e'           &\mapsto               \texttt{\kwd{let} \typ{<Nat>} x \kwd{:=} e'; e} \\
+                \Lambda X. e                        &\mapsto                \texttt{\typ{/{\char`\\} X.} e}\\
+                e\ \forall X.X                      &\mapsto                \texttt{e \typ{<{\char`\\}/X.X>} }\\
+                \text{letrec}_{Nat\to Nat}\ f = e    &\mapsto               \texttt{\kwd{letrec} \typ{<Nat->Nat>} f \kwd{:=} e}\\
+                \text{case}_X\ e \text{ of } \{ c \Rightarrow e\} &\mapsto  \texttt{\kwd{case} \typ{<X>} e \kwd{of} \{c \kwd{=>} e\}} \\
+                bind\ f\ e                             &\mapsto               \texttt{ \kwd{bind} f e} \\
+                unit\ e                              &\mapsto                \texttt{ \kwd{unit} e} 
+            \end{align*}
+        \end{block}
+    \end{frame}
+    
+    \begin{frame}
+        \frametitle{Compilator}
+        \begin{block}<+->{Generare de cod}
+            \begin{itemize}
+                \item \textit{TBT} $\mapsto$ \textit{Java}
+                \item \^ Inchideri func\c tionale
+                \item ANTLR + StringTemplate
+            \end{itemize}
+        \end{block}
+        \begin{block}<+->{Typechecker}
+            \begin{itemize}
+            \item Variabile de inferen\c t\u a
+            $$ s : Nat^{\av{3-}{3}{$v_1$}} \to Nat^{\av{3-}{3}{$\widehat{v_1}$}} ,
+               z : Nat^{\av{3-}{3}{$\widehat{v_2}$}} \vdash 
+               \lambda f : Nat^{\av{3-}{3}{$v_3$}} \to Nat^{\av{3-}{3}{$v_4$}} . f\ z : Nat^{\av{3-}{3}{$v_4$}}$$
+            \item<4-> Constr\^ angeri \^ intre variabile $\Rightarrow$ clas\u a de tipuri
+            $$ Nat^{\widehat{v_2}} \sqsubseteq Nat^{v_3} \Rightarrow \{\widehat{v_2} \le v_3 \}$$
+            \end{itemize}
+        \end{block}
+    \end{frame}
+
+%-----------------------------------------------------------------------------------
+    \begin{frame}
+    \setbeamercolor{qa}{fg=block title.fg,bg=block title.bg} %structure.fg
+
+    \begin{beamercolorbox}[rounded=true,shadow=true]{qa}
+    \begin{center}
+        {\Huge \textbf{Mul\c tumesc!}}
+    \end{center}
+    \end{beamercolorbox}
+    \vfill
+    \begin{columns}
+            \begin{column}[l]{0.5\textwidth}
+                \begin{itemize}
+                    \item Normalizare puternic\u a
+                    \item Calcul Lambda
+                    \item \^ Inchideri func\c tionale
+                    \item ANTLR + StringTemplate
+                \end{itemize}
+            \end{column}
+            \begin{column}[l]{0.5\textwidth}
+                \begin{itemize}
+                    \item (In)completitudine Turing
+                    \item Sisteme de tipuri
+                    \item Variabile de inferen\c t\u a
+                    \item Constr\^ angeri
+                \end{itemize}
+            \end{column}
+    \end{columns}
+    \end{frame}
+
+\end{document}
