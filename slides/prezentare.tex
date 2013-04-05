@@ -18,21 +18,6 @@
   $\,$
   \includegraphics[scale=0.05]{../Images/cern_logo.png}}
 
-% Marcouri
-\newcommand\nat{\textbf{Nat}}
-\newcommand\tlist{\textbf{List}}
-\newcommand\sfrec{\text{$System\ F^{rec}\ $}}
-\newcommand\sfhat{\text{$System\ F$\^{}}}
-\newcommand\sysf{\text{$System\ F$}}
-
-\newcommand\vdrec{\vdash_\text{$SysF^{rec}\ $}}
-\newcommand\vdhat{\vdash_\text{$SysF$\^{}}}
-\newcommand\vdtm{\vdash_\text{$SF$\^{}mon}}
-
-\newcommand\kwd[1]{\textcolor[rgb]{0.54,0.21,0.22}{\textbf{#1}}}
-\newcommand\typ[1]{\textcolor[rgb]{0.00,0.59,0.00}{\textit{#1}}}
-
-\newcommand\av[3]{\visible<#1>{\alert<#2>{\text{\tiny #3}}}}
 
 \begin{document}
 
@@ -40,178 +25,180 @@
         \titlepage
     \end{frame}
 
+\begin{frame}
+    \frametitle{Monitoring in the ATLAS TDAQ system}
+    \begin{block}{Figures - global view}
+    	\begin{itemize}
+        	\item 15000 applications
+        	\item running on 1500 nodes
+            \item publish to 30 IS servers
+      	\end{itemize}
+  	\end{block}
+    \begin{block}{Figures - single application}
+    	\begin{itemize}
+            \item publishes 5000 histograms
+			\item with 500-1000 bins in average
+            \item each histogram has a period between 5-120s
+            \item 5-10 distinct periods in total
+      	\end{itemize}
+  	\end{block}
+  	
+\end{frame}
+
+\begin{frame}[fragile]
+     \frametitle{{\tt monsvc} Library}
+     \begin{exampleblock}{Usage}
+     	\begin{semiverbatim}
+\alert<1>{ptr<TH1> phist = register("/DEBUG/event_size", &hist)}
+\alert<2>{configure("/DEBUG/*", 30 * SEC, "DF")}
+\alert<3>{start_publishing()}
+...
+\alert<4>{phist->update(event.size)}
+...
+stop_publishing()
+        \end{semiverbatim}
+	\end{exampleblock}
+	\alt<2>{\begin{block}{Configuration}
+	Provides a way to specify the publishing parameters associated with a given object.	
+	\end{block}}{}
+	\alt<3>{\begin{block}{Scheduling}
+	Determines when to start publishing each histogram in each application.
+	\end{block}}{}
+	\alt<4>{\begin{block}{Synchronization}
+	Ensures thread-safe access to the histogram for the application that updates it and the library thread which publishes.
+	\end{block}}{}
+\end{frame}
+
 %-----------------------------------------------------------------------------------
-    \begin{frame}
-        \frametitle{Problema verific\u arii statice}
-        \begin{block}<+->{Instan\c t\u a - Terminarea programelor}
-            \begin{itemize}
-            \item Solu\c tie corect\u a dar incomplet\u a
-            \item \^ In cadrul analizei de tip
-            \item \sfrec = \sysf + \textbf{case} + \textbf{letrec}
-            \end{itemize}
-        \end{block}
-
-        \begin{exampleblock}<+-> {Caracteristici}
-            Tipuri \alert<2>{polimorfice}, \alert<3>{recursive}, \alert<4>{de ordin \^ inalt}
-            $$\alert<3>{Tree}\ \alert<2>{X} = lf : \alert<3>{Tree}\ \alert<2>{X} \,|\, nd : \alert<4>{(Nat \to \alert<3>{Tree}\ \alert<2>{X})} \to \alert<2>{X} \to \alert<3>{Tree}\ \alert<2>{X}$$
-        \end{exampleblock}
-
-    \end{frame}
+\begin{frame}
+	\frametitle{Configuration}
+	\begin{block}
+	
+	\end{block}
+\end{frame}
 %-----------------------------------------------------------------------------------
-    \begin{frame}
-        \frametitle{Ideea \sfhat}
+\tikzstyle{every picture}+=[remember picture]
 
-        \begin{block}<1->{Constr\^ angere letrec}
-        \begin{itemize}
-        \item Apelurile recursive se fac cu argumente mai mici
-        \item Rela\c tia de ordine $\Leftrightarrow$ Rela\c tia de subtip
-        \end{itemize}
+\begin{frame}[fragile]
+	\frametitle{Synchronization}
+	\begin{columns}
+		\begin{column}{0.3\linewidth}
+		
+			\begin{block}{\tikz[baseline] \node (lt) {Library thread};}
+				\begin{semiverbatim}
+# lock:
+\alert<2>{obj.lock()}
 
-        \end{block}
-        \frametitle{Tipuri inductive cu dimensiune}
-        \begin{exampleblock}<2->{\visible<3->{\sfhat} \visible<2>{\sfrec} }
-                \vskip -0.6cm
-                \begin{align*}
-                    \textbf{Datatype}\ Nat &= z : Nat^{\visible<3->{\alert{\widehat{\imath}}}} \,|\,
-                                              s : Nat^{\visible<3->{\alert{\imath}}} \to Nat^{\visible<3->{\alert{\widehat{\imath}}}} \\
-                    \textbf{Datatype}\ List &= nil : List^{\visible<3->{\alert{\widehat{\imath}}}} \,|\, cons : Nat^{\visible<3->{\alert{\infty}}} \to List^{\visible<3->{\alert{\imath}}} \to List^{\visible<3->{\alert{\widehat{\imath}}}}
-                \end{align*}
-        \end{exampleblock}
-        \begin{exampleblock}<2->{Diagrama}
-        \end{exampleblock}
+# unlock:
+\alert<7>{with upd.lock: }
+\alert<8>{  upd.exec()}
+\alert<9>{  obj.unlock()}
+				\end{semiverbatim}	
+			\end{block}
+		\end{column}
 
-    \end{frame}
+		\begin{column}{0.3\linewidth}
+			\begin{tabular}{r l}
+			{\tt obj} & \includegraphics[scale=0.05]{../Images/histogram.png}
+			\alt<2-9>{
+			\begin{tikzpicture}[overlay]
+				\node[yshift=5ex, xshift=-0.5ex] (objlock)
+				  {\includegraphics[scale=0.025]{../Images/lock.png}};
+			\end{tikzpicture}
+			}{} \\
+			&\\
+			{\tt upd} & \alt<6-8>{[(f,args)]}{[\, ]}
+			\alt<3-14>{
+			\begin{tikzpicture}[overlay]
+				\node[yshift=1.75ex, xshift=-1ex] (updlock)
+				  {\includegraphics[scale=0.025]{../Images/lock.png}};
+			\end{tikzpicture}
+			}{} \\
+			\end{tabular}	
+		\end{column}
+ 		
+		\begin{column}{0.4\linewidth}
+			\begin{block}{\tikz[baseline] \node (mt) {Main thread};}
+				\begin{semiverbatim}
+# async(f, args):
+\alert<3,10>{with upd.lock:}
+\alert<4,11>{  if obj.try_lock():}
+\alert<12>{    upd.exec()}
+\alert<13>{    f(args)}
+\alert<14>{    obj.unlock()}
+\alert<5>{  else: }
+\alert<6>{    upd.apnd(f, args)}
+				\end{semiverbatim}
+			\end{block}
+		\end{column}
+	\end{columns}
+
+	\begin{tikzpicture}[overlay]
+        \path<2-9>[->,thick] (objlock) edge [bend right] (lt);
+        \path<3-6>[->,thick] (updlock) edge [bend left] (mt);
+        \path<7-9>[->,thick] (updlock) edge [bend right] (lt);
+        \path<11-14>[->,thick] (updlock) edge [bend left] (mt);
+	\end{tikzpicture}
+
+\end{frame}
 %-----------------------------------------------------------------------------------
-    \begin{frame}
-        \frametitle{Expresivitate}
-        \begin{block}<1->{Propriet\u ati - \sfhat}
-            \begin{itemize}
-                \item Compatibilitate \sfrec
-                \item Normalizare puternic\u a \visible<2->{\alert<2>{$\Longrightarrow$ Incompletitudine Turing}}
-            \end{itemize}
-        \end{block}
-        \begin{block}<3->{Tipuri monadice - \sfhat-mon}
-            \begin{itemize}
-                \item Dou\u a categorii de tipuri incompatibile ca $\sqsubseteq$: \textbf{ID} , \textbf{NT}
-                \item \textbf{ID} - toate expresiile \sfhat
-                \item \textbf{NT} - expresii \sfrec (slab/ne)-normalizabile 
-            \end{itemize}
-        \end{block}
+\begin{frame}
+	\frametitle{Scheduling requirements}
+	\begin{block}{Global}
+		\begin{itemize}
+			\item Minimize latency
+			\item Minimize publishing skew
+			\item Maximize throughput
+		\end{itemize}
+	\end{block}
 
-
-    \end{frame}
+	\begin{block}{Local}
+		\begin{itemize}
+			\item Minimize jitter
+			\item Efficient reconfiguration
+		\end{itemize}
+	\end{block}
+\end{frame}
 %-----------------------------------------------------------------------------------
-    \begin{frame}
-        \frametitle{Cum construim expresii NT?}
-
-        \begin{exampleblock}
-        {\visible<1-3>{unit}
-         {\visible<4>{letrec - $Nat_{nt}^{\imath} \sqsubseteq Nat_{nt}^{\jmath}$}
-          \visible<5->{bind}
-         }
-        }
-        
-        \end{exampleblock}
-
-        \begin{exampleblock}{Diagram\u a}
-        \end{exampleblock}
-    \end{frame}
+\begin{frame}
+	\frametitle{Global scheduling}
+	\begin{block}
+	
+	\end{block}
+\end{frame}
 %-----------------------------------------------------------------------------------
-    \begin{frame}
-        \frametitle{Tipuri monadice - propriet\u a\c ti}
-        \begin{block}{Propriet\u ati}
-        \begin{itemize}
-        \item {\bf Siguran\c t\u a}:
-            \begin{itemize}
-                \item \textit{(Conservare)} Dac\u a $e:\tau \to e':\tau'$, atunci.
-                    \begin{itemize}
-                        \item $\tau \in \textbf{ID} \Rightarrow \tau = \tau'$
-                        \item $\tau \in \textbf{NT} \Rightarrow |\tau| = |\tau'|$.
-                    \end{itemize}
-                \item \textit{(Progres)} Evaluarea unei expresii se termin\u a cu o valoare.
-            \end{itemize}
-        \item {\bf Normalizare puternic\u a}
-            \begin{itemize}
-                \item Pentru tipuri din \textbf{ID}.
-            \end{itemize}
-        \item {\bf Completitudine Turing}
-            \begin{itemize}
-                \item Orice func\c tie $\mu$-recursiv\u a poate fi tipat\u a \^ in \textbf{NT}
-            \end{itemize}
-        \item {\bf Compatibilitate} cu \sfrec
-        \end{itemize}
-        \end{block}
-    \end{frame}
+\begin{frame}
+	\frametitle{Local scheduling}
+	\begin{block}{Real-time system formulation}
+	
+	\end{block}
+	\begin{block}{Offset-free system}
+	
+	\end{block}
+\end{frame}
 %-----------------------------------------------------------------------------------
-
-    \begin{frame}
-        \frametitle{TBT (Type Based Termination) }
-        \begin{block}<+->{Sintax\u a $\approx$ ML}
-                \vskip -0.6cm
-            \begin{align*}
-                \texttt{\kwd{Inductive} \typ{Bool} }& \texttt{= t : \typ{Bool} | f : \typ{Bool}} \\
-                \lambda x : Nat . e                 &\mapsto                \texttt{\kwd{fn} \typ{<Nat>} x \kwd{=>} e} \\
-                e \ e'                              &\mapsto               \texttt{e' e} \\
-                (\lambda x : Nat . e )\ e'           &\mapsto               \texttt{\kwd{let} \typ{<Nat>} x \kwd{:=} e'; e} \\
-                \Lambda X. e                        &\mapsto                \texttt{\typ{/{\char`\\} X.} e}\\
-                e\ \forall X.X                      &\mapsto                \texttt{e \typ{<{\char`\\}/X.X>} }\\
-                \text{letrec}_{Nat\to Nat}\ f = e    &\mapsto               \texttt{\kwd{letrec} \typ{<Nat->Nat>} f \kwd{:=} e}\\
-                \text{case}_X\ e \text{ of } \{ c \Rightarrow e\} &\mapsto  \texttt{\kwd{case} \typ{<X>} e \kwd{of} \{c \kwd{=>} e\}} \\
-                bind\ f\ e                             &\mapsto               \texttt{ \kwd{bind} f e} \\
-                unit\ e                              &\mapsto                \texttt{ \kwd{unit} e} 
-            \end{align*}
-        \end{block}
-    \end{frame}
-    
-    \begin{frame}
-        \frametitle{Compilator}
-        \begin{block}<+->{Generare de cod}
-            \begin{itemize}
-                \item \textit{TBT} $\mapsto$ \textit{Java}
-                \item \^ Inchideri func\c tionale
-                \item ANTLR + StringTemplate
-            \end{itemize}
-        \end{block}
-        \begin{block}<+->{Typechecker}
-            \begin{itemize}
-            \item Variabile de inferen\c t\u a
-            $$ s : Nat^{\av{3-}{3}{$v_1$}} \to Nat^{\av{3-}{3}{$\widehat{v_1}$}} ,
-               z : Nat^{\av{3-}{3}{$\widehat{v_2}$}} \vdash 
-               \lambda f : Nat^{\av{3-}{3}{$v_3$}} \to Nat^{\av{3-}{3}{$v_4$}} . f\ z : Nat^{\av{3-}{3}{$v_4$}}$$
-            \item<4-> Constr\^ angeri \^ intre variabile $\Rightarrow$ clas\u a de tipuri
-            $$ Nat^{\widehat{v_2}} \sqsubseteq Nat^{v_3} \Rightarrow \{\widehat{v_2} \le v_3 \}$$
-            \end{itemize}
-        \end{block}
-    \end{frame}
-
+\begin{frame}
+	\frametitle{Local scheduling}
+	\begin{block}{Subperiod algorithm}
+		
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Local scheduling}
+	\begin{block}{Subperiod algorithm - results}
+	
+	\end{block}
+\end{frame}
 %-----------------------------------------------------------------------------------
     \begin{frame}
     \setbeamercolor{qa}{fg=block title.fg,bg=block title.bg} %structure.fg
 
     \begin{beamercolorbox}[rounded=true,shadow=true]{qa}
     \begin{center}
-        {\Huge \textbf{Mul\c tumesc!}}
+        {\Huge \textbf{Questions?}}
     \end{center}
     \end{beamercolorbox}
-    \vfill
-    \begin{columns}
-            \begin{column}[l]{0.5\textwidth}
-                \begin{itemize}
-                    \item Normalizare puternic\u a
-                    \item Calcul Lambda
-                    \item \^ Inchideri func\c tionale
-                    \item ANTLR + StringTemplate
-                \end{itemize}
-            \end{column}
-            \begin{column}[l]{0.5\textwidth}
-                \begin{itemize}
-                    \item (In)completitudine Turing
-                    \item Sisteme de tipuri
-                    \item Variabile de inferen\c t\u a
-                    \item Constr\^ angeri
-                \end{itemize}
-            \end{column}
-    \end{columns}
     \end{frame}
 
 \end{document}

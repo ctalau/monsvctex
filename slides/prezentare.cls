@@ -26,6 +26,11 @@
 \usepackage{amsthm,amsmath}
 \newtheorem{thm}{Teorem\u a}[section]
 
+\usepackage{tikz}
+\usepackage{pgf}
+\usetikzlibrary{arrows}
+
+
 % Pachete pentru grafice si diagrame
 \usepackage{graphicx}
 
