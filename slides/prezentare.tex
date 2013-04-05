@@ -5,7 +5,7 @@
 
 \author [Cristian T\u al\u au]
         {\texorpdfstring
-            {{\bf Autor:} Cristian T\u al\u au \\ 
+            {{\bf Author:} Cristian T\u al\u au \\ 
             {\bf Supervisors:} Prof. Roger Hersch, Dr. Wainer Vandelli}
             {Cristian Talau}  
       }
@@ -65,17 +65,36 @@ stop_publishing()
 	Determines when to start publishing each histogram in each application.
 	\end{block}}{}
 	\alt<4>{\begin{block}{Synchronization}
-	Ensures thread-safe access to the histogram for the application that updates it and the library thread which publishes.
+	Ensures thread-safe access of the histogram for the application that updates it and the library thread which publishes it.
 	\end{block}}{}
 \end{frame}
 
 %-----------------------------------------------------------------------------------
+
 \begin{frame}
 	\frametitle{Configuration}
-	\begin{block}
+	\begin{block}<1->{Challenge: Code size}
+	\begin{description}
+	\item [Problem]	Changing config. in a large codebase.
+	\item [Solution] Store the config. in an external database.
+	\end{description}
+	\end{block}
 	
+	\begin{block}<2->{Challenge: Number of objects}
+	\begin{description}
+	\item [Problem] Specifying the config. for a large number of objects.
+	\item [Solution] Use regex. to group object with similar configuration and to specify exceptions.
+	\end{description}
+	\end{block}
+	
+	\begin{block}<3->{Challenge: Multiple developers}
+	\begin{description}
+	\item [Problem] Apps are built from independently developed libs.
+	\item [Solution] The config. is composed of rule bundles of the libs.
+	\end{description}
 	\end{block}
 \end{frame}
+
 %-----------------------------------------------------------------------------------
 \tikzstyle{every picture}+=[remember picture]
 
@@ -137,7 +156,7 @@ stop_publishing()
         \path<2-9>[->,thick] (objlock) edge [bend right] (lt);
         \path<3-6>[->,thick] (updlock) edge [bend left] (mt);
         \path<7-9>[->,thick] (updlock) edge [bend right] (lt);
-        \path<11-14>[->,thick] (updlock) edge [bend left] (mt);
+        \path<10-14>[->,thick] (updlock) edge [bend left] (mt);
 	\end{tikzpicture}
 
 \end{frame}
@@ -186,6 +205,13 @@ stop_publishing()
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Local scheduling}
+	\begin{block}{Subperiod algorithm - results}
+	
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Conclusions}
 	\begin{block}{Subperiod algorithm - results}
 	
 	\end{block}
