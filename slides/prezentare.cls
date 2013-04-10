@@ -28,7 +28,8 @@
 
 \usepackage{tikz}
 \usepackage{pgf}
-\usetikzlibrary{arrows}
+\usetikzlibrary{arrows,decorations.pathreplacing}
+
 
 
 % Pachete pentru grafice si diagrame

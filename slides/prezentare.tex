@@ -20,7 +20,9 @@
 
 
 \begin{document}
-
+\tikzstyle{every picture}+=[remember picture]
+\tikzstyle{exec}=[rectangle,fill=black,minimum size=3pt,inner sep=0pt]
+\begin{comment}
     \begin{frame}
         \titlepage
     \end{frame}
@@ -96,7 +98,6 @@ stop_publishing()
 \end{frame}
 
 %-----------------------------------------------------------------------------------
-\tikzstyle{every picture}+=[remember picture]
 
 \begin{frame}[fragile]
 	\frametitle{Synchronization}
@@ -177,30 +178,179 @@ stop_publishing()
 			\item Efficient reconfiguration
 		\end{itemize}
 	\end{block}
+	
 \end{frame}
 %-----------------------------------------------------------------------------------
 \begin{frame}
+	\frametitle{Global vs. Local scheduling}
+	\begin{block}{Time slots}
+	\begin{itemize}
+	\item Divide the time into equal length slots. 
+	\item Slot length is configurable and we expect 1s = 30-100 slots.
+	\end{itemize}	
+	\end{block}
+
+	\begin{definition}
+	\emph{Local scheduling} decides which histogram(s) to publish in each time slot.
+	\end{definition}
+
+	\begin{definition}
+	\emph{Global scheduling} decides when to start publishing the histogram(s) inside the assigned time slot.
+	\end{definition}
+
+\end{frame}
+
+\begin{frame}
 	\frametitle{Global scheduling}
-	\begin{block}
+	\begin{block}{Contradicting requirements}
+	\begin{columns}[onlytextwidth]
+		\begin{column}{0.5\textwidth}
+		Minimize publishing skew
+		
+		\begin{tikzpicture}[node distance=1cm]
+			\node (s1) at (0,0.5) [exec,label=west:{\scriptsize App. 3}] {};
+            \node (e1) [exec,right of=s1] {};
+            \draw [-,thick] (s1.east) -- (e1.west);
+
+			\node (s2) at (0,1) [exec,label=west:{\scriptsize App. 2}] {};
+            \node (e2) [exec,right of=s2] {};
+            \draw [-,thick] (s2.east) -- (e2.west);
+
+			\node (s3) at (0,1.5) [exec,label=west:{\scriptsize App. 1}] {};
+            \node (e3) [exec,right of=s3] {};
+            \draw [-,thick] (s3.east) -- (e3.west);
+
+            \draw[-,dashed] (0,0.5) -- (3,0.5);
+            \draw[-,dashed] (0,1.0) -- (3,1.0);
+            \draw[-,dashed] (0,1.5) -- (3,1.5);
+            \draw[-,dashed] (2,0.25) -- (2,2);
+		\end{tikzpicture}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+		Minimize latency \& contention
+		\begin{tikzpicture}[node distance=1cm]
+			\node at (0,0.5) [label=west:{\scriptsize App. 3}] {};			
+			\node (s1) at (0,0.5) [exec] {};
+            \node (e1) [exec,right of=s1] {};
+            \draw [-,thick] (s1.east) -- (e1.west);
+
+			\node at (0,1) [label=west:{\scriptsize App. 2}] {};			
+			\node (s2) at (1,1) [exec] {};
+            \node (e2) [exec,right of=s2] {};
+            \draw [-,thick] (s2.east) -- (e2.west);
+
+			\node at (0,1.5) [label=west:{\scriptsize App. 1}] {};			
+			\node (s3) at (2,1.5) [exec] {};
+            \node (e3) [exec,right of=s3] {};
+
+            \draw [-,thick] (s3.east) -- (e3.west);
+            \draw[-,dashed] (0,0.5) -- (3,0.5);
+            \draw[-,dashed] (0,1.0) -- (3,1.0);
+            \draw[-,dashed] (0,1.5) -- (3,1.5);
+            \draw[-,dashed] (2,0.25) -- (2,2);
+		\end{tikzpicture}
+		\end{column}
+	\end{columns}
+	\end{block}
 	
+	\begin{block}<2->{Solution}
+	\begin{itemize}
+	  \item Introduce a random delay of up to $f=75\%$ of the time slot. 
+	  \item If the publishing takes longer, reduce the next interval(s).
+	\end{itemize}
+    \vspace{-5mm}
+	\begin{center}
+			\begin{tikzpicture}[node distance=1cm]
+			\node at (0,0.5) [label=west:{\scriptsize App. 3}] {};			
+			\node (s1) at (0.2,0.5) [exec] {};
+            \node (e1) [exec,right of=s1] {};
+            \draw [-,thick] (s1.east) -- (e1.west);
+
+			\node at (0,1) [label=west:{\scriptsize App. 2}] {};			
+			\node (s2) at (1.1,1) [exec] {};
+            \node (e2) [exec,right of=s2] {};
+            \draw [-,thick] (s2.east) -- (e2.west);
+
+			\node at (0,1.5) [label=west:{\scriptsize App. 1}] {};			
+			\node (s3) at (0.8,1.5) [exec] {};
+            \node (e3) [exec,right of=s3] {};
+
+            \draw [-,thick] (s3.east) -- (e3.west);
+            \draw[-,dashed] (0,0.5) -- (3,0.5);
+            \draw[-,dashed] (0,1.0) -- (3,1.0);
+            \draw[-,dashed] (0,1.5) -- (3,1.5);
+            \draw[-,dashed] (2,0.25) -- (2,2);
+		\end{tikzpicture}
+	\end{center}
 	\end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Local scheduling}
 	\begin{block}{Real-time system formulation}
-	
+	\begin{center}
+	\begin{tabular}{r c l}
+		task           & $\Longleftrightarrow$ & histogram \\
+		job            & $\Longleftrightarrow$ & publishing a histogram \\
+		execution time & $\Longleftrightarrow$ & latency \\
+		period         & $\Longleftrightarrow$ & publishing interval \\	
+		deadline       & $\Longleftrightarrow$ & jitter bound \\	
+		CPU            & $\Longleftrightarrow$ & IS server \\
+		utilization    & $\Longleftrightarrow$ & throughput \\
+	\end{tabular}	
+	\end{center}
 	\end{block}
-	\begin{block}{Offset-free system}
-	
+
+	\begin{block}<2->{Offset-free system}
+	Our system permits different starting points for different tasks.
 	\end{block}
 \end{frame}
+\end{comment}
 %-----------------------------------------------------------------------------------
 \begin{frame}
-	\frametitle{Local scheduling}
-	\begin{block}{Subperiod algorithm}
-		
-	\end{block}
+	\frametitle{Local scheduling - Subperiod algorithm}
+	\begin{exampleblock}{Two periods}
+	Two histogram groups:
+	\begin{itemize}
+	\item 4=x+y histograms with period 10s
+	\item 4=a+b+c histograms with period 15s
+	\end{itemize}
+	\vspace{-5mm}	
+	\begin{center}
+		\begin{tikzpicture}[node distance=0.75cm]
+			\foreach \x in {0,1,2,3,4,5,6} {
+				\node at (\x,1) [exec] (n0\x) {};
+				\node at (\x,0) [exec] (n1\x) {};
+			}
+			
+			\foreach \x/\la/\lb in {1/x/a,2/y/b,3/x/c,4/y/a,5/x/b,6/y/c} {
+				\node [text depth=0pt, text height=12pt, above left of=n1\x ,yshift=-5] {\lb};
+				\node [text depth=0pt, text height=12pt, above left of=n0\x, yshift=-5] {\la};
+			}
+			
+%			\node at (-2,0) [text width=2.5cm] {x+y=4 histo. $\pi$=10s};
+%			\node at (-2,1.5) [text width=2.5cm] {4=x+y histo. $\pi$=15s};
+			
+			% linii punctate
+            \draw[-,dashed] (-0.5,0) -- (6.5,0);
+            \draw[-,dashed] (-0.5,1) -- (6.5,1);
+            % paranteze 
+            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
+            (0,0) -- (1,0) node [black,midway,yshift=-10pt] {\footnotesize 5s};
+            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=12pt},xshift=0pt]
+            (0,0) -- (3,0) node [black,midway,yshift=-20pt] {\footnotesize 15s};
+            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
+            (0,1) -- (2,1) node [black,midway,yshift=-0.5cm] {\footnotesize 10s};
+		\end{tikzpicture}
+	\vspace{-2.5mm}		
+	\end{center}
+	Minimize:
+	\vspace{-2.5mm}
+	\begin{equation*}
+		\max(x+a, y+b, x+c, \ldots) = \max(a, b, c) + \max(x, y)
+	\end{equation*}
+
+	\end{exampleblock}
 \end{frame}
 %-----------------------------------------------------------------------------------
 \begin{frame}
@@ -210,6 +360,7 @@ stop_publishing()
 	\end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------
+\begin{comment}
 \begin{frame}
 	\frametitle{Conclusions}
 
@@ -239,5 +390,5 @@ stop_publishing()
     \end{center}
     \end{beamercolorbox}
     \end{frame}
-
+\end{comment}
 \end{document}
