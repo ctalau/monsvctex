@@ -368,63 +368,165 @@ stop_publishing()
 \begin{frame}
 	\frametitle{Local scheduling - Subperiod algorithm}
 	\begin{exampleblock}{Hierarchical approximation}
+	
 	\tikzstyle{leaf}=[rectangle,draw=black,very thick,fill=skyblue,minimum width=10pt,minimum height=5pt,inner sep=0pt]
 	\tikzstyle{interns}=[rectangle,draw=black,very thick,fill=purple,minimum width=10pt,minimum height=5pt,inner sep=0pt]
-	\tikzstyle{internl}=[rectangle,draw=black,very thick,fill=purple,minimum width=40pt,minimum height=15pt,inner sep=0pt]
+	\tikzstyle{internl}=[rectangle,draw=black,very thick,fill=purple,minimum width=35pt,minimum height=15pt,inner sep=0pt]
+
 	\begin{center}
 	\begin{tikzpicture}
-%		\node at (0,0) [leaf] (l) {};
-%		\node at (1,1) [interns] (is) {};
-	
-		\node [internl] (root) {4/1s};
-		\node [internl,above left of=root,node distance=2cm,xshift=-1cm] (2s) {5/2s};
-		\node [internl,above right of=root,node distance=2cm,xshift=1cm] (5s) {4/5s};
-		\node [internl,above right of=5s,node distance=2cm] (15s) {4/15s};
-		\node [internl,above left of=5s,node distance=2cm] (10s) {4/10s};
-		\draw (root) -- (5s) -- (15s);
-		\draw           (5s) -- (10s);
-		\draw (root) -- (2s);		
+		\uncover<13->{\node [internl] (root) {4/1s};}
+		\uncover<12->{\node 
+			[internl,above left of=root,node distance=2cm,xshift=-1cm] (2s) {5/2s};}
+		\uncover<8 ->{\node 
+			[internl,above right of=root,node distance=2cm,xshift=1cm] (5s) {4/5s};}
+		\uncover<4 ->{\node 
+			[internl,above right of=5s,node distance=2cm] (15s) {4/15s};}
+		\uncover<7 ->{\node [internl,above left of=5s,node distance=2cm] (10s) {4/10s};}
+		\uncover<8 ->{\draw           (5s) -- (15s);}
+		\uncover<13->{\draw (root) -- (5s);}
+		\uncover<8 ->{\draw           (5s) -- (10s);}
+		\uncover<13->{\draw (root) -- (2s);}
 		
 		
-		\node [interns,above left of=2s,node distance=1cm] (2si1) {};
-		\node [interns,above right of=2s,node distance=1cm] (2si2) {};
-		\node [interns,above right of=2si2,node distance=0.5cm] (2si3) {};
+		\uncover<11->{\node [interns,above left of=2s,node distance=1cm] (2si1) {};}
+		\uncover<10->{\node [interns,above right of=2s,node distance=1cm] (2si2) {};}
+		\uncover<9 ->{\node [interns,above right of=2si2,node distance=0.5cm] (2si3) {};}
 		\node [leaf,above left of=2si1,node distance=0.5cm] (2l1) {};
 		\node [leaf,above right of=2si1,node distance=0.5cm] (2l2) {};
 		\node [leaf,above left of=2si2,node distance=0.5cm] (2l3) {};
 		\node [leaf,above left of=2si3,node distance=0.5cm] (2l4) {};
 		\node [leaf,above right of=2si3,node distance=0.5cm] (2l5) {};
-		\draw (2s) -- (2si1) -- (2l1);		
-		\draw         (2si1) -- (2l2);
-		\draw (2s) -- (2si2) -- (2si3) -- (2l5);
-		\draw                   (2si3) -- (2l4);
-		\draw         (2si2) -- (2l3);
+		\uncover<11->{\draw         (2si1) -- (2l1);}
+		\uncover<12->{\draw (2s) -- (2si1);}
+		\uncover<11->{\draw         (2si1) -- (2l2);}
+		\uncover<10->{\draw         (2si2) -- (2l3);}
+		\uncover<12->{\draw (2s) -- (2si2);}
+		\uncover<9 ->{\draw                   (2si3) -- (2l4);}
+		\uncover<10->{\draw         (2si2) -- (2si3);}
+		\uncover<9 ->{\draw                   (2si3) -- (2l5);}
 		
 		
-		\node [interns,above left of=10s,node distance=1cm,xshift=0.25cm] (10si1) {};
-		\node [interns,above left of=10si1,node distance=0.5cm] (10si2) {};
+		\uncover<6- >{\node 
+		  [interns,above left of=10s,node distance=1cm,xshift=0.25cm] (10si1){};}
+		\uncover<5- >{\node [interns,above left of=10si1,node distance=0.5cm] (10si2) {};}
 		\node [leaf,above left of=10si2,node distance=0.5cm] (10l1) {};
 		\node [leaf,above right of=10si2,node distance=0.5cm] (10l2) {};
 		\node [leaf,above right of=10si1,node distance=0.5cm] (10l3) {};
 		\node [leaf,above right of=10s,node distance=1cm,xshift=-0.25cm] (10l4) {};	
-		\node [interns,above left of=10s,node distance=1cm,xshift=0.25cm] (10si1) {};
-		\draw (10s) -- (10si1) -- (10si2) -- (10l1);
-		\draw                     (10si2) -- (10l2);
-		\draw          (10si1) -- (10l3);
-		\draw (10s) -- (10l4);
+		\uncover<5- >{\draw                     (10si2) -- (10l1);}
+		\uncover<6- >{\draw          (10si1) -- (10si2);}
+		\uncover<5- >{\draw                     (10si2) -- (10l2);}
+		\uncover<7- >{\draw (10s) -- (10si1);}
+		\uncover<6- >{\draw          (10si1) -- (10l3);}
+		\uncover<7- >{\draw (10s) -- (10l4);}
 
 
-		\node [interns,above left of=15s,node distance=1cm] (15si1) {};
-		\node [interns,above right of=15s,node distance=1cm] (15si2) {};
+		\uncover<2 ->{\node [interns,above left of=15s,node distance=1cm] (15si1) {};}
+		\uncover<3 ->{\node [interns,above right of=15s,node distance=1cm] (15si2) {};}
 		\node [leaf,above left of=15si1,node distance=0.5cm] (15l1) {};
 		\node [leaf,above right of=15si1,node distance=0.5cm] (15l2) {};
 		\node [leaf,above left of=15si2,node distance=0.5cm] (15l3) {};
 		\node [leaf,above right of=15si2,node distance=0.5cm] (15l4) {};	
-		\draw (15s) -- (15si1) -- (15l1);
-		\draw          (15si1) -- (15l2);
-		\draw (15s) -- (15si2) -- (15l3);
-		\draw          (15si2) -- (15l4);
-		
+		\uncover<2- >{\draw          (15si1) -- (15l1);}
+		\uncover<4 ->{\draw (15s) -- (15si1);}
+		\uncover<2- >{\draw          (15si1) -- (15l2);}
+		\uncover<3- >{\draw          (15si2) -- (15l3);}
+		\uncover<4- >{\draw (15s) -- (15si2);}
+		\uncover<3- >{\draw          (15si2) -- (15l4);}
+	
+		% acolade		
+        \draw [decorate, decoration={brace,mirror,amplitude=10pt,raise=7pt}]
+            (2l5.north east) -- +(-3cm,0)
+            node [black,midway,yshift=25pt] {2s};
+
+        \draw [decorate, decoration={brace,amplitude=10pt,raise=7pt}]
+            (10l1.north west) -- +(2.25cm,0)
+            node [black,midway,yshift=25pt] {10s};
+
+        \draw [decorate, decoration={brace,amplitude=10pt,raise=7pt}]
+            (15l1.north west) -- +(2.6cm,0)
+            node [black,midway,yshift=25pt] {15s};
+            
+        % offset propagation: starting from 14
+        \node [right of=root,node distance=2.25cm,text width=3cm] 
+        	{\alt<14>
+        		{\tiny \{0, .25, .5, .75\}}
+        		{\alt<15-16>
+        			{\tiny \{0, .25, .5\}}
+        			{\alt<17->
+        				{\tiny\{\}}
+        				{}
+        			}
+        		}
+        	};
+
+        \node [right of=5s,node distance=2.25cm,text width=3cm] 
+        	{\alt<15>
+        		{\tiny \{.75\}}
+        		{\alt<16->
+        			{\tiny \{.75, 1.75, $\ldots$\}}
+        			{} 
+        		}
+        	};
+        \node [right of=2s,node distance=2.25cm,text width=3cm] 
+        	{\alt<17>
+        		{\tiny \{0, .25, .5\}}
+        		{\alt<18>
+        			{\tiny \{0, .25, .5, 1, 1.25, 1.5\}}
+        			{\alt<19>
+        				{\tiny \{.5, 1, 1.25, 1.5\}}
+        				{\alt<20->
+        					{\tiny \{1.5\}}
+        					{}
+        				}
+        			}
+        		}
+        	};
+
+		\node [left of=2si1,,node distance=.75cm,text width=1cm] 
+			{\hfill \alt<19-20>
+				{\tiny \{0, .25\}}
+				{\alt<21>
+					{\tiny \{.25\}}
+					{\alt<22->
+						{\tiny \{\}}
+						{}
+					}
+				}
+			};
+			
+		\node [right of=2si2,node distance=1.5cm,text width=2cm] 
+			{\alt<20-22>
+				{\tiny \{.5, 1, 1.25\}}
+				{\alt<23>
+					{\tiny \{1, 1.25\}}
+					{\alt<24->
+						{\tiny \{\}}
+						{}
+					}
+				}
+			};
+
+        \uncover<21- >{\node [above of=2l1,node distance=.25cm] {\tiny 0};}
+        \uncover<22- >{\node [above of=2l2,node distance=.25cm] {\tiny .25};}       
+        \uncover<23- >{\node [above of=2l3,node distance=.25cm] {\tiny .5};}
+        
+        \node [right of=2si3,node distance=.7cm] 
+        	{\alt<24>
+        		{\tiny \{1, 1.25\}}
+        		{\alt<25>
+        			{\tiny \{1.25\}}
+        			{\alt<26>
+        				{\tiny \{\}}
+        				{}
+        			}
+        		}
+        	};
+
+        \uncover<25- >{\node [above of=2l4,node distance=.25cm] {\tiny 1};}
+        \uncover<26- >{\node [above of=2l5,node distance=.25cm] {\tiny 1.25};}
+
 	\end{tikzpicture}
 	\end{center}	
 	\end{exampleblock}
