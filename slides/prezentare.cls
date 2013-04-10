@@ -26,10 +26,13 @@
 \usepackage{amsthm,amsmath}
 \newtheorem{thm}{Teorem\u a}[section]
 
+\usepackage{color}
 \usepackage{tikz}
 \usepackage{pgf}
 \usetikzlibrary{arrows,decorations.pathreplacing}
 
+\definecolor{purple}{RGB}{160,32,240}
+\definecolor{skyblue}{RGB}{135,206,250}
 
 
 % Pachete pentru grafice si diagrame

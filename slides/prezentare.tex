@@ -305,27 +305,27 @@ stop_publishing()
 	Our system permits different starting points for different tasks.
 	\end{block}
 \end{frame}
-\end{comment}
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Local scheduling - Subperiod algorithm}
 	\begin{exampleblock}{Two periods}
 	Two histogram groups:
 	\begin{itemize}
-	\item 4=x+y histograms with period 10s
 	\item 4=a+b+c histograms with period 15s
+	\item 4=x+y histograms with period 10s
 	\end{itemize}
-	\vspace{-5mm}	
+	\vspace{-7.5mm}	
 	\begin{center}
 		\begin{tikzpicture}[node distance=0.75cm]
 			\foreach \x in {0,1,2,3,4,5,6} {
-				\node at (\x,1) [exec] (n0\x) {};
-				\node at (\x,0) [exec] (n1\x) {};
+				\node at (\x,0) [exec] (n0\x) {};
+				\node at (\x,1) [exec] (n1\x) {};
 			}
 			
-			\foreach \x/\la/\lb in {1/x/a,2/y/b,3/x/c,4/y/a,5/x/b,6/y/c} {
-				\node [text depth=0pt, text height=12pt, above left of=n1\x ,yshift=-5] {\lb};
-				\node [text depth=0pt, text height=12pt, above left of=n0\x, yshift=-5] {\la};
+			\foreach \x/\la/\lb/\na/\nb in 
+				{1/x/a/2/2, 2/y/b/2/1, 3/x/c/2/1, 4/y/a/2/2, 5/x/b/2/1, 6/y/c/2/1} {
+				\node [text depth=0pt, text height=12pt, above left of=n1\x ,yshift=-7pt] {\alt<2>{\alert{\footnotesize \nb}}{\footnotesize \lb}};
+				\node [text depth=0pt, text height=12pt, above left of=n0\x, yshift=-7pt] {\alt<2>{\alert{\footnotesize \na}}{\footnotesize \la}};
 			}
 			
 %			\node at (-2,0) [text width=2.5cm] {x+y=4 histo. $\pi$=10s};
@@ -334,22 +334,99 @@ stop_publishing()
 			% linii punctate
             \draw[-,dashed] (-0.5,0) -- (6.5,0);
             \draw[-,dashed] (-0.5,1) -- (6.5,1);
+            
             % paranteze 
-            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
-            (0,0) -- (1,0) node [black,midway,yshift=-10pt] {\footnotesize 5s};
-            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=12pt},xshift=0pt]
-            (0,0) -- (3,0) node [black,midway,yshift=-20pt] {\footnotesize 15s};
-            \draw [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
-            (0,1) -- (2,1) node [black,midway,yshift=-0.5cm] {\footnotesize 10s};
+            \draw<1> [decorate, decoration={brace,amplitude=4pt,mirror,raise=5pt},xshift=0pt]
+            (0,1) -- (1,1) node [black,midway,yshift=-14pt] {\footnotesize 5s};
+            \draw<1> [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
+            (0,1) -- (3,1) node [black,midway,yshift=-14pt] {\footnotesize 15s};
+            \draw<1> [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
+            (0,0) -- (2,0) node [black,midway,yshift=-11pt] {\footnotesize 10s};
+            % paranteze 
+            \draw<2> [decorate, decoration={brace,amplitude=4pt,mirror,raise=2pt},xshift=0pt]
+            (0,1) -- (1,1) node [black,midway,yshift=-11pt] {\footnotesize 5s};
 		\end{tikzpicture}
-	\vspace{-2.5mm}		
 	\end{center}
-	Minimize:
-	\vspace{-2.5mm}
-	\begin{equation*}
-		\max(x+a, y+b, x+c, \ldots) = \max(a, b, c) + \max(x, y)
-	\end{equation*}
+	\end{exampleblock}
 
+	\alt<1>{
+	\begin{exampleblock}{Goal}
+	  Minimize:
+	  \vspace{-2.5mm}
+	  \begin{equation*}
+		  \max(x+a, y+b, x+c, \ldots) = \max(a, b, c) + \max(x, y)
+	  \end{equation*}
+	\end{exampleblock}
+	}{
+	\begin{exampleblock}<2>{Solution}
+		We can (over-)approximate with  4 histograms and period 5s.
+	\end{exampleblock}
+	}
+\end{frame}
+\end{comment}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Local scheduling - Subperiod algorithm}
+	\begin{exampleblock}{Hierarchical approximation}
+	\tikzstyle{leaf}=[rectangle,draw=black,very thick,fill=skyblue,minimum width=10pt,minimum height=5pt,inner sep=0pt]
+	\tikzstyle{interns}=[rectangle,draw=black,very thick,fill=purple,minimum width=10pt,minimum height=5pt,inner sep=0pt]
+	\tikzstyle{internl}=[rectangle,draw=black,very thick,fill=purple,minimum width=40pt,minimum height=15pt,inner sep=0pt]
+	\begin{center}
+	\begin{tikzpicture}
+%		\node at (0,0) [leaf] (l) {};
+%		\node at (1,1) [interns] (is) {};
+	
+		\node [internl] (root) {4/1s};
+		\node [internl,above left of=root,node distance=2cm,xshift=-1cm] (2s) {5/2s};
+		\node [internl,above right of=root,node distance=2cm,xshift=1cm] (5s) {4/5s};
+		\node [internl,above right of=5s,node distance=2cm] (15s) {4/15s};
+		\node [internl,above left of=5s,node distance=2cm] (10s) {4/10s};
+		\draw (root) -- (5s) -- (15s);
+		\draw           (5s) -- (10s);
+		\draw (root) -- (2s);		
+		
+		
+		\node [interns,above left of=2s,node distance=1cm] (2si1) {};
+		\node [interns,above right of=2s,node distance=1cm] (2si2) {};
+		\node [interns,above right of=2si2,node distance=0.5cm] (2si3) {};
+		\node [leaf,above left of=2si1,node distance=0.5cm] (2l1) {};
+		\node [leaf,above right of=2si1,node distance=0.5cm] (2l2) {};
+		\node [leaf,above left of=2si2,node distance=0.5cm] (2l3) {};
+		\node [leaf,above left of=2si3,node distance=0.5cm] (2l4) {};
+		\node [leaf,above right of=2si3,node distance=0.5cm] (2l5) {};
+		\draw (2s) -- (2si1) -- (2l1);		
+		\draw         (2si1) -- (2l2);
+		\draw (2s) -- (2si2) -- (2si3) -- (2l5);
+		\draw                   (2si3) -- (2l4);
+		\draw         (2si2) -- (2l3);
+		
+		
+		\node [interns,above left of=10s,node distance=1cm,xshift=0.25cm] (10si1) {};
+		\node [interns,above left of=10si1,node distance=0.5cm] (10si2) {};
+		\node [leaf,above left of=10si2,node distance=0.5cm] (10l1) {};
+		\node [leaf,above right of=10si2,node distance=0.5cm] (10l2) {};
+		\node [leaf,above right of=10si1,node distance=0.5cm] (10l3) {};
+		\node [leaf,above right of=10s,node distance=1cm,xshift=-0.25cm] (10l4) {};	
+		\node [interns,above left of=10s,node distance=1cm,xshift=0.25cm] (10si1) {};
+		\draw (10s) -- (10si1) -- (10si2) -- (10l1);
+		\draw                     (10si2) -- (10l2);
+		\draw          (10si1) -- (10l3);
+		\draw (10s) -- (10l4);
+
+
+		\node [interns,above left of=15s,node distance=1cm] (15si1) {};
+		\node [interns,above right of=15s,node distance=1cm] (15si2) {};
+		\node [leaf,above left of=15si1,node distance=0.5cm] (15l1) {};
+		\node [leaf,above right of=15si1,node distance=0.5cm] (15l2) {};
+		\node [leaf,above left of=15si2,node distance=0.5cm] (15l3) {};
+		\node [leaf,above right of=15si2,node distance=0.5cm] (15l4) {};	
+		\draw (15s) -- (15si1) -- (15l1);
+		\draw          (15si1) -- (15l2);
+		\draw (15s) -- (15si2) -- (15l3);
+		\draw          (15si2) -- (15l4);
+		
+	\end{tikzpicture}
+	\end{center}	
 	\end{exampleblock}
 \end{frame}
 %-----------------------------------------------------------------------------------
