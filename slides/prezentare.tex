@@ -363,7 +363,6 @@ stop_publishing()
 	\end{exampleblock}
 	}
 \end{frame}
-\end{comment}
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Local scheduling - Subperiod algorithm}
@@ -460,16 +459,7 @@ stop_publishing()
         			}
         		}
         	};
-
-        \node [right of=5s,node distance=2.25cm,text width=3cm] 
-        	{\alt<15>
-        		{\tiny \{.75\}}
-        		{\alt<16->
-        			{\tiny \{.75, 1.75, $\ldots$\}}
-        			{} 
-        		}
-        	};
-        \node [right of=2s,node distance=2.25cm,text width=3cm] 
+        \node [right of=2s,node distance=2.25cm,text width=3cm]  (o1)
         	{\alt<17>
         		{\tiny \{0, .25, .5\}}
         		{\alt<18>
@@ -481,6 +471,18 @@ stop_publishing()
         					{}
         				}
         			}
+        		}
+        	};
+
+        \node [right of=5s,node distance=2.25cm,text width=3cm] (o2)
+        	{\alt<15>
+        		{\tiny \{.75\}}
+        		{\alt<16-26>
+        			{\tiny \{.75, 1.75, $\ldots$\}}
+        			{\alt<27->
+        				{\tiny \{4.75\}}
+        				{}
+        			} 
         		}
         	};
 
@@ -508,30 +510,68 @@ stop_publishing()
 				}
 			};
 
-        \uncover<21- >{\node [above of=2l1,node distance=.25cm] {\tiny 0};}
-        \uncover<22- >{\node [above of=2l2,node distance=.25cm] {\tiny .25};}       
-        \uncover<23- >{\node [above of=2l3,node distance=.25cm] {\tiny .5};}
+        \uncover<21- >{\node [above of=2l1,node distance=.25cm] {\tiny \bf 0};}
+        \uncover<22- >{\node [above of=2l2,node distance=.25cm] {\tiny \bf .25};}       
+        \uncover<23- >{\node [above of=2l3,node distance=.25cm] {\tiny \bf .5};}
         
         \node [right of=2si3,node distance=.7cm] 
         	{\alt<24>
         		{\tiny \{1, 1.25\}}
         		{\alt<25>
         			{\tiny \{1.25\}}
-        			{\alt<26>
+        			{\alt<26->
         				{\tiny \{\}}
         				{}
         			}
         		}
         	};
 
-        \uncover<25- >{\node [above of=2l4,node distance=.25cm] {\tiny 1};}
-        \uncover<26- >{\node [above of=2l5,node distance=.25cm] {\tiny 1.25};}
-
-	\end{tikzpicture}
+        \uncover<25- >{\node [above of=2l4,node distance=.25cm] {\tiny \bf 1};}
+        \uncover<26- >{\node [above of=2l5,node distance=.25cm] {\tiny \bf 1.25};}
+        
+        \uncover<27 ->{
+	        \node [above of=10l1,node distance=.25cm] {\tiny \bf .75};
+	        \node [above of=10l2,node distance=.25cm] {\tiny \bf 1.75};
+	        \node [above of=10l3,node distance=.25cm,xshift=0.1cm] {\tiny \bf 5.75};
+	        \node [above of=10l4,node distance=.25cm] {\tiny \bf 6.75};
+	        
+	        \node [above of=15l1,node distance=.25cm] {\tiny \bf 2.75};
+	        \node [above of=15l2,node distance=.25cm] {\tiny \bf 3.75};
+	        \node [above of=15l3,node distance=.25cm] {\tiny \bf 7.75};
+	        \node [above of=15l4,node distance=.25cm] {\tiny \bf 12.75};
+	        
+	        \node [right of=10s,node distance=2cm,text width=2.5cm] {\tiny \{\}};
+	        \node [right of=15s,node distance=1.5cm,text width=1.5cm] 
+	        	(o3) {\tiny \{8.75, 13.75\}};
+        }
+        
+        \uncover<28- >{
+        	\node at (o1.west) 
+        		[shape=rectangle,draw=red,very thick,inner sep=0,minimum width=.6cm,minimum height=0.4cm,xshift=0.4cm] (or1) {};
+        	\node at (o2.west) 
+        		[shape=rectangle,draw=red,very thick,inner sep=0,minimum width=.7cm,minimum height=0.4cm,xshift=0.45cm] (or2) {};
+        	\node at (o3.west) 
+	        	[shape=rectangle,draw=red,very thick,inner sep=0,minimum width=1.4cm,minimum height=0.4cm,xshift=.8cm] (or3) {};
+	        	
+        	\node [right of=root,node distance=2cm,text=red] (unused1)
+        		{$\frac 1 2$ + };
+        	\node [right of=unused1,node distance=.75cm,text=red] (unused2)       		
+				{$\frac 1 5$ + }; 
+        	\node [right of=unused2,node distance=.6cm,text=red] (unused3)
+				{$\frac 2 {15} $};
+        	\node [right of=unused3,node distance=1.5cm,text=red] (unused4)
+				{unused slots/s};
+				
+	        \path[->,thick,draw=red] (unused1) edge [bend right] (or1);
+	        \path[->,thick,draw=red] (unused2) edge [bend left] (or2);
+	        \path[->,thick,draw=red] (unused3) edge [bend right] (or3);        	
+        }
+        \end{tikzpicture}
 	\end{center}	
 	\end{exampleblock}
 \end{frame}
-%-----------------------------------------------------------------------------------
+\end{comment}
+%-----------------------------------------------------------------------------------%
 \begin{frame}
 	\frametitle{Local scheduling}
 	\begin{block}{Subperiod algorithm - results}
