@@ -199,7 +199,7 @@ stop_publishing()
 	\end{definition}
 
 \end{frame}
-
+%-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Global scheduling}
 	\begin{block}{Contradicting requirements}
@@ -570,12 +570,66 @@ stop_publishing()
 	\end{center}	
 	\end{exampleblock}
 \end{frame}
-\end{comment}
 %-----------------------------------------------------------------------------------%
 \begin{frame}
-	\frametitle{Local scheduling}
-	\begin{block}{Subperiod algorithm - results}
+	\frametitle{Local scheduling - Subperiod algorithm}
+	\begin{block}{Complexity of offset assignment}
+	\begin{itemize}
+	\item Minimizing the no. of unused slots is \emph{strongly NP-hard}.
+	\item Largest $\gcd$ first heuristic $\Longrightarrow O(n + m^2(\log m + \log T))$.
+	\item Incremental change of $k$ histograms $\Longrightarrow O(m + k)$. 
+	\end{itemize}
+	\end{block}
 	
+	\begin{block}{Complexity of scheduling}
+	\begin{itemize}
+	\item Sort histograms with the same period according to the offsets.
+	\item Store the earliest offset for each period in a data structure.
+	\end{itemize}
+	
+	\begin{center}
+	\begin{tabular}{c | c | c}
+                           & heap-base           & table-based \\
+   	\hline
+ 	          per decision & $O(\log m)$         & $O(1)$ \\
+   	\hline
+ 	       add $p$ periods & $O(p \cdot \log m)$ & $O(p)$ \\
+   	\hline
+                     space & $O(m)$              & $O(T)$ \\
+	\end{tabular}
+	\end{center}
+
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Local scheduling - Subperiod algorithm}
+
+	\begin{block}{Jitter}
+	\begin{itemize}
+	\item 6 groups of 100 histo w/ 1000 bins and period 2,4,$\ldots$,12.
+	\end{itemize}
+	\begin{center}
+	\includegraphics[scale=.27]{../Images/jitter_histo}
+	\end{center}
+	\end{block}
+
+\end{frame}
+\end{comment}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Scheduling}
+	\begin{block}{Burstiness}
+	\begin{itemize}
+	\item Local scheduling avoid bursts of traffic in a short interval. 
+	\item<2> Global scheduling unif. distributes it withing a time slot.
+	\end{itemize}
+	\vspace{-5mm}
+	\begin{center}
+	\alt<1>
+		{\includegraphics[scale=.375]{../Images/burstiness}}
+		{\includegraphics[scale=.375]{../Images/burstiness_hires}}
+	\end{center}
 	\end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------
