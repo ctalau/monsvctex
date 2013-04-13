@@ -82,7 +82,7 @@ stop_publishing()
 	\end{description}
 	\end{block}
 	
-	\begin{block}<2->{Challenge: Number of objects}
+	\begin{block}<2->{Challenge: Number of monitored objects}
 	\begin{description}
 	\item [Problem] Specifying the config. for a large number of objects.
 	\item [Solution] Use regex. to group object with similar configuration and to specify exceptions.
@@ -284,7 +284,43 @@ stop_publishing()
 	\end{center}
 	\end{block}
 \end{frame}
+\end{comment}
 %-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Global scheduling}
+	\begin{block}{One slot - simulation results}
+	
+	\begin{itemize}
+	\item 400 apps, publishing 1 or 2 histo. in a time slot.
+	\item In a "prod" sample: Tiny - 91\% , Small - 8.3\%, Large - 0.6\%
+	\end{itemize}
+
+	\vspace{-5mm}
+
+	\begin{center}
+	\includegraphics[width=0.5\textwidth]{../Images/one_slot_sim_latency}
+	\includegraphics[width=0.5\textwidth]{../Images/one_slot_sim_skew}
+	\end{center}
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Global scheduling}
+	\begin{block}{One slot - testbed results}
+
+	\begin{itemize}
+	\item Same experiment on a testbed.
+	\end{itemize}
+
+	\vspace{-5mm}
+
+	\begin{center}
+	\includegraphics[scale=0.4]{../Images/one_slot_tbed}
+	\end{center}
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{comment}
 \begin{frame}
 	\frametitle{Local scheduling}
 	\begin{block}{Real-time system formulation}
@@ -615,14 +651,13 @@ stop_publishing()
 	\end{block}
 
 \end{frame}
-\end{comment}
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Scheduling}
 	\begin{block}{Burstiness}
 	\begin{itemize}
 	\item Local scheduling avoid bursts of traffic in a short interval. 
-	\item<2> Global scheduling unif. distributes it withing a time slot.
+	\item<2> Global scheduling unif. distributes it within a time slot.
 	\end{itemize}
 	\vspace{-5mm}
 	\begin{center}
@@ -633,7 +668,6 @@ stop_publishing()
 	\end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------
-\begin{comment}
 \begin{frame}
 	\frametitle{Conclusions}
 
@@ -663,5 +697,16 @@ stop_publishing()
     \end{center}
     \end{beamercolorbox}
     \end{frame}
+
+	\begin{frame}
+	\frametitle{Local scheduling}
+	\begin{block}{The effect of large histograms}
+	
+	\begin{center}
+	\includegraphics[width=\textwidth]{../Images/e2e_histograms}
+	\end{center}
+	
+	\end{block}
+	\end{frame}
 \end{comment}
 \end{document}
