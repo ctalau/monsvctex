@@ -22,7 +22,6 @@
 \begin{document}
 \tikzstyle{every picture}+=[remember picture]
 \tikzstyle{exec}=[rectangle,fill=black,minimum size=3pt,inner sep=0pt]
-\begin{comment}
     \begin{frame}
         \titlepage
     \end{frame}
@@ -31,20 +30,19 @@
     \frametitle{Monitoring in the ATLAS TDAQ system}
     \begin{block}{Figures - global view}
     	\begin{itemize}
-        	\item 15000 applications
-        	\item running on 1500 nodes
-            \item publish to 30 IS servers
+        	\item 15K applications
+        	\item running on 1.5K nodes
+            \item publish histograms periodically to 30 IS servers
       	\end{itemize}
   	\end{block}
     \begin{block}{Figures - single application}
     	\begin{itemize}
-            \item publishes 5000 histograms
-			\item with 500-1000 bins in average
-            \item each histogram has a period between 5-120s
+            \item publishes 5K histograms
+			\item with 500-1K bins in average
+            \item each histogram is published every 5-120s
             \item 5-10 distinct periods in total
       	\end{itemize}
-  	\end{block}
-  	
+  	\end{block}  	
 \end{frame}
 
 \begin{frame}[fragile]
@@ -61,7 +59,7 @@ stop_publishing()
         \end{semiverbatim}
 	\end{exampleblock}
 	\alt<2>{\begin{block}{Configuration}
-	Provides a way to specify the publishing parameters associated with a given object.	
+	The developer specifies the publishing parameters associated with a given object.	
 	\end{block}}{}
 	\alt<3>{\begin{block}{Scheduling}
 	Determines when to start publishing each histogram in each application.
@@ -227,7 +225,7 @@ stop_publishing()
 		\end{tikzpicture}
 		\end{column}
 		\begin{column}{0.5\textwidth}
-		Minimize latency \& contention
+		Minimize contention
 		\begin{tikzpicture}[node distance=1cm]
 			\node at (0,0.5) [label=west:{\scriptsize App. 3}] {};			
 			\node (s1) at (0,0.5) [exec] {};
@@ -284,7 +282,6 @@ stop_publishing()
 	\end{center}
 	\end{block}
 \end{frame}
-\end{comment}
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Global scheduling}
@@ -320,7 +317,6 @@ stop_publishing()
 	\end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------
-\begin{comment}
 \begin{frame}
 	\frametitle{Local scheduling}
 	\begin{block}{Real-time system formulation}
@@ -654,6 +650,19 @@ stop_publishing()
 %-----------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Scheduling}
+	\begin{block}{Throughput, latency and publishing skew}
+	\begin{itemize}
+	\item As we try to achieve better throughput both latency and publishing skew spike.
+	\end{itemize}
+	\vspace{-5mm}
+	\begin{center}
+		\includegraphics[scale=.375]{../Images/skew_lat_sim}
+	\end{center}
+	\end{block}
+\end{frame}
+%-----------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Scheduling}
 	\begin{block}{Burstiness}
 	\begin{itemize}
 	\item Local scheduling avoid bursts of traffic in a short interval. 
@@ -708,5 +717,4 @@ stop_publishing()
 	
 	\end{block}
 	\end{frame}
-\end{comment}
 \end{document}

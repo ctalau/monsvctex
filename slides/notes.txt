@@ -1,0 +1,137 @@
+
+- 2 -
+In this slide I included several figures about the ATLAS TDAQ system.
+
+- 3 -
+Here is an example of code that uses the library.
+I will give details on how each part of the functionality is implemented.
+
+- 4 -
+Configuration allows the user to specify for each histogram the parameters according
+to which it is to be published.
+
+- 5 -
+Scheduling decides when to start publishing each histogram from each application
+to create minimum contention and to respect periodical publishing behaviour for 
+each histogram.
+
+- 6 -
+Synchronization ensures thread-safe access to the histogram between the library
+which publishes it and the application that updates it. It uses the smart-pointer
+returned by the registration function.
+
+- 7 - 
+Configuration imposes several problems:
+We have a large code-base, so, programatic configuration will be spread around the 
+code, and will be difficult to modify.
+So, we use an external database for storing it and loading it at runtime.
+
+- 8 -
+We have a lot of monitored objects 5000 x 15000 = 7 milion. We use regular expressions
+to group objects with the same monitoring requirements.
+
+- 9 -
+We should be able to specify the configuration for an application in the same 
+hierarchical way we build apps from libraries. To this end we created rule bundles.
+
+- 10 - 23 - 
+I will detail a bit one policy of ensuring thread safe access to the underlying histogram.
+
+The library has to acquire the lock on the histogram in order to publish it,
+which can take tens of milliseconds. During this time, the main application 
+instead of updating the histogram it just stores the update in a queue,
+and it gets executed before the library unlocks the histogram.
+If the histogram is not locked, the update is applied directly.
+
+The developer can choose among multiple such policies when he registers the object.
+
+- 24 -
+We now turn to the scheduling problem:
+global requirement which require cooperation of all applications include minimize 
+latency (by minimizing contention), minimize pub. skew = time between first and last 
+publication of a histogram, maximize throughput.
+
+local req: 
+minimize jitter from the period publishing
+efficient reconfiguration of the system.
+
+- 25 - 
+In order to deal with the two classes of requirement separately we divide the time
+into slots. 
+Global scheduling: how to publish inside a time-slot.
+Local publishing: what histograms to assign to a time slot.
+
+- 26 - 27 -
+A solution for minimal pub. skew is to start publishing at the same time.
+A solution for small contention is to start publishing as far as possible.
+Solution:
+ Introduce a small random delay before publishing.
+
+- 28 - 
+
+- 29 - 
+
+- 30 - 
+We can make a mapping of concepts between the local scheduling problem and 
+real-time scheduling. ....
+In fact, our system is offset-free which means that we are allowed to 
+choose a offset for the first job of each task, and maintain the periodic
+publishing behaviour only relative to this offset.
+
+- 31 -
+I will explain the subperiod algorithm to assign offsets:
+two groups, 4 x 10s and 4 x 15s. We split the time in 5s subperiod and we want to
+choose offsets to uniformly distribute histograms over subperiods, so minimize max(...)
+which is the same to minimize max(a,b,c) + max(x,y) so minimize for each group in isolation.
+
+So, we can overapproximate the 2 groups with a single group of 4 histo and period of 5s.
+
+- 32-46 -
+Now let's consider how we merge small groups into larger groups in a hierarchical manner:
+
+
+- 47-61 -
+Now we assign to the root 4 offsets modulo 1 second: 0, 0.25, 0.5 .75,
+and we propagate the up to the leafs. 
+We can see that offset .75 modulo 1s is the same as 0.75, 1.75, 4.75 mod 5s.
+
+We are left with some unused offsets in some of the nodes of the tree.
+
+- 62 - 
+If we want to build the tree that leaves the fewest unused slots, the problem is strongly NP-hard.
+However, I proposed a heuristic that achieves good enough results in practice.
+If we want to change the period of k histograms, the cost is only O(m+k) if the algorithm succeeds,
+otherwise we need to rebuild the tree from scratch.
+
+In order to compute the earliest deadline with 5000 tasks, we can take advantage of the fact that
+we have small # of periods and there aren't two histos scheduled for the same interval. 
+With a heap, we use O(\log m) per sched decision, and with a table we use O(1) at the price of O(T)
+space, where T is the # of slots in the largest of the periods.
+
+- 63 -
+XXX
+
+- 64 -
+
+- 65 -
+Local sched ...
+
+- 66 -
+Global sched ...
+
+- 67 - 
+Conclusions.
+
+- 68 -
+Questions.
+
+- 69 - 
+Backup.
+
+
+
+
+
+
+
+
